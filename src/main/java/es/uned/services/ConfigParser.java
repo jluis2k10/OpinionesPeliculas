@@ -1,12 +1,12 @@
 package es.uned.services;
 
-import es.uned.entities.SourceOptions;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -17,22 +17,24 @@ public class ConfigParser {
     @Inject
     private Environment environment;
 
-    public List<SourceOptions> getSources() {
-        List<SourceOptions> sourcesList = new ArrayList<>();
+    public ArrayNode getSources() {
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode results = mapper.createArrayNode();
         String[] sources = environment.getProperty("sources").split(",");
+
         for (String source: sources) {
-            String preffix = "source." + source.trim();
-            SourceOptions sourceOptions = new SourceOptions();
-            sourceOptions.setName(environment.getProperty(preffix + ".name"));
-            sourceOptions.setAdapterClass(environment.getProperty(preffix + ".adapterClass"));
-            sourceOptions.setLimitEnabled(environment.getProperty(preffix + ".limit").equals("true"));
-            sourceOptions.setSinceDateEnabled(environment.getProperty(preffix + ".sinceDate").equals("true"));
-            sourceOptions.setUntilDateEnabled(environment.getProperty(preffix + ".untilDate").equals("true"));
-            sourceOptions.setLanguageEnabled(environment.getProperty(preffix + ".language").equals("true"));
-            sourceOptions.setImdbIDEnabled(environment.getProperty(preffix + ".imdbID").equals("true"));
-            sourcesList.add(sourceOptions);
+            String prefix = "source." + source.trim();
+            ObjectNode option = mapper.createObjectNode();
+            option.put("name", environment.getProperty(prefix + ".name"));
+            option.put("adapterClass", environment.getProperty(prefix + ".adapterClass"));
+            option.put("limitEnabled", environment.getProperty(prefix + ".limit").equals("true"));
+            option.put("sinceDateEnabled", environment.getProperty(prefix + ".sinceDate").equals("true"));
+            option.put("untilDateEnabled", environment.getProperty(prefix + ".untilDate").equals("true"));
+            option.put("languageEnabled", environment.getProperty(prefix + ".language").equals("true"));
+            option.put("imdbIDEnabled", environment.getProperty(prefix + ".imdbID").equals("true"));
+            results.add(option);
         }
-        return sourcesList;
+        return results;
     }
 
 }

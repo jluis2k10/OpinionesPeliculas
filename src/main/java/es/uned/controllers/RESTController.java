@@ -1,16 +1,17 @@
 package es.uned.controllers;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import es.uned.entities.SourceOptions;
 import es.uned.services.ConfigParser;
 import es.uned.services.TrakttvLookup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  *
@@ -26,8 +27,9 @@ public class RESTController {
     private TrakttvLookup trakttvLookup;
 
     @RequestMapping(value = "/comments-source", method = RequestMethod.GET)
-    public @ResponseBody List<SourceOptions> sources() {
-        return configParser.getSources();
+    public ResponseEntity<ArrayNode>  sources() {
+        ArrayNode response = configParser.getSources();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @RequestMapping(value = "/imdb-lookup", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
