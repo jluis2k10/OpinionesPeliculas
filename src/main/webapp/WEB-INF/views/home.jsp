@@ -3,8 +3,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ include file="_header.jsp"%>
 
-<div class="row">
-    <form:form method="post" modelAttribute="searchForm">
+
+<form:form method="post" modelAttribute="searchForm">
+    <div class="row">
         <spring:bind path="searchTerm">
             <div class="col-xs-12 ${status.error ? "has-error" : ""}">
                 <div class="input-group">
@@ -22,7 +23,7 @@
             <div class="col-xs-3 limit-container" style="display: none;">
                 <div class="form-group ${status.error ? "has-error" : ""}">
                     <form:label path="limit">Comentarios a recuperar (máx.)</form:label>
-                    <form:input path="limit" type="text" cssClass="form-control" id="limit" value="50" aria-describedby="errorsLimit"></form:input>
+                    <form:input path="limit" type="number" min="1" cssClass="form-control" id="limit" value="50" aria-describedby="errorsLimit"></form:input>
                     <form:errors path="limit" cssClass="help-block" id="errorsLimit"></form:errors>
                 </div>
             </div>
@@ -47,13 +48,15 @@
         </spring:bind>
         <spring:bind path="lang">
             <div class="col-xs-3 language-container ${status.error ? "has-error" : ""}" style="display: none;">
-                <p><strong>Idioma</strong></p>
-                <label class="radio-inline">
-                    <form:radiobutton path="lang" id="en" value="en" checked="checked"></form:radiobutton> Inglés
-                </label>
-                <label class="radio-inline">
-                    <form:radiobutton path="lang" id="es" value="es"></form:radiobutton> Español
-                </label>
+                <div class="form-group">
+                    <p><strong>Idioma</strong></p>
+                    <label class="radio-inline">
+                        <form:radiobutton path="lang" id="en" value="en" checked="checked"></form:radiobutton> Inglés
+                    </label>
+                    <label class="radio-inline">
+                        <form:radiobutton path="lang" id="es" value="es"></form:radiobutton> Español
+                    </label>
+                </div>
             </div>
         </spring:bind>
         <div class="col-xs-3 imdbID-container" style="display: none;">
@@ -62,17 +65,42 @@
                 <option value=""></option>
             </select>
         </div>
+    </div>
+    <div class="row sentiment-container">
+        <spring:bind path="sentimentAdapter">
+            <div class="col-xs-6">
+                <div class="form-group ${status.error ? "has-error" : ""}">
+                    <form:label path="sentimentAdapter">Analizador de Sentimiento</form:label>
+                    <form:select path="sentimentAdapter" cssClass="form-control"></form:select>
+                </div>
+            </div>
+        </spring:bind>
+        <spring:bind path="sentimentModel">
+            <div class="col-xs-6 sentimentModel-container" style="display: none;">
+                <div class="form-group ${status.error ? "has-error" : ""}">
+                    <form:label path="sentimentModel">Modelo</form:label>
+                    <form:select path="sentimentModel" cssClass="form-control"></form:select>
+                </div>
+            </div>
+        </spring:bind>
+        <div class="col-xs-12" style="display: none;"></div>
+    </div>
+    <div class="row">
         <form:hidden path="sourceClass" value="" id="sourceClass"></form:hidden>
         <div class="col-xs-12">
             <button type="submit" class="btn btn-primary">Enviar</button>
         </div>
-    </form:form>
+    </div>
+</form:form>
+<div class="row">
     <div class="col-xs-12">
         <c:if test="${!empty comments}">
             <ol>
-            <c:forEach var="comment" items="${comments}">
-                <li><c:out value="${comment.value}"></c:out></li>
-            </c:forEach>
+                <c:forEach var="comment" items="${comments}">
+                    <li>${comment.value.comment} (<strong>${comment.value.predictedSentiment}</strong>, ${comment.value.sentimentScore})
+                        <p>${comment.value.tokenizedComment}</p>
+                    </li>
+                </c:forEach>
             </ol>
         </c:if>
     </div>
@@ -146,6 +174,7 @@
     });
 </script>
 <script>
+    $sentimentAdapters = null;
     $( document ).ready(function() {
         /* Recuperar las posibles fuentes de comentarios */
         $.ajax({
@@ -157,6 +186,21 @@
                 makeSourcesButton(data);
                 var first_link = $("#sources-dropdown li:first-child a");
                 makeOptions(first_link.get(0));
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                console.error("Request: " + JSON.stringify(XMLHttpRequest) + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);
+            }
+        });
+
+        /* Recuperar los adaptadores para el análisis de sentimiento */
+        $.ajax({
+            type: "GET",
+            contentType: "application/json",
+            url: "${path}/api/sentiment-adapters",
+            timeout: 5000,
+            success: function(data) {
+                $sentimentAdapters = data;
+                populateSentiment($sentimentAdapters);
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 console.error("Request: " + JSON.stringify(XMLHttpRequest) + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);
@@ -223,5 +267,188 @@
             $(".language-container").hide();
         }
     }
+
+    /* Acción al seleccionar el idioma */
+    $("input[name='lang']").change(function() {
+        populateSentiment($sentimentAdapters);
+    });
+
+    /* Acción al seleccionar una opción del select con los adaptadores para el análisis de sentimiento */
+    $("#sentimentAdapter").change(function () {
+        $selected = $(this).find("option:selected")[0];
+        $adapterClass = $selected.value;
+        $adapter = $.grep($sentimentAdapters, function(e) {
+            return e.class === $adapterClass;
+        });
+        populateSentimentModels($adapter[0]); // Rellener el select con los modelos del adaptador
+        makeSentimentOptions($adapter[0]);    // Construir las opciones para el adaptador
+    });
+
+    /* Rellenar el seleccionable de los adaptadores disponibles para el análisis de sentimiento */
+    function populateSentiment(adapters) {
+        $select = $("#sentimentAdapter");
+        $select.empty();                       // Borrar opciones anteriores si las hubiera
+        var adaptersPerLanguage = new Array(); // Array con los adaptadores compatibles con el idioma seleccionado
+
+        $.each(adapters, function (index, adapter) {
+            var adapterLanguages = adapter.lang.split(",");
+            $.each(adapterLanguages, function (index2, adapterLanguage) {
+                if (adapterLanguage === $("input[name='lang']:checked").val() &&
+                    (hasModelForSelectedLanguage(adapter) || !adapter.models_enabled)) {
+                    adaptersPerLanguage.push(adapter);
+                    $select.append(new Option(adapter.name, adapter.class));
+                }
+            });
+        });
+        populateSentimentModels(adaptersPerLanguage[0]); // Rellenar select de los modelos para el primer adaptador
+        makeSentimentOptions(adaptersPerLanguage[0]);    // Construir las opciones para el primer adaptador
+    }
+
+    /* Mostrar/ocultar select con los modelos del analizador de sentimiento */
+    function populateSentimentModels(adapter) {
+        $select = $("#sentimentModel");
+        $select.empty(); // Primero borramos las opciones anteriores (se suponen de otro adaptador)
+        if (typeof adapter !== "undefined" && adapter.models_enabled && hasModelForSelectedLanguage(adapter)) {
+            $.each(adapter.models, function (index, model) {
+                if (model.lang === $("input[name='lang']:checked").val())
+                    $select.append(new Option(model.name, model.location));
+            });
+            $(".sentimentModel-container").show();
+        } else {
+            $(".sentimentModel-container").hide();
+        }
+    }
+
+    /* Devuelve cierto si el adaptador contiene modelos para el idioma seleccionado */
+    function hasModelForSelectedLanguage(adapter) {
+        var result = false;
+        $.each(adapter.models, function (index, model) {
+            result = result || model.lang === $("input[name='lang']:checked").val();
+        });
+        return result;
+    }
+
+    function makeSentimentOptions(adapter) {
+        $container = $(".sentiment-container");
+        $(".sentiment-option").remove(); // Borramos todas las opciones anteriores que puedan existir
+        if (adapter.parameters.length > 0) {
+            $.each(adapter.parameters, function (index, parameter) {
+                switch (parameter.type) {
+                    case 'radio':
+                        makeRadioOptions($container, parameter);
+                        break;
+                    case 'select':
+                        makeSelectOptions($container, parameter);
+                        break;
+                    case 'number':
+                        makeNumberOptions($container, parameter);
+                        break;
+                    case 'text':
+                        makeTextOptions($container, parameter);
+                        break;
+                    default:
+                        break;
+                }
+            });
+        }
+    }
+
+    function makeRadioOptions(container, parameter) {
+        var optionDiv = $("<div class='col-xs-3 sentiment-option'></div>");
+        var innerDiv = $("<div class='form-group'></div>");
+        innerDiv.appendTo(optionDiv);
+        var optionHeaderPar = $("<p></p>");
+        var optionHeaderTitle = $("<strong></strong>").text(parameter.name);
+        optionHeaderTitle.appendTo(optionHeaderPar);
+        optionHeaderPar.appendTo(innerDiv);
+
+        $.each(parameter.options, function (index, option) {
+            var optionLabel = $("<label class='radio-inline'></label>");
+            var input = $("<input />").attr({
+                id: option.value,
+                name: parameter.id,
+                value: option.value,
+                type: "radio"
+            });
+            if (index === 0)
+                input.attr("checked", "checked");
+            input.appendTo(optionLabel);
+            optionLabel.append(" " + option.name + "&nbsp;");
+            optionLabel.appendTo(innerDiv);
+        });
+        optionDiv.appendTo(container);
+    }
+
+    function makeSelectOptions(container, parameter) {
+        var optionDiv = $("<div class='col-xs-3 sentiment-option'></div>");
+
+        var innerDiv = $("<div class='form-group'></div>");
+        innerDiv.appendTo(optionDiv);
+
+        var label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
+        label.appendTo(innerDiv);
+
+        var select = $("<select></select>").attr({
+            id: parameter.id,
+            class: "form-control",
+            name: parameter.id
+        });
+        select.appendTo(innerDiv);
+
+        $.each(parameter.options, function (index, option) {
+            var option = $("<option></option>").attr("value", option.value).text(option.name);
+            option.appendTo(select);
+        });
+
+        optionDiv.appendTo(container);
+    }
+
+    function makeNumberOptions(container, parameter) {
+        var optionDiv = $("<div class='col-xs-3 sentiment-option'></div>");
+        var innerDiv = $("<div class='form-group'></div>");
+        innerDiv.appendTo(optionDiv);
+
+        var label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
+        label.appendTo(innerDiv);
+
+        var input = $("<input />").attr({
+            type: 'number',
+            id: parameter.id,
+            class: 'form-control',
+            name: parameter.id,
+            value: parameter.default
+        });
+        input.appendTo(innerDiv);
+
+        $.each(parameter.options, function(index, option) {
+            if (option.name === "min")
+                input.attr("min", option.value);
+            else if (option.name === "max")
+                input.attr("max", option.value);
+        });
+
+        optionDiv.appendTo(container);
+    }
+
+    function makeTextOptions(container, parameter) {
+        var optionDiv = $("<div class='col-xs-3 sentiment-option'></div>");
+        var innerDiv = $("<div class='form-group'></div>");
+        innerDiv.appendTo(optionDiv);
+
+        var label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
+        label.appendTo(innerDiv);
+
+        var input = $("<input />").attr({
+            type: 'text',
+            id: parameter.id,
+            class: 'form-control',
+            name: parameter.id,
+            value: parameter.default
+        });
+        input.appendTo(innerDiv);
+
+        optionDiv.appendTo(container);
+    }
+
 </script>
 <%@ include file="_footer.jsp"%>

@@ -1,5 +1,6 @@
 package es.uned.adapters.sources;
 
+import es.uned.entities.CommentWithSentiment;
 import es.uned.entities.SearchParams;
 import org.springframework.core.env.Environment;
 import org.springframework.social.twitter.api.SearchParameters;
@@ -26,8 +27,8 @@ public class TwitterSearch implements SourceAdapter {
     private Environment environment;
 
     @Override
-    public HashMap<Integer,String> getComments(SearchParams params) {
-        HashMap<Integer,String> comments = new HashMap<>();
+    public HashMap<Integer,CommentWithSentiment> getComments(SearchParams params) {
+        HashMap<Integer,CommentWithSentiment> comments = new HashMap<>();
         Twitter twitter = new TwitterTemplate(
                 environment.getProperty("twitter.consumerKey"),
                 environment.getProperty("twitter.consumerSecret")
@@ -38,7 +39,7 @@ public class TwitterSearch implements SourceAdapter {
                 .resultType(SearchParameters.ResultType.RECENT)
                 .count(100)
                 .includeEntities(false);
-        if (params.getUntilDate() != null) {
+        if (!params.getUntilDate().equals("")) {
             SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
             try {
                 Date untilDate = formatter.parse(params.getUntilDate());
@@ -54,13 +55,15 @@ public class TwitterSearch implements SourceAdapter {
                 break;
 
             for (Tweet tweet : results.getTweets()) {
-                if (tweet.getRetweetCount() == 0 && tweet.getText().toLowerCase().indexOf("http") == -1
-                        && tweet.getText().toLowerCase().indexOf(params.getSearchTerm().toLowerCase()) != -1
-                        && comments.size() < params.getLimit()) {
-                    /*comments.add(new CommentWithSentiment(tweet.getText(), tweet.getIdStr(), tweet.getFromUser(),
-                            tweet.getCreatedAt(), tweet.getProfileImageUrl()));*/
-                    String clean = this.cleanTweet(tweet.getText());
-                    comments.put(clean.hashCode(), clean);
+                if (tweet.getRetweetCount() == 0 && // No retweets
+                        tweet.getText().toLowerCase().indexOf("http") == -1 && // Que no contengan enlaces
+                        tweet.getText().toLowerCase().indexOf(params.getSearchTerm().toLowerCase()) != -1 && // Que contengan el término de búsqueda
+                        comments.size() < params.getLimit()) {
+                    CommentWithSentiment comment = new CommentWithSentiment.Builder()
+                            .searchTerm(params.getSearchTerm())
+                            .comment(tweet.getText())
+                            .build();
+                    comments.put(comment.getComment().hashCode(), comment);
                 }
             }
 
@@ -70,12 +73,5 @@ public class TwitterSearch implements SourceAdapter {
         }
 
         return comments;
-    }
-
-    private String cleanTweet(String tweet) {
-        String clean = null;
-        // Eliminar menciones a usuarios
-        clean = tweet.replaceAll("(?:\\s|\\A)[@]+([A-Za-z0-9-_]+)", "");
-        return clean;
     }
 }

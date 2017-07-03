@@ -1,5 +1,6 @@
 package es.uned.config;
 
+import es.uned.adapters.SentimentAdapterFactory;
 import es.uned.adapters.SourceAdapterFactory;
 import org.springframework.beans.factory.config.ServiceLocatorFactoryBean;
 import org.springframework.context.annotation.*;
@@ -33,6 +34,13 @@ public class ApplicationContextConfig {
         ServiceLocatorFactoryBean svcLoc = new ServiceLocatorFactoryBean();
         svcLoc.setServiceLocatorInterface(SourceAdapterFactory.class);
         return svcLoc;
+    }
+
+    @Bean
+    public ServiceLocatorFactoryBean svcLocSentimentAdapterFactory() {
+        ServiceLocatorFactoryBean svcLoc = new ServiceLocatorFactoryBean();
+        svcLoc.setServiceLocatorInterface(SentimentAdapterFactory.class);
+        return  svcLoc;
     }
 
 }

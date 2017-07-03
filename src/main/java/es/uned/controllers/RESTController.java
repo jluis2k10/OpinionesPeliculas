@@ -2,8 +2,8 @@ package es.uned.controllers;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import es.uned.services.ConfigParser;
-import es.uned.services.TrakttvLookup;
+import es.uned.components.ConfigParser;
+import es.uned.components.TrakttvLookup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,6 +29,12 @@ public class RESTController {
     @RequestMapping(value = "/comments-source", method = RequestMethod.GET)
     public ResponseEntity<ArrayNode>  sources() {
         ArrayNode response = configParser.getSources();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @RequestMapping(value = "/sentiment-adapters", method = RequestMethod.GET)
+    public ResponseEntity<ArrayNode> sentimentAdapters() {
+        ArrayNode response = configParser.getSentimentAdapters();
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

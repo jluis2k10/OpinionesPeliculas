@@ -1,5 +1,6 @@
 package es.uned.adapters.sources;
 
+import es.uned.entities.CommentWithSentiment;
 import es.uned.entities.SearchParams;
 import org.springframework.stereotype.Component;
 
@@ -12,9 +13,9 @@ import java.util.HashMap;
 public class SentenceSearch implements SourceAdapter {
 
     @Override
-    public HashMap<Integer, String> getComments(SearchParams params) {
-        HashMap<Integer, String> results = new HashMap<>();
-        results.put(params.getSearchTerm().hashCode(), params.getSearchTerm());
+    public HashMap<Integer, CommentWithSentiment> getComments(SearchParams params) {
+        HashMap<Integer, CommentWithSentiment> results = new HashMap<>();
+        results.put(params.getSearchTerm().hashCode(),  new CommentWithSentiment.Builder().comment(params.getSearchTerm()).build());
         return results;
     }
 

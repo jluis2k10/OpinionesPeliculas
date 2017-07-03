@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<adapters>
+
+    <adapter name="Datumbox" class="es.uned.adapters.sentiment.Datumbox" models="true" lang="en,es">
+        <description><![CDATA[Descripción adaptador]]></description>
+        <parameter name="Preprocesar comentario" type="radio" id="preprocesar">
+            <option name="Sí" value="yes"/>
+            <option name="No" value="no"/>
+            <description><![CDATA[Descripción parámetro]]></description>
+        </parameter>
+        <parameter name="Seleccionable" type="select" id="selectID">
+            <option name="Opcion 1" value="op1" />
+            <option name="Option 2" value="op2" />
+            <option name="Opcion 3" value="op3" />
+            <description>Descripción parámetro seleccionable</description>
+        </parameter>
+        <parameter name="Número" type="number" id="numberID" default="5">
+            <option name="min" value="0" />
+            <option name="max" value="10" />
+            <description>Descripción número</description>
+        </parameter>
+        <parameter name="Texto" type="text" id="textID" default="Texto por defecto">
+            <description>Descriptción texto</description>
+        </parameter>
+    </adapter>
+
+    <adapter name="LingPipe" class="es.uned.adapters.sentiment.LingPipe" models="true" lang="en">
+        <description></description>
+    </adapter>
+
+</adapters>

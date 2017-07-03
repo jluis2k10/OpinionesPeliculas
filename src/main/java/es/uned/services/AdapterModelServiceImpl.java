@@ -1,0 +1,27 @@
+package es.uned.services;
+
+import es.uned.entities.AdapterModel;
+import es.uned.repositories.AdapterModelRepo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Set;
+
+/**
+ *
+ */
+@Service
+public class AdapterModelServiceImpl implements AdapterModelService {
+
+    private final AdapterModelRepo adapterModelRepo;
+
+    @Autowired
+    public AdapterModelServiceImpl(AdapterModelRepo adapterModelRepo) {
+        this.adapterModelRepo = adapterModelRepo;
+    }
+
+    @Override
+    public Set<AdapterModel> findByAdapterClass(String adapterClass) {
+        return adapterModelRepo.findAllByAdapterClass(adapterClass);
+    }
+}
