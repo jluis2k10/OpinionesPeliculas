@@ -37,13 +37,14 @@ public class Datumbox implements SentimentAdapter {
         }
         memConfiguration.setDirectory(modelsDirectory);
         configuration.setStorageConfiguration(memConfiguration);
-
         TextClassifier sentimentClassifier = MLBuilder.load(TextClassifier.class, search.getSentimentModel(), configuration);
 
+        twitterTokenizer.setLanguage(search.getLang());
+        twitterTokenizer.setSearchTerm(search.getSearchTerm());
         comments.forEach((k, comment) -> {
             if (options.get("preprocesar").equals("yes")) {
                 comment.setTokenized(true);
-                comment.setTokenizedComment(twitterTokenizer.cleanUp(comment.getComment(), comment.getSearchTerm()));
+                comment.setTokenizedComment(twitterTokenizer.cleanUp(comment.getComment()));
             } else {
                 comment.setTokenizedComment(comment.getComment());
             }

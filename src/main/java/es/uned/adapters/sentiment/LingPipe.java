@@ -39,10 +39,12 @@ public class LingPipe implements SentimentAdapter {
             e.printStackTrace();
         }
 
+        twitterTokenizer.setLanguage(search.getLang());
+        twitterTokenizer.setSearchTerm(search.getSearchTerm());
         BaseClassifier<String> finalClassifier = classifier;
         comments.forEach((k, comment) -> {
             comment.setTokenized(true);
-            comment.setTokenizedComment(twitterTokenizer.cleanUp(comment.getComment(), comment.getSearchTerm()));
+            comment.setTokenizedComment(twitterTokenizer.cleanUp(comment.getComment()));
             Classification classification = finalClassifier.classify(comment.getTokenizedComment());
             comment.setPredictedSentiment(classification.bestCategory());
             comment.setSentimentScore(((JointClassification) classification).conditionalProbability(classification.bestCategory()));
@@ -78,6 +80,8 @@ public class LingPipe implements SentimentAdapter {
                 String review = null;
                 try {
                     review = Files.readFromFile(trainFile, "UTF-8");
+                    twitterTokenizer.setLanguage("en");
+                    twitterTokenizer.setSearchTerm("");
                     review = twitterTokenizer.cleanUp(review);
                     Classified<CharSequence> classified = new Classified<CharSequence>(review, classification);
                     classifier.handle(classified);

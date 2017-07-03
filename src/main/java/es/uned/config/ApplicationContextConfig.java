@@ -11,8 +11,7 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
  */
 @Configuration
 @PropertySources({
-        @PropertySource(value = "classpath:application.properties"),
-        @PropertySource(value = "classpath:commentsSource.properties")})
+        @PropertySource(value = "classpath:application.properties")})
 @ComponentScan(value = "es.uned.*")
 public class ApplicationContextConfig {
 

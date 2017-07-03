@@ -117,7 +117,8 @@ entonces
 tiempo
 verdad
 verdadero
-verdadera 	cierto
+verdadera
+cierto
 ciertos
 cierta
 ciertas
@@ -174,4 +175,3 @@ podriamos
 podrian
 podriais
 yo
-aquel
