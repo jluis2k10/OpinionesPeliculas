@@ -2,6 +2,7 @@ package es.uned.config;
 
 import es.uned.adapters.SentimentAdapterFactory;
 import es.uned.adapters.SourceAdapterFactory;
+import es.uned.adapters.SubjectivityAdapterFactory;
 import org.springframework.beans.factory.config.ServiceLocatorFactoryBean;
 import org.springframework.context.annotation.*;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
@@ -40,6 +41,13 @@ public class ApplicationContextConfig {
         ServiceLocatorFactoryBean svcLoc = new ServiceLocatorFactoryBean();
         svcLoc.setServiceLocatorInterface(SentimentAdapterFactory.class);
         return  svcLoc;
+    }
+
+    @Bean
+    public ServiceLocatorFactoryBean svcLocSubjectivityAdapterFactory() {
+        ServiceLocatorFactoryBean svcLoc = new ServiceLocatorFactoryBean();
+        svcLoc.setServiceLocatorInterface(SubjectivityAdapterFactory.class);
+        return svcLoc;
     }
 
 }

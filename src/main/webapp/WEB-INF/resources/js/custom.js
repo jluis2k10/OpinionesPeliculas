@@ -13,7 +13,7 @@ function makeSourcesButton(sources) {
 }
 
 /* Presentar los elementos del formulario necesarios según la fuente de comentarios */
-function makeOptions(e) {
+function makeSourcesOptions(e) {
     $(".source-placeholder").html(e.dataset.name);
     $("#sourceClass").val(e.dataset.adapter);
     if (e.dataset.imdbid === "true") {
@@ -46,12 +46,14 @@ function makeOptions(e) {
     }
 }
 
-/* Rellenar el seleccionable de los adaptadores disponibles para el análisis de sentimiento */
-function populateSentiment(adapters) {
-    $select = $("#sentimentAdapter");
-    $select.empty();                       // Borrar opciones anteriores si las hubiera
-    var adaptersPerLanguage = new Array(); // Array con los adaptadores compatibles con el idioma seleccionado
-
+/* Rellenar el seleccionable de los adaptadores disponibles para el análisis de subjetividad */
+function populateAdapters(adapterType, adapters) {
+    if (adapterType === "subjectivity")
+        $select = $("#subjectivityAdapter");
+    else
+        $select = $("#sentimentAdapter");
+    $select.empty();                        // Borrar opciones anteriores si las hubiera
+    var adaptersPerLanguage = new Array();  // Array con los adaptadores compatibles con el idioma seleccionado
     $.each(adapters, function (index, adapter) {
         var adapterLanguages = adapter.lang.split(",");
         $.each(adapterLanguages, function (index2, adapterLanguage) {
@@ -60,24 +62,62 @@ function populateSentiment(adapters) {
                 adaptersPerLanguage.push(adapter);
                 $select.append(new Option(adapter.name, adapter.class));
             }
-        });
+        })
     });
-    populateSentimentModels(adaptersPerLanguage[0]); // Rellenar select de los modelos para el primer adaptador
-    makeSentimentOptions(adaptersPerLanguage[0]);    // Construir las opciones para el primer adaptador
+    populateModels(adapterType, adaptersPerLanguage[0]);     // Rellenar select de los modelos para el primer adaptador
+    makeAdapterOptions(adapterType, adaptersPerLanguage[0]); // Construir las opciones para el primer adaptador
 }
 
 /* Mostrar/ocultar select con los modelos del analizador de sentimiento */
-function populateSentimentModels(adapter) {
-    $select = $("#sentimentModel");
+function populateModels(adapterType, adapter) {
+    if (adapterType === "subjectivity") {
+        $select = $("#subjectivityModel");
+        $container = $(".subjectivityModel-container");
+    } else {
+        $container = $(".sentimentModel-container");
+        $select = $("#sentimentModel");
+    }
     $select.empty(); // Primero borramos las opciones anteriores (se suponen de otro adaptador)
     if (typeof adapter !== "undefined" && adapter.models_enabled && hasModelForSelectedLanguage(adapter)) {
         $.each(adapter.models, function (index, model) {
             if (model.lang === $("input[name='lang']:checked").val())
                 $select.append(new Option(model.name, model.location));
         });
-        $(".sentimentModel-container").show();
+        $container.show();
     } else {
-        $(".sentimentModel-container").hide();
+        $container.hide();
+    }
+}
+
+function makeAdapterOptions(adapterType, adapter) {
+    if (adapterType === "subjectivity") {
+        $container = $(".subjectivity-form-container");
+        $(".subjectivity-option").remove();
+    } else {
+        $container = $(".sentiment-container");
+        $(".sentiment-option").remove();    // Borramos todas las opciones anteriores que puedan existir
+    }
+    if (typeof adapter === "undefined") // Salimos si no hay adaptador disponible
+        return;
+    if (adapter.parameters.length > 0) {
+        $.each(adapter.parameters, function (index, parameter) {
+            switch (parameter.type) {
+                case 'radio':
+                    makeRadioOptions($container, parameter, adapterType, adapter.ID);
+                    break;
+                case 'select':
+                    makeSelectOptions($container, parameter, adapterType, adapter.ID);
+                    break;
+                case 'number':
+                    makeNumberOptions($container, parameter, adapterType, adapter.ID);
+                    break;
+                case 'text':
+                    makeTextOptions($container, parameter, adapterType, adapter.ID);
+                    break;
+                default:
+                    break;
+            }
+        });
     }
 }
 
@@ -90,35 +130,8 @@ function hasModelForSelectedLanguage(adapter) {
     return result;
 }
 
-function makeSentimentOptions(adapter) {
-    $container = $(".sentiment-container");
-    $(".sentiment-option").remove();    // Borramos todas las opciones anteriores que puedan existir
-    if (typeof adapter === "undefined") // Salimos si no hay adaptador disponible
-        return;
-    if (adapter.parameters.length > 0) {
-        $.each(adapter.parameters, function (index, parameter) {
-            switch (parameter.type) {
-                case 'radio':
-                    makeRadioOptions($container, parameter);
-                    break;
-                case 'select':
-                    makeSelectOptions($container, parameter);
-                    break;
-                case 'number':
-                    makeNumberOptions($container, parameter);
-                    break;
-                case 'text':
-                    makeTextOptions($container, parameter);
-                    break;
-                default:
-                    break;
-            }
-        });
-    }
-}
-
-function makeRadioOptions(container, parameter) {
-    var optionDiv = $("<div class='col-xs-3 sentiment-option'></div>");
+function makeRadioOptions(container, parameter, adapterType, adapterID) {
+    var optionDiv = $("<div class='col-xs-3 " + adapterType + "-option'></div>");
     var innerDiv = $("<div class='form-group'></div>");
     innerDiv.appendTo(optionDiv);
     var optionHeaderPar = $("<p></p>");
@@ -129,8 +142,8 @@ function makeRadioOptions(container, parameter) {
     $.each(parameter.options, function (index, option) {
         var optionLabel = $("<label class='radio-inline'></label>");
         var input = $("<input />").attr({
-            id: option.value,
-            name: parameter.id,
+            id: adapterID + "-" + option.value,
+            name: adapterID + "-" +parameter.id,
             value: option.value,
             type: "radio"
         });
@@ -143,8 +156,8 @@ function makeRadioOptions(container, parameter) {
     optionDiv.appendTo(container);
 }
 
-function makeSelectOptions(container, parameter) {
-    var optionDiv = $("<div class='col-xs-3 sentiment-option'></div>");
+function makeSelectOptions(container, parameter, adapterType, adapterID) {
+    var optionDiv = $("<div class='col-xs-3 " + adapterType + "-option'></div>");
 
     var innerDiv = $("<div class='form-group'></div>");
     innerDiv.appendTo(optionDiv);
@@ -153,9 +166,9 @@ function makeSelectOptions(container, parameter) {
     label.appendTo(innerDiv);
 
     var select = $("<select></select>").attr({
-        id: parameter.id,
+        id: adapterID + "-" + parameter.id,
         class: "form-control",
-        name: parameter.id
+        name: adapterID + "-" + parameter.id
     });
     select.appendTo(innerDiv);
 
@@ -167,8 +180,8 @@ function makeSelectOptions(container, parameter) {
     optionDiv.appendTo(container);
 }
 
-function makeNumberOptions(container, parameter) {
-    var optionDiv = $("<div class='col-xs-3 sentiment-option'></div>");
+function makeNumberOptions(container, parameter, adapterType, adapterID) {
+    var optionDiv = $("<div class='col-xs-3 " + adapterType + "-option'></div>");
     var innerDiv = $("<div class='form-group'></div>");
     innerDiv.appendTo(optionDiv);
 
@@ -177,9 +190,9 @@ function makeNumberOptions(container, parameter) {
 
     var input = $("<input />").attr({
         type: 'number',
-        id: parameter.id,
+        id: adapterID + "-" + parameter.id,
         class: 'form-control',
-        name: parameter.id,
+        name: adapterID + "-" + parameter.id,
         value: parameter.default
     });
     input.appendTo(innerDiv);
@@ -194,8 +207,8 @@ function makeNumberOptions(container, parameter) {
     optionDiv.appendTo(container);
 }
 
-function makeTextOptions(container, parameter) {
-    var optionDiv = $("<div class='col-xs-3 sentiment-option'></div>");
+function makeTextOptions(container, parameter, adapterType, adapterID) {
+    var optionDiv = $("<div class='col-xs-3 " + adapterType + "-option'></div>");
     var innerDiv = $("<div class='form-group'></div>");
     innerDiv.appendTo(optionDiv);
 
@@ -204,9 +217,9 @@ function makeTextOptions(container, parameter) {
 
     var input = $("<input />").attr({
         type: 'text',
-        id: parameter.id,
+        id: adapterID + "-" + parameter.id,
         class: 'form-control',
-        name: parameter.id,
+        name: adapterID + "-" + parameter.id,
         value: parameter.default
     });
     input.appendTo(innerDiv);

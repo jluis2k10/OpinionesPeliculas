@@ -1,2 +1,3 @@
 INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, DESCRIPTION) VALUES ('Twitter Sentiment Analysis', 'es.uned.adapters.sentiment.Datumbox', 'en', '/datumbox/TwitterSentimentAnalysis', 'Desc');
 INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, DESCRIPTION) VALUES ('LingPipe Model 1', 'es.uned.adapters.sentiment.LingPipe', 'en', '/lingpipe/polarityMovieReviews.model', 'Desc');
+INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, DESCRIPTION) VALUES ('Subjectivity Analysis', 'es.uned.adapters.subjectivity.Datumbox', 'en', '/datumbox/SubjectivityAnalysis', 'Desc');

@@ -1,4 +1,4 @@
-package es.uned.adapters.sentiment;
+package es.uned.adapters.subjectivity;
 
 import es.uned.entities.CommentWithSentiment;
 import es.uned.entities.SearchParams;
@@ -8,9 +8,9 @@ import java.util.Map;
 /**
  *
  */
-public interface SentimentAdapter {
+public interface SubjectivityAdapter {
 
-    String MODELS_DIR = "/models/sentiment";
+    String MODELS_DIR = "/models/subjectivity";
 
     void analyze(Map<Integer,CommentWithSentiment> comments, SearchParams search, Map<String,String> options);
 

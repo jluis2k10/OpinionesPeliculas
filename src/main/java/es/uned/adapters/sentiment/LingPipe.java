@@ -23,11 +23,12 @@ public class LingPipe implements SentimentAdapter {
 
     @Autowired
     private ResourceLoader resourceLoader;
-    @Autowired private TwitterTokenizer twitterTokenizer;
+    @Autowired
+    private TwitterTokenizer twitterTokenizer;
 
     @Override
     public void analyze(Map<Integer,CommentWithSentiment> comments, SearchParams search, Map<String,String> options) {
-        Resource resource = resourceLoader.getResource("classpath:/models" + search.getSentimentModel());
+        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + search.getSentimentModel());
         File modelFile = null;
         BaseClassifier<String> classifier = null;
         try {
@@ -92,7 +93,7 @@ public class LingPipe implements SentimentAdapter {
         }
 
         // Guardar el modelo
-        resource = resourceLoader.getResource("classpath:/models/lingpipe");
+        resource = resourceLoader.getResource("classpath:" + MODELS_DIR);
         try {
             dir = resource.getFile();
             FileOutputStream fileOut = new FileOutputStream(dir.toString() + "/polarityMovieReviews.model");

@@ -35,6 +35,10 @@ public class ConfigParser {
     @Autowired
     private AdapterModelService adapterModelService;
 
+    private static final String SOURCE_XML = "/sourceAdapters.xml";
+    private static final String SENTIMENT_XML = "/sentimentAdapters.xml";
+    private static final String SUBJECTIVITY_XML = "/subjectivityAdapters.xml";
+
     /**
      * Adaptadores disponibles para las fuentes de comentarios.
      * Genera objeto JSON desde el archivo de configuración /sourceAdapters.xml
@@ -43,7 +47,7 @@ public class ConfigParser {
     public ArrayNode getSources() {
         ObjectMapper mapper = new ObjectMapper();
         ArrayNode results = mapper.createArrayNode();
-        Resource resource = resourceLoader.getResource("classpath:/sourceAdapters.xml");
+        Resource resource = resourceLoader.getResource("classpath:" + SOURCE_XML);
 
         try {
             File xmlFile = resource.getFile();
@@ -79,13 +83,21 @@ public class ConfigParser {
 
     /**
      * Adaptadores disponibles para el análisis de sentimiento.
-     * Genera objeto JSON desde el archivo de configuración /sentimentAdapters.xml
+     * Genera objeto JSON desde el archivo de configuración
      * @return Objeto ArrayNode que representa al archivo de configuración XML
      */
-    public ArrayNode getSentimentAdapters() {
+    public ArrayNode getSentimentAdapters(String adapterType) {
         ObjectMapper mapper = new ObjectMapper();
         ArrayNode results = mapper.createArrayNode();
-        Resource resource = resourceLoader.getResource("classpath:/sentimentAdapters.xml");
+        Resource resource = null;
+        switch (adapterType) {
+            case "sentiment":
+                resource = resourceLoader.getResource("classpath:" + SENTIMENT_XML);
+                break;
+            case "subjectivity":
+                resource = resourceLoader.getResource("classpath:" + SUBJECTIVITY_XML);
+                break;
+        }
         try {
             File xmlFile = resource.getFile();
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -99,6 +111,7 @@ public class ConfigParser {
                     Element element = (Element) adapter;
                     ObjectNode adapterNode = mapper.createObjectNode();
 
+                    adapterNode.put("ID", element.getAttribute("id"));
                     adapterNode.put("name", element.getAttribute("name"));
                     adapterNode.put("class", element.getAttribute("class"));
                     adapterNode.put("lang", element.getAttribute("lang"));
@@ -151,8 +164,8 @@ public class ConfigParser {
     /**
      * Genera un objeto JSON con los parámetros opcionales que tiene un adaptador
      * según el archivo de configuración correspondiente.
-     * Se separa este método de {@link #getSentimentAdapters()} para hacer más legible
-     * el código.
+     * Se separa este método de {@link #getSentimentAdapters(String adapterType)} para
+     * hacer más legible el código.
      * @param parameters Lista de Nodos parámetro DOM
      * @return Objeto ArrayNode que representa en formato JSON los parámetros disponibles
      */

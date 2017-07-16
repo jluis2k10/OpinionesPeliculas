@@ -2,8 +2,10 @@ package es.uned.controllers;
 
 import es.uned.adapters.SentimentAdapterFactory;
 import es.uned.adapters.SourceAdapterFactory;
+import es.uned.adapters.SubjectivityAdapterFactory;
 import es.uned.adapters.sentiment.SentimentAdapter;
 import es.uned.adapters.sources.SourceAdapter;
+import es.uned.adapters.subjectivity.SubjectivityAdapter;
 import es.uned.entities.CommentWithSentiment;
 import es.uned.entities.SearchParams;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,9 @@ public class MainController {
     private SourceAdapterFactory sourceFactory;
 
     @Autowired
+    private SubjectivityAdapterFactory subjectivityFactory;
+
+    @Autowired
     private SentimentAdapterFactory sentimentFactory;
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
@@ -43,6 +48,11 @@ public class MainController {
 
         SourceAdapter sourceAdapter = sourceFactory.get(searchParams.getSourceClass());
         HashMap<Integer,CommentWithSentiment> comments = sourceAdapter.getComments(searchParams);
+
+        if (searchParams.isClassifySubjectivity()) {
+            SubjectivityAdapter subjectivityAdapter = subjectivityFactory.get(searchParams.getSubjectivityAdapter());
+            subjectivityAdapter.analyze(comments, searchParams, optionalParameters);
+        }
 
         SentimentAdapter sentimentAdapter = sentimentFactory.get(searchParams.getSentimentAdapter());
         sentimentAdapter.analyze(comments, searchParams, optionalParameters);

@@ -20,9 +20,13 @@ public class SearchParams {
     private String lang;
     private String sentimentAdapter;
     private String sentimentModel;
+    private boolean classifySubjectivity;
+    private String subjectivityAdapter;
+    private String subjectivityModel;
+    private boolean discardNonSubjective;
 
     private final String PARAMS_KEYS = "(?:searchTerm|sourceClass|limit|sinceDate|untilDate|lang|sentimentAdapter|" +
-            "sentimentModel)";
+            "sentimentModel|classifySubjectivity|subjectivityAdapter|subjectivityModel|discardNonSubjective)";
 
     public Map<String,String> getOptionalParameters(Map<String,String[]> parameters) {
 
@@ -101,5 +105,37 @@ public class SearchParams {
 
     public void setSentimentModel(String sentimentModel) {
         this.sentimentModel = sentimentModel;
+    }
+
+    public boolean isClassifySubjectivity() {
+        return classifySubjectivity;
+    }
+
+    public void setClassifySubjectivity(boolean classifySubjectivity) {
+        this.classifySubjectivity = classifySubjectivity;
+    }
+
+    public String getSubjectivityAdapter() {
+        return subjectivityAdapter;
+    }
+
+    public void setSubjectivityAdapter(String subjectivityAdapter) {
+        this.subjectivityAdapter = subjectivityAdapter;
+    }
+
+    public String getSubjectivityModel() {
+        return subjectivityModel;
+    }
+
+    public void setSubjectivityModel(String subjectivityModel) {
+        this.subjectivityModel = subjectivityModel;
+    }
+
+    public boolean isDiscardNonSubjective() {
+        return discardNonSubjective;
+    }
+
+    public void setDiscardNonSubjective(boolean discardNonSubjective) {
+        this.discardNonSubjective = discardNonSubjective;
     }
 }

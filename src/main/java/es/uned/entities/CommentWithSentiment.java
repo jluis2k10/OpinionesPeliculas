@@ -9,9 +9,10 @@ public class CommentWithSentiment {
     private String comment;
     private boolean isTokenized;
     private String tokenizedComment;
-    private String sentimentClassifier;
     private String predictedSentiment;
     private double sentimentScore;
+    private String predictedSubjectivity;
+    private double subjectivityScore;
 
     private CommentWithSentiment() {}
 
@@ -71,14 +72,6 @@ public class CommentWithSentiment {
         this.tokenizedComment = tokenizedComment;
     }
 
-    public String getSentimentClassifier() {
-        return sentimentClassifier;
-    }
-
-    public void setSentimentClassifier(String sentimentClassifier) {
-        this.sentimentClassifier = sentimentClassifier;
-    }
-
     public String getPredictedSentiment() {
         return predictedSentiment;
     }
@@ -93,5 +86,21 @@ public class CommentWithSentiment {
 
     public void setSentimentScore(double sentimentScore) {
         this.sentimentScore = sentimentScore;
+    }
+
+    public String getPredictedSubjectivity() {
+        return predictedSubjectivity;
+    }
+
+    public void setPredictedSubjectivity(String predictedSubjectivity) {
+        this.predictedSubjectivity = predictedSubjectivity;
+    }
+
+    public double getSubjectivityScore() {
+        return subjectivityScore;
+    }
+
+    public void setSubjectivityScore(double subjectivityScore) {
+        this.subjectivityScore = subjectivityScore;
     }
 }
