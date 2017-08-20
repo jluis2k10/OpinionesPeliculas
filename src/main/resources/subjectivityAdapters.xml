@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <adapters>
 
-    <adapter id="S01" name="Datumbox" class="es.uned.adapters.subjectivity.Datumbox" models="true" lang="en">
+    <adapter id="S01" name="Datumbox" class="es.uned.adapters.subjectivity.Datumbox" models="true" lang="en" trainable="true">
         <description><![CDATA[Descripción adaptador]]></description>
         <parameter name="Preprocesar comentario" type="radio" id="preprocesar">
             <option name="Sí" value="yes"/>

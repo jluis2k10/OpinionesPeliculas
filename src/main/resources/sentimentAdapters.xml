@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <adapters>
 
-    <adapter id="P01" name="Datumbox" class="es.uned.adapters.sentiment.Datumbox" models="true" lang="en,es">
+    <adapter id="P01" name="Datumbox" class="es.uned.adapters.sentiment.Datumbox" models="true" lang="en,es" trainable="true">
         <description><![CDATA[Descripción adaptador]]></description>
         <parameter name="Preprocesar comentario" type="radio" id="preprocesar">
             <option name="Sí" value="yes"/>
@@ -24,7 +24,7 @@
         </parameter>
     </adapter>
 
-    <adapter id="P02" name="LingPipe" class="es.uned.adapters.sentiment.LingPipe" models="true" lang="en">
+    <adapter id="P02" name="LingPipe" class="es.uned.adapters.sentiment.LingPipe" models="true" lang="en" trainable="true">
         <description></description>
     </adapter>
 

@@ -1,17 +1,16 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ include file="_header.jsp"%>
 
-
-<form:form method="post" modelAttribute="searchForm">
-    <!-- Grupo para Opciones de búsqueda -->
+<form:form method="post" modelAttribute="searchForm" action="results">
+    <!-- Grupo para Opciones de Fuente de Comentarios -->
     <div class="row">
         <fieldset class="col-xs-12">
             <legend>Opciones de búsqueda</legend>
             <spring:bind path="searchTerm">
                 <div class="col-xs-12 ${status.error ? "has-error" : ""}">
-                    <div class="input-group">
+                    <div class="input-group form-group">
                         <div class="input-group-btn">
                             <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Origen <span class="caret"></span></button>
                             <ul class="dropdown-menu" id="sources-dropdown"></ul>
@@ -153,20 +152,6 @@
         </div>
     </div>
 </form:form>
-<div class="row">
-    <div class="col-xs-12">
-        <c:if test="${!empty comments}">
-            <ol>
-                <c:forEach var="comment" items="${comments}">
-                    <li>${comment.value.comment}
-                        <p>${comment.value.tokenizedComment}</p>
-                        <p><strong>${comment.value.predictedSentiment}</strong>, ${comment.value.sentimentScore}, <strong>${comment.value.predictedSubjectivity}</strong>, ${comment.value.subjectivityScore}</p>
-                    </li>
-                </c:forEach>
-            </ol>
-        </c:if>
-    </div>
-</div>
 
 <%@ include file="_js.jsp"%>
 <link rel="stylesheet" href="${path}/css/bootstrap-datetimepicker.min.css" />
@@ -215,7 +200,7 @@
             success: function(data) {
                 $subjectivityAdapters = data;
                 if ($("input[name='classifySubjectivity']").get(0).checked) {
-                    populateAdapters("subjectivity", $subjectivityAdapters);
+                    populateAdapters("subjectivity", data);
                 }
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -231,7 +216,7 @@
             timeout: 5000,
             success: function(data) {
                 $sentimentAdapters = data;
-                populateAdapters("sentiment", $sentimentAdapters);
+                populateAdapters("sentiment", data);
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 console.error("Request: " + JSON.stringify(XMLHttpRequest) + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);

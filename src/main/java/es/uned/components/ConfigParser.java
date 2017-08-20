@@ -115,6 +115,7 @@ public class ConfigParser {
                     adapterNode.put("name", element.getAttribute("name"));
                     adapterNode.put("class", element.getAttribute("class"));
                     adapterNode.put("lang", element.getAttribute("lang"));
+                    adapterNode.put("trainable", element.getAttribute("models").equals("true"));
                     adapterNode.put("description", element.getElementsByTagName("description").item(0).getTextContent());
 
                     // Los parámetros opcionales son un array

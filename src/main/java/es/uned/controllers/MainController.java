@@ -41,7 +41,7 @@ public class MainController {
         return "home";
     }
 
-    @RequestMapping(value = "/", method = RequestMethod.POST)
+    @RequestMapping(value = "/results", method = RequestMethod.POST)
     public String home(Model model, @ModelAttribute("searchForm") SearchParams searchParams,
                        BindingResult searchFormErrors, HttpServletRequest request) {
         Map<String,String> optionalParameters = searchParams.getOptionalParameters(request.getParameterMap());
@@ -58,6 +58,14 @@ public class MainController {
         sentimentAdapter.analyze(comments, searchParams, optionalParameters);
 
         model.addAttribute("comments", comments);
+        return "results";
+    }
+
+    @RequestMapping(value = "crear")
+    public String crear() {
+        //SentimentAdapter sentimentAdapter = sentimentFactory.get("es.uned.adapters.sentiment.LingPipe");
+        SentimentAdapter sentimentAdapter = sentimentFactory.get("es.uned.adapters.sentiment.Datumbox");
+        sentimentAdapter.createModel();
         return "home";
     }
 

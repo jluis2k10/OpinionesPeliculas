@@ -5,6 +5,8 @@ import es.uned.adapters.SourceAdapterFactory;
 import es.uned.adapters.SubjectivityAdapterFactory;
 import org.springframework.beans.factory.config.ServiceLocatorFactoryBean;
 import org.springframework.context.annotation.*;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 /**
@@ -15,6 +17,12 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
         @PropertySource(value = "classpath:application.properties")})
 @ComponentScan(value = "es.uned.*")
 public class ApplicationContextConfig {
+
+    // Subir archivos
+    @Bean
+    public MultipartResolver multipartResolver() {
+        return new StandardServletMultipartResolver();
+    }
 
     @Bean(name = "viewResolver")
     public InternalResourceViewResolver getViewResolver() {

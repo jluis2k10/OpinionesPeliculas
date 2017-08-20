@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -70,6 +71,11 @@ public class Datumbox implements SubjectivityAdapter {
                 comments.put(k, comment);
         });
         comments.keySet().removeAll(commentsToRemove);
+    }
+
+    @Override
+    public void trainModel(String modelLocation, List<String> positives, List<String> negatives) {
+
     }
 
     @Override

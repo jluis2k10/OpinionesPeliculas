@@ -44,6 +44,14 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
         super.configureMessageConverters(converters);
     }
 
+    /*@Bean(name = "multipartResolver")
+    public CommonsMultipartResolver getResolver() throws IOException {
+        CommonsMultipartResolver resolver = new CommonsMultipartResolver();
+        // no limit
+        resolver.setMaxUploadSize(-1);
+        return resolver;
+    }*/
+
     // Configuración recursos estáticos
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
