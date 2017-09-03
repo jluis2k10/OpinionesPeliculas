@@ -1,6 +1,4 @@
-INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, DESCRIPTION) VALUES ('Twitter Sentiment Analysis', 'es.uned.adapters.sentiment.Datumbox', 'en', '/datumbox/TwitterSentimentAnalysis', 'Desc');
-INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, DESCRIPTION) VALUES ('LingPipe Model 1', 'es.uned.adapters.sentiment.LingPipe', 'en', '/lingpipe/polarityMovieReviews.model', 'Desc');
-INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, DESCRIPTION) VALUES ('Subjectivity Analysis', 'es.uned.adapters.subjectivity.Datumbox', 'en', '/datumbox/SubjectivityAnalysis', 'Desc');
-INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, DESCRIPTION) VALUES ('LingPipe Test 1', 'es.uned.adapters.sentiment.LingPipe', 'en', '/lingpipe/test1', 'Desc');
-INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, DESCRIPTION) VALUES ('LingPipe Test 2', 'es.uned.adapters.sentiment.LingPipe', 'en', '/lingpipe/test2/classifier.model', 'Desc');
-INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, DESCRIPTION) VALUES ('Test Datumbox Sentiment', 'es.uned.adapters.sentiment.Datumbox', 'en', '/datumbox/testDatumbox', 'Desc');
+INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, TRAINABLE, DESCRIPTION) VALUES ('Original Datumbox Twitter Sentiment Analysis', 'es.uned.adapters.sentiment.Datumbox', 'en', '/TwitterSentimentAnalysis', false, 'Desc');
+INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, TRAINABLE, DESCRIPTION) VALUES ('Original Datumbox Sentiment Analysis', 'es.uned.adapters.sentiment.Datumbox', 'en', '/SentimentAnalysis', false, 'Desc');
+INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, TRAINABLE, DESCRIPTION) VALUES ('Original Lingpipe Polarity Movie Reviews', 'es.uned.adapters.sentiment.LingPipe', 'en', '/OriginalPolarityMovieReviews', true, 'Desc');
+INSERT INTO PUBLIC.MODELS (NAME, ADAPTER_CLASS, LANGUAGE, LOCATION, TRAINABLE, DESCRIPTION) VALUES ('Subjectivity Analysis', 'es.uned.adapters.subjectivity.Datumbox', 'en', '/datumbox/SubjectivityAnalysis', true, 'Desc');

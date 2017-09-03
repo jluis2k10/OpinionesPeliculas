@@ -17,6 +17,6 @@ public interface SentimentAdapter {
 
     void trainModel(String modelLocation, List<String> positives, List<String> negatives);
 
-    void createModel();
+    void createModel(String modelLocation, Map<String,String> options, List<String> positives, List<String> negatives);
 
 }

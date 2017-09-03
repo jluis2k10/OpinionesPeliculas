@@ -9,10 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -39,13 +36,14 @@ public class ConfigParser {
     private static final String SENTIMENT_XML = "/sentimentAdapters.xml";
     private static final String SUBJECTIVITY_XML = "/subjectivityAdapters.xml";
 
+    private ObjectMapper mapper = new ObjectMapper();
+
     /**
      * Adaptadores disponibles para las fuentes de comentarios.
      * Genera objeto JSON desde el archivo de configuración /sourceAdapters.xml
      * @return Objeto ArrayNode que representa al archivo de configuración XML
      */
     public ArrayNode getSources() {
-        ObjectMapper mapper = new ObjectMapper();
         ArrayNode results = mapper.createArrayNode();
         Resource resource = resourceLoader.getResource("classpath:" + SOURCE_XML);
 
@@ -87,7 +85,6 @@ public class ConfigParser {
      * @return Objeto ArrayNode que representa al archivo de configuración XML
      */
     public ArrayNode getSentimentAdapters(String adapterType) {
-        ObjectMapper mapper = new ObjectMapper();
         ArrayNode results = mapper.createArrayNode();
         Resource resource = null;
         switch (adapterType) {
@@ -115,18 +112,14 @@ public class ConfigParser {
                     adapterNode.put("name", element.getAttribute("name"));
                     adapterNode.put("class", element.getAttribute("class"));
                     adapterNode.put("lang", element.getAttribute("lang"));
-                    adapterNode.put("trainable", element.getAttribute("models").equals("true"));
-                    adapterNode.put("description", element.getElementsByTagName("description").item(0).getTextContent());
-
-                    // Los parámetros opcionales son un array
-                    ArrayNode adapterParameters = this.getAdapterParameters(element.getElementsByTagName("parameter"));
-                    adapterNode.set("parameters", adapterParameters);
-
-                    // Los modelos disponibles para el adaptador son un array
                     adapterNode.put("models_enabled", element.getAttribute("models").equals("true"));
+                    adapterNode.put("trainable", element.getAttribute("trainable").equals("true"));
+                    adapterNode.put("model_creation", element.getAttribute("model_creation").equals("true"));
+                    adapterNode.put("description", element.getElementsByTagName("description").item(0).getTextContent());
                     if (adapterNode.get("models_enabled").asBoolean())
                         adapterNode.set("models", this.getAdapterModels(element.getAttribute("class")));
 
+                    this.constructAdapterParameters(adapterNode, element);
                     results.add(adapterNode);
                 }
             }
@@ -139,6 +132,89 @@ public class ConfigParser {
         }
         
         return results;
+    }
+
+    /**
+     * Construir los parámetros disponibles para el adaptador.
+     * Existen parámetros para opciones que determinan el funcionamiento del clasificador a la hora de clasificar
+     * un comentario, y parámetros para opciones que se utilizan cuando se pretende crear un modelo para el clasificador
+     * @param adapterNode
+     * @param element
+     */
+    private void constructAdapterParameters(ObjectNode adapterNode, Element element) {
+        ArrayNode adapterParametersArray = mapper.createArrayNode();
+        ArrayNode modelCreationParametersArray = mapper.createArrayNode();
+
+        NodeList allParameters = element.getElementsByTagName("parameter");
+        // Ahora hay tres posibles casos:
+        //   1. Que sea un parámetro opcional del adaptador
+        //   2. Que sea un parámetro para construir modelos del adaptador
+        //   3. Que sea un parámetro dentro de una de las opciones de los parámetros utilizados
+        //      para construir modelos del adaptador
+        for (int i = 0; i < allParameters.getLength(); i++) {
+            Element parameter = (Element) allParameters.item(i);
+            if (parameter.getParentNode().getNodeName().equals("adapter")) {
+                adapterParametersArray.add(constructParameter(parameter));
+            } else if (parameter.getParentNode().getNodeName().equals("model_creation_parameters")) {
+                modelCreationParametersArray.add(constructParameter(parameter));
+            }
+            // Ignoramos el caso 3. Ya se añade un parámetro de ese tipo mediante el método
+            // constructParameterOptions() de forma recursiva.
+        }
+        if (adapterParametersArray.size() > 0)
+            adapterNode.set("parameters", adapterParametersArray);
+        if (modelCreationParametersArray.size() > 0)
+            adapterNode.set("model_creation_parameters", modelCreationParametersArray);
+    }
+
+    /**
+     * Construir el cuerpo de un parámetro
+     * @param parameter
+     * @return
+     */
+    private ObjectNode constructParameter (Element parameter) {
+        ObjectNode parameterNode = mapper.createObjectNode();
+
+        parameterNode.put("name", parameter.getAttribute("name"));
+        parameterNode.put("type", parameter.getAttribute("type"));
+        parameterNode.put("id", parameter.getAttribute("id"));
+        parameterNode.put("default", parameter.getAttribute("default"));
+        if (parameter.getElementsByTagName("description").getLength() > 0)
+            parameterNode.put("description", parameter.getElementsByTagName("description").item(0).getTextContent());
+        parameterNode.set("options", constructParameterOptions(parameter));
+
+        return parameterNode;
+    }
+
+    /**
+     * Construir las opciones disponibles para cada parámetro
+     * @param parameter
+     * @return
+     */
+    private ArrayNode constructParameterOptions(Element parameter) {
+        ArrayNode optionsArray = mapper.createArrayNode();
+        NodeList options = parameter.getChildNodes(); // Los hijos de "parameter" deben ser todos un elemento "option"
+
+        for (int i = 0; i < options.getLength(); i++) {
+            if (options.item(i).getNodeType() == Node.ELEMENT_NODE && options.item(i).hasAttributes()) {
+                ObjectNode optionNode = mapper.createObjectNode();
+                Element option = (Element) options.item(i);
+                optionNode.put("name", option.getAttribute("name"));
+                optionNode.put("value", option.getAttribute("value"));
+                if (option.hasChildNodes()) { // Si la opción tiene hijos, construimos los parámetros de dicha opción
+                    NodeList optionParameters = option.getElementsByTagName("parameter");
+                    ArrayNode optionParametersArray = mapper.createArrayNode();
+                    for (int j = 0; j < optionParameters.getLength(); j++) {
+                        Element optionParameter = (Element) optionParameters.item(j);
+                        optionParametersArray.add(constructParameter(optionParameter));
+                    }
+                    optionNode.set("parameters", optionParametersArray);
+                }
+                optionsArray.add(optionNode);
+            }
+        }
+
+        return optionsArray;
     }
 
     /**
@@ -161,44 +237,4 @@ public class ConfigParser {
         }
         return results;
     }
-
-    /**
-     * Genera un objeto JSON con los parámetros opcionales que tiene un adaptador
-     * según el archivo de configuración correspondiente.
-     * Se separa este método de {@link #getSentimentAdapters(String adapterType)} para
-     * hacer más legible el código.
-     * @param parameters Lista de Nodos parámetro DOM
-     * @return Objeto ArrayNode que representa en formato JSON los parámetros disponibles
-     */
-    private ArrayNode getAdapterParameters(NodeList parameters) {
-        ObjectMapper mapper = new ObjectMapper();
-        ArrayNode adapterParameters = mapper.createArrayNode();
-
-        for (int i = 0; i < parameters.getLength(); i++) {
-            ObjectNode paramNode = mapper.createObjectNode();
-            Node parameterNode = parameters.item(i);
-            Element parameter = (Element) parameterNode;
-
-            paramNode.put("name", parameter.getAttribute("name"));
-            paramNode.put("type", parameter.getAttribute("type"));
-            paramNode.put("id", parameter.getAttribute("id"));
-            paramNode.put("default", parameter.getAttribute("default"));
-            paramNode.put("description", parameter.getElementsByTagName("description").item(0).getTextContent());
-
-            ArrayNode parameterOptions = mapper.createArrayNode();
-            NodeList options = parameter.getElementsByTagName("option");
-            for (int j = 0; j < options.getLength(); j++) {
-                ObjectNode optionObjNode = mapper.createObjectNode();
-                Node optionNode = options.item(j);
-                Element option = (Element) optionNode;
-                optionObjNode.put("name", option.getAttribute("name"));
-                optionObjNode.put("value", option.getAttribute("value"));
-                parameterOptions.add(optionObjNode);
-            }
-            paramNode.set("options", parameterOptions);
-            adapterParameters.add(paramNode);
-        }
-        return adapterParameters;
-    }
-
 }

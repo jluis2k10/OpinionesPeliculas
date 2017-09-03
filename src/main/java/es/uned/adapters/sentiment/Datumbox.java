@@ -9,9 +9,13 @@ import com.datumbox.framework.core.common.dataobjects.Record;
 import com.datumbox.framework.core.common.text.StringCleaner;
 import com.datumbox.framework.core.common.text.extractors.AbstractTextExtractor;
 import com.datumbox.framework.core.common.text.extractors.NgramsExtractor;
+import com.datumbox.framework.core.common.text.extractors.UniqueWordSequenceExtractor;
+import com.datumbox.framework.core.common.text.extractors.WordSequenceExtractor;
 import com.datumbox.framework.core.machinelearning.MLBuilder;
-import com.datumbox.framework.core.machinelearning.classification.MultinomialNaiveBayes;
+import com.datumbox.framework.core.machinelearning.classification.*;
+import com.datumbox.framework.core.machinelearning.featureselection.ChisquareSelect;
 import com.datumbox.framework.core.machinelearning.featureselection.MutualInformation;
+import com.datumbox.framework.core.machinelearning.preprocessing.*;
 import com.datumbox.framework.storage.inmemory.InMemoryConfiguration;
 import es.uned.components.TwitterTokenizer;
 import es.uned.entities.CommentWithSentiment;
@@ -22,9 +26,10 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -38,10 +43,12 @@ public class Datumbox implements SentimentAdapter {
     /* Debe coincidir con ID del XML */
     private final String myID = "P01";
 
+    private static final String ADAPTER_DIR = "/datumbox";
+
     public void analyze(Map<Integer,CommentWithSentiment> comments, SearchParams search, Map<String,String> options) {
         Configuration configuration = Configuration.getConfiguration();
         InMemoryConfiguration memConfiguration = new InMemoryConfiguration();
-        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR);
+        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR);
         String modelsDirectory = null;
         try {
             modelsDirectory = resource.getFile().getAbsolutePath();
@@ -80,7 +87,7 @@ public class Datumbox implements SentimentAdapter {
 
         // Definir configuración del modelo (en memoria, directorio)
         InMemoryConfiguration memConfiguration = new InMemoryConfiguration();
-        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR);
+        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR);
         String modelsDirectory = null;
         try {
             modelsDirectory = resource.getFile().getAbsolutePath();
@@ -126,13 +133,13 @@ public class Datumbox implements SentimentAdapter {
         sentimentClassifier.save(modelLocation);
     }
 
-    public void createModel() {
+    public void createModel(String modelLocation, Map<String,String> options, List<String> positives, List<String> negatives) {
         RandomGenerator.setGlobalSeed(42L);
         Configuration configuration = Configuration.getConfiguration();
 
         // Definir configuración del modelo (en memoria, directorio)
         InMemoryConfiguration memConfiguration = new InMemoryConfiguration();
-        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR);
+        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR);
         String modelsDirectory = null;
         try {
             modelsDirectory = resource.getFile().getAbsolutePath();
@@ -142,85 +149,130 @@ public class Datumbox implements SentimentAdapter {
         memConfiguration.setDirectory(modelsDirectory);
         configuration.setStorageConfiguration(memConfiguration);
 
-        // Configurar training parameters
+        // Ajustar parámetros de entrenamiento
+        // -----------------------------------
         TextClassifier.TrainingParameters trainingParameters = new TextClassifier.TrainingParameters();
-        trainingParameters.setNumericalScalerTrainingParameters(null);
-        trainingParameters.setCategoricalEncoderTrainingParameters(null);
-        trainingParameters.setFeatureSelectorTrainingParametersList(Arrays.asList(new MutualInformation.TrainingParameters()));
-        trainingParameters.setTextExtractorParameters(new NgramsExtractor.Parameters());
-        trainingParameters.setModelerTrainingParameters(new MultinomialNaiveBayes.TrainingParameters());
 
-        // Crear el clasificador
-        TextClassifier sentimentClassifier = MLBuilder.create(trainingParameters, configuration);
-        AbstractTextExtractor textExtractor = AbstractTextExtractor.newInstance(trainingParameters.getTextExtractorParameters());
-
-        // Cargar dataset desde texto y guardarlo en formato Datumbox
-        Map<Object, URI> datasets = new HashMap<>();
-        try {
-            datasets.put("positive", Datumbox.class.getClassLoader().getResource("datasets/testPolaridad/polaridad.pos").toURI());
-            datasets.put("negative", Datumbox.class.getClassLoader().getResource("datasets/testPolaridad/polaridad.neg").toURI());
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
+        // 1. Numerical Scaler
+        switch (options.get("NumericalScaler")) {
+            case "BinaryScaler":
+                BinaryScaler.TrainingParameters BStrainingParameters = new BinaryScaler.TrainingParameters();
+                BStrainingParameters.setThreshold(Double.parseDouble(options.get("BinaryScaler_Threshold")));
+                trainingParameters.setNumericalScalerTrainingParameters(BStrainingParameters);
+                break;
+            case "MaxAbsScaler":
+                trainingParameters.setNumericalScalerTrainingParameters(new MaxAbsScaler.TrainingParameters());
+                break;
+            case "MinMaxScaler":
+                trainingParameters.setNumericalScalerTrainingParameters(new MinMaxScaler.TrainingParameters());
+                break;
+            case "StandardScaler":
+                trainingParameters.setNumericalScalerTrainingParameters(new StandardScaler.TrainingParameters());
+                break;
+            default:
+                break;
         }
 
-        // Entrenar el clasificador
-        sentimentClassifier.fit(datasets);
+        // 2. Feature Selector List
+        // TODO: puede tener ambos de forma simultánea.
+        switch (options.get("FeatureSelector")) {
+            case "ChisquareSelect":
+                ChisquareSelect.TrainingParameters CSTrainingParameters = new ChisquareSelect.TrainingParameters();
+                CSTrainingParameters.setALevel(Double.parseDouble(options.get("ChisquareSelect_ALevel")));
+                trainingParameters.setFeatureSelectorTrainingParametersList(Arrays.asList(CSTrainingParameters));
+                break;
+            case "MutualInformation":
+                trainingParameters.setFeatureSelectorTrainingParametersList(Arrays.asList(new MutualInformation.TrainingParameters()));
+                break;
+        }
+
+        // 3. Text Extractor
+        switch (options.get("TextExtractor")) {
+            case "Ngrams":
+                NgramsExtractor.Parameters parameters = new NgramsExtractor.Parameters();
+                parameters.setExaminationWindowLength(Integer.parseInt(options.get("Ngrams_ExaminationWindowLength")));
+                parameters.setMaxCombinations(Integer.parseInt(options.get("Ngrams_MaxCombinations")));
+                parameters.setMaxDistanceBetweenKwds(Integer.parseInt(options.get("Ngrams_MaxDistanceBetweenKwds")));
+                parameters.setMinWordLength(Integer.parseInt(options.get("Ngrams_MinWordLength")));
+                parameters.setMinWordOccurrence(Integer.parseInt(options.get("Ngrams_MinWordOccurrence")));
+                trainingParameters.setTextExtractorParameters(parameters);
+                break;
+            case "UniqueWordSequence":
+                trainingParameters.setTextExtractorParameters(new UniqueWordSequenceExtractor.Parameters());
+                break;
+            case "WordSequence":
+                trainingParameters.setTextExtractorParameters(new WordSequenceExtractor.Parameters());
+                break;
+        }
+
+        // 4. Modeler Training
+        switch (options.get("ModelerTraining")) {
+            case "BernoulliNaiveBayes":
+                trainingParameters.setModelerTrainingParameters(new BernoulliNaiveBayes.TrainingParameters());
+                break;
+            case "BinarizedNaiveBayes":
+                trainingParameters.setModelerTrainingParameters(new BinarizedNaiveBayes.TrainingParameters());
+                break;
+            case "MaximumEntropy":
+                MaximumEntropy.TrainingParameters MEParameters = new MaximumEntropy.TrainingParameters();
+                MEParameters.setTotalIterations(Integer.parseInt(options.get("MaximumEntropy_TotalIterations")));
+                trainingParameters.setModelerTrainingParameters(MEParameters);
+                break;
+            case "MultinomialNaiveBayes":
+                trainingParameters.setModelerTrainingParameters(new MultinomialNaiveBayes.TrainingParameters());
+                break;
+            case "OrdinalRegression":
+                OrdinalRegression.TrainingParameters ORparameters = new OrdinalRegression.TrainingParameters();
+                ORparameters.setTotalIterations(Integer.parseInt(options.get("OrdinalRegression_TotalIterations")));
+                ORparameters.setLearningRate(Double.parseDouble(options.get("OrdinalRegression_LearningRate")));
+                ORparameters.setL2(Double.parseDouble(options.get("OrdinalRegression_L2")));
+                trainingParameters.setModelerTrainingParameters(ORparameters);
+                break;
+            case "SoftMaxRegression":
+                SoftMaxRegression.TrainingParameters SMRparameters = new SoftMaxRegression.TrainingParameters();
+                SMRparameters.setTotalIterations(Integer.parseInt(options.get("SoftMaxRegression_TotalIterations")));
+                SMRparameters.setLearningRate(Double.parseDouble(options.get("SoftMaxRegression_LearningRate")));
+                SMRparameters.setL1(Double.parseDouble(options.get("SoftMaxRegression_L1")));
+                SMRparameters.setL2(Double.parseDouble(options.get("SoftMaxRegression_L2")));
+                trainingParameters.setModelerTrainingParameters(SMRparameters);
+                break;
+            case "SupportVectorMachine":
+                // No nos liamos con los parámetros para el clasificador y dejamos los que vienen por defecto
+                trainingParameters.setModelerTrainingParameters(new SupportVectorMachine.TrainingParameters());
+                break;
+        }
+        // ----- Fin parámetros entrenamiento ----- //
+
+        // Generar el clasificador
+        TextClassifier classifier = MLBuilder.create(trainingParameters, configuration);
+        AbstractTextExtractor textExtractor = AbstractTextExtractor.newInstance(trainingParameters.getTextExtractorParameters());
+
+        // Crear nuevas entradas para el dataset
+        List<Record> records = new ArrayList<>();
+        for (String positive: positives) {
+            if (!positive.isEmpty()) {
+                AssociativeArray xData = new AssociativeArray(textExtractor.extract(StringCleaner.clear(positive)));
+                records.add(new Record(xData, "positive"));
+            }
+        }
+        for (String negative: negatives) {
+            if (!negative.isEmpty()) {
+                AssociativeArray xData = new AssociativeArray(textExtractor.extract(StringCleaner.clear(negative)));
+                records.add(new Record(xData, "negative"));
+            }
+        }
+
+        // Añadir entradas al dataset
+        Dataframe trainingData = new Dataframe(configuration);
+        for (Record r: records) {
+            trainingData.set(trainingData.size(), r);
+        }
 
         // Guardar dataset
-        Dataframe dataset = Dataframe.Builder.parseTextFiles(datasets, textExtractor, configuration);
-        dataset.save("/datumbox/testDatumbox/dataset");
-
-        // Guardar clasificador
-        sentimentClassifier.save("/datumbox/testDatumbox");
-
-    }
-
-    public void createModel2() {
-        RandomGenerator.setGlobalSeed(42L);
-        Configuration configuration = Configuration.getConfiguration();
-
-        // Definir configuración del modelo (en memoria, directorio)
-        InMemoryConfiguration memConfiguration = new InMemoryConfiguration();
-        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR);
-        String modelsDirectory = null;
-        try {
-            modelsDirectory = resource.getFile().getAbsolutePath();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        memConfiguration.setDirectory(modelsDirectory);
-        configuration.setStorageConfiguration(memConfiguration);
-        // Cargar el clasificador según el modelo indicado
-        TextClassifier sentimentClassifier = MLBuilder.load(TextClassifier.class, "/datumbox/TwitterSentimentAnalysis", configuration);
-
-        TextClassifier.TrainingParameters trainingParameters = (TextClassifier.TrainingParameters) sentimentClassifier.getTrainingParameters();
-        AbstractTextExtractor textExtractor = AbstractTextExtractor.newInstance(trainingParameters.getTextExtractorParameters());
-        /*
-        // Cargar dataset desde texto y guardarlo en formato Datumbox
-        Map<Object, URI> datasets = new HashMap<>();
-        try {
-            datasets.put("positive", Datumbox.class.getClassLoader().getResource("datasets/datumboxPolarity/rt-polarity.pos").toURI());
-            datasets.put("negative", Datumbox.class.getClassLoader().getResource("datasets/datumboxPolarity/rt-polarity.neg").toURI());
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-
-        Dataframe dataset = Dataframe.Builder.parseTextFiles(datasets, textExtractor, configuration);
-        dataset.save("/datumbox/TwitterSentimentAnalysis/dataset");*/
-
-        // Definir nueva entrada para el dataset
-        AssociativeArray xData = new AssociativeArray(textExtractor.extract(StringCleaner.clear("probando datumbox")));
-        Record r = new Record(xData, "positive");
-        // Cargar el dataset con el que se construyó el modelo
-        Dataframe dataset = Dataframe.Builder.load("/datumbox/TwitterSentimentAnalysis/dataset", configuration);
-        // Añadir entrada al dataset
-        dataset.set(dataset.size(), r);
+        trainingData.save("/" + modelLocation + "/dataset");
         // Entrenar el clasificador
-        sentimentClassifier.fit(dataset);
-
-        // Guardar dataset y modelo del clasificador
-        dataset.save("/datumbox/TwitterSentimentAnalysis/dataset");
-        sentimentClassifier.save("/datumbox/TwitterSentimentAnalysis");
+        classifier.fit(trainingData);
+        // Guardar modelo del clasificador
+        classifier.save("/" + modelLocation);
     }
-
 }

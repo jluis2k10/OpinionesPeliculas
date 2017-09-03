@@ -1,6 +1,16 @@
 package es.uned.entities;
 
+import org.apache.commons.lang.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
 import javax.persistence.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -19,14 +29,71 @@ public class AdapterModel {
     @Column(name = "adapter_class", nullable = false)
     private String adapterClass;
 
-    @Column(name = "language", length = 3, nullable = false)
+    @Column(name = "language", length = 2, nullable = false)
     private String language;
 
     @Column(name = "location", nullable = false)
     private String location;
 
+    @Column(name = "trainable")
+    private boolean trainable = true;
+
     @Column(name = "description", nullable = true)
     private String description;
+
+    @Transient private boolean textDataset = true;
+    @Transient private String psText; // positive or subjective text
+    @Transient private String noText; // negative or objective text
+    @Transient private MultipartFile psFile; // positive or subjective file
+    @Transient private MultipartFile noFile; // negative or objective file
+
+    private final String PARAMS_KEYS = "(?:id|name|adapterClass|language|location|trainable|description|" +
+            "textDataset|psText|noText|psFile|noFile)";
+
+    public Map<String,String> getModelParameters(Map<String,String[]> parameters) {
+        Map<String,String> modelParameters = new HashMap<>();
+        Pattern pattern = Pattern.compile(PARAMS_KEYS);
+        parameters.forEach((key, value) -> {
+            Matcher matcher = pattern.matcher(key);
+            if (!matcher.matches())
+                modelParameters.put(key, StringUtils.join(value, ""));
+        });
+        return modelParameters;
+    }
+
+    public List<String> getPositivesSubjectives() {
+        if (isTextDataset())
+            return getSentences(getPsText());
+        else
+            return getSentences(getPsFile());
+    }
+
+    public List<String> getNegativesObjectives() {
+        if (isTextDataset())
+            return getSentences(getNoText());
+        else
+            return getSentences(getNoFile());
+    }
+
+    private List<String> getSentences(String text) {
+        String[] lines = text.split("\\r?\\n");
+        return Arrays.asList(lines);
+    }
+
+    private List<String> getSentences(MultipartFile file) {
+        List<String> sentences = new ArrayList<>();
+        try {
+            InputStream is = file.getInputStream();
+            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            String line;
+            while ((line = br.readLine()) != null) {
+                sentences.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sentences;
+    }
 
     public Long getId() {
         return id;
@@ -68,11 +135,59 @@ public class AdapterModel {
         this.location = location;
     }
 
+    public boolean isTrainable() {
+        return trainable;
+    }
+
+    public void setTrainable(boolean trainable) {
+        this.trainable = trainable;
+    }
+
     public String getDescription() {
         return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public boolean isTextDataset() {
+        return textDataset;
+    }
+
+    public void setTextDataset(boolean textDataset) {
+        this.textDataset = textDataset;
+    }
+
+    public String getPsText() {
+        return psText;
+    }
+
+    public void setPsText(String psText) {
+        this.psText = psText;
+    }
+
+    public String getNoText() {
+        return noText;
+    }
+
+    public void setNoText(String noText) {
+        this.noText = noText;
+    }
+
+    public MultipartFile getPsFile() {
+        return psFile;
+    }
+
+    public void setPsFile(MultipartFile psFile) {
+        this.psFile = psFile;
+    }
+
+    public MultipartFile getNoFile() {
+        return noFile;
+    }
+
+    public void setNoFile(MultipartFile noFile) {
+        this.noFile = noFile;
     }
 }

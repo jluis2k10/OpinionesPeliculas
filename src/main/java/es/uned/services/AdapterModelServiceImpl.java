@@ -21,6 +21,11 @@ public class AdapterModelServiceImpl implements AdapterModelService {
     }
 
     @Override
+    public void save(AdapterModel adapterModel) {
+        adapterModelRepo.save(adapterModel);
+    }
+
+    @Override
     public Set<AdapterModel> findByAdapterClass(String adapterClass) {
         return adapterModelRepo.findAllByAdapterClass(adapterClass);
     }

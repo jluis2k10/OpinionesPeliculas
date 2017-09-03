@@ -5,6 +5,7 @@ CREATE TABLE Models (
   adapter_class VARCHAR(255) NOT NULL ,
   language VARCHAR(3) NOT NULL ,
   location VARCHAR(255) NOT NULL ,
+  trainable BOOLEAN ,
   description TEXT ,
   PRIMARY KEY (id),
   UNIQUE (name)

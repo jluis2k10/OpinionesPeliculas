@@ -85,8 +85,6 @@ function makeSourcesOptions(e) {
 
 /* Rellenar el seleccionable de los adaptadores disponibles para el análisis de subjetividad */
 function populateAdapters(adapterType, adapters) {
-    console.log(adapterType);
-    console.log(adapters);
     if (adapterType === "subjectivity")
         $select = $("#subjectivityAdapter");
     else

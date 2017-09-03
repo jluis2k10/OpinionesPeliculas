@@ -1,9 +1,15 @@
 package es.uned.adapters.sentiment;
 
-import com.aliasi.classify.*;
+import com.aliasi.classify.BaseClassifier;
+import com.aliasi.classify.Classification;
+import com.aliasi.classify.DynamicLMClassifier;
+import com.aliasi.classify.JointClassification;
+import com.aliasi.corpus.ObjectHandler;
+import com.aliasi.io.BitInput;
+import com.aliasi.lm.LanguageModel;
+import com.aliasi.lm.NGramBoundaryLM;
 import com.aliasi.lm.NGramProcessLM;
 import com.aliasi.util.AbstractExternalizable;
-import com.aliasi.util.Files;
 import es.uned.components.TwitterTokenizer;
 import es.uned.entities.CommentWithSentiment;
 import es.uned.entities.SearchParams;
@@ -28,9 +34,14 @@ public class LingPipe implements SentimentAdapter {
     @Autowired
     private TwitterTokenizer twitterTokenizer;
 
+    /* Debe coincidir con ID del XML */
+    private final String myID = "P02";
+
+    private static final String ADAPTER_DIR = "/lingpipe";
+
     @Override
     public void analyze(Map<Integer,CommentWithSentiment> comments, SearchParams search, Map<String,String> options) {
-        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + search.getSentimentModel() + "/classifier.model");
+        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR  + search.getSentimentModel() + "/classifier.model");
         File modelFile = null;
         BaseClassifier<String> classifier = null;
         try {
@@ -59,34 +70,64 @@ public class LingPipe implements SentimentAdapter {
 
     @Override
     public void trainModel(String modelLocation, List<String> positives, List<String> negatives) {
-        NGramProcessLM[] lms = new NGramProcessLM[2];
-        String[] categories = {"neg", "pos"};
-        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + modelLocation);
+        ObjectHandler<CharSequence>[] lms = null;
+        String[] categories = {"positive", "negative"};
+        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR + "/" + modelLocation);
         File dir = null;
 
-        // Cargar language models
         try {
             dir = resource.getFile();
-            File posFile = new File(dir.toString() + "/lm_neg.model");
-            File negFile = new File(dir.toString() + "/lm_pos.model");
-            lms[0] = NGramProcessLM.readFrom(new BufferedInputStream(FileUtils.openInputStream(negFile)));
-            lms[1] = NGramProcessLM.readFrom(new BufferedInputStream(FileUtils.openInputStream(posFile)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        File posFile = new File(dir.toString() + "/lm_positive.model");
+        File negFile = new File(dir.toString() + "/lm_negative.model");
+
+        // Determinar si el LM es NGramBoundary o NGramProcess
+        boolean isNGramProcess = true;
+        try {
+            BitInput bitInput = new BitInput(new BufferedInputStream(FileUtils.openInputStream(posFile)));
+            char boundaryChar = (char) (bitInput.readDelta()-1L);
+            if (boundaryChar == '\uFFFF') // Carácter unicode "prohibido" que se utiliza como frontera en el modelo
+                isNGramProcess = false;   // y que sólo debería aparecer en NGramBoundary
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // Entrenamos los language models con los nuevos datasets
-        for (String negative: negatives) {
-            lms[0].train(negative);
-            //lms[0].handle(negative);
+        // Cargar language models
+        try {
+            if (isNGramProcess) {
+                lms = new NGramProcessLM[2];
+                lms[0] = NGramProcessLM.readFrom(new BufferedInputStream(FileUtils.openInputStream(posFile)));
+                lms[1] = NGramProcessLM.readFrom(new BufferedInputStream(FileUtils.openInputStream(negFile)));
+            } else {
+                lms = new NGramBoundaryLM[2];
+                lms[0] = NGramBoundaryLM.readFrom(new BufferedInputStream(FileUtils.openInputStream(posFile)));
+                lms[1] = NGramBoundaryLM.readFrom(new BufferedInputStream(FileUtils.openInputStream(negFile)));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
         }
+
+        // Entrenamos los language models con los nuevos datasets
         for (String positive: positives) {
-            lms[1].train(positive);
-            //lms[1].handle(positive);
+            if (!positive.isEmpty() && isNGramProcess) {
+                ((NGramProcessLM)lms[0]).train(positive);
+            } else if (!positive.isEmpty() && !isNGramProcess) {
+                ((NGramBoundaryLM)lms[0]).train(positive);
+            }
+        }
+        for (String negative: negatives) {
+            if (!negative.isEmpty() && isNGramProcess) {
+                ((NGramProcessLM)lms[0]).train(negative);
+            } else if (!negative.isEmpty() && !isNGramProcess) {
+                ((NGramBoundaryLM)lms[0]).train(negative);
+            }
         }
 
         // Recrear modelo del clasificador a partir de los language models anteriores
-        DynamicLMClassifier<NGramProcessLM> classifier = new DynamicLMClassifier<NGramProcessLM>(categories, lms);
+        DynamicLMClassifier<LanguageModel.Dynamic> classifier = new DynamicLMClassifier(categories, (LanguageModel.Dynamic[]) lms);
 
         // guardar modelos de lenguaje
         for(int j = 0; j < lms.length; ++j) {
@@ -95,7 +136,10 @@ public class LingPipe implements SentimentAdapter {
                 File saveToFile = new File(dir.toString() + "/lm_" + categories[j] + ".model");
                 OutputStream fileOut = FileUtils.openOutputStream(saveToFile);
                 BufferedOutputStream bufOut = new BufferedOutputStream(fileOut);
-                lms[j].writeTo(bufOut);
+                if (isNGramProcess)
+                    ((NGramProcessLM)lms[j]).writeTo(bufOut);
+                else
+                    ((NGramBoundaryLM)lms[j]).writeTo(bufOut);
                 fileOut.close();
                 bufOut.close();
             } catch (IOException e) {
@@ -123,70 +167,91 @@ public class LingPipe implements SentimentAdapter {
      * Lingpipe no tiene modelos que se puedan re-entrenar. Lo que hay que hacer es serializar los "language models",
      * recrear el modelo con ellos y guardarlo todo.
      */
-    public void createModel() {
-        // Cargar datasets
-        Resource resource = resourceLoader.getResource("classpath:/datasets/" + "polarityMovieReviews");
+    public void createModel(String modelLocation, Map<String,String> options, List<String> positives, List<String> negatives) {
+        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR);
         File dir = null;
         try {
             dir = resource.getFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // Dos categorías según los directorios del dataset (pos y neg)
-        String[] categories = dir.list();
-        int nGram = 8;
-        NGramProcessLM[] lms = new NGramProcessLM[categories.length];
+        String[] categories = {"positive", "negative"};
 
-        // Definir language models (2, uno para pos y otro para neg)
-        for(int i = 0; i < lms.length; ++i) {
-            lms[i] = new NGramProcessLM(nGram);
-        }
-
-        // Entrenar language models
-        int i = 0;
-        for (String category: categories) {
-            // Accedemos a los archivos de cada directorio (/pos y /neg)
-            File file = new File(dir, category);
-            File[] trainFiles = file.listFiles();
-
-            for (File trainFile: trainFiles) {
-                String review = null;
-                try {
-                    review = Files.readFromFile(trainFile, "UTF-8");
-                    twitterTokenizer.setLanguage("en");
-                    twitterTokenizer.setSearchTerm("");
-                    review = twitterTokenizer.cleanUp(review);
-                    lms[i].handle(review);
-                } catch (IOException e) {
-                    e.printStackTrace();
+        ObjectHandler<CharSequence>[] lms = null;
+        // Construir Language Model según las opciones
+        switch (options.get("LanguageModel")) {
+            case "NGramProcessLM":
+                lms = new NGramProcessLM[categories.length];
+                int nGram = Integer.parseInt(options.get("NGramProcessLM_nGram"));
+                int numChars = Integer.parseInt(options.get("NGramProcessLM_numChars"));
+                double lambdaFactor = Double.parseDouble(options.get("NGramProcessLM_lambdaFactor"));
+                for (int i = 0; i < categories.length; i++)
+                    lms[i] = new NGramProcessLM(nGram, numChars, lambdaFactor);
+                break;
+            case "NGramBoundaryLM":
+                lms = new NGramBoundaryLM[categories.length];
+                int nGramB = Integer.parseInt(options.get("NGramBoundaryLM_nGram"));
+                int numCharsB = Integer.parseInt(options.get("NGramBoundaryLM_numChars"));
+                double lambdaFactorB = Double.parseDouble(options.get("NGramBoundaryLM_lambdaFactor"));
+                for (int i = 0; i < categories.length; i++)
+                    lms[i] = new NGramBoundaryLM(nGramB, numCharsB, lambdaFactorB, '\uffff');
+                break;
+            /*case "TokenizedLM":
+                lms = new TokenizedLM[categories.length];
+                TokenizerFactory tokenizerFactory = null;
+                switch (options.get("tokenizerFactory")) {
+                    case "CharacterTokenizerFactory":
+                        tokenizerFactory = CharacterTokenizerFactory.INSTANCE;
+                        break;
+                    case "IndoEuropeanTokenizer":
+                        tokenizerFactory = IndoEuropeanTokenizerFactory.INSTANCE;
+                        break;
+                    case "NGramTokenizerFactory":
+                        int minNGram = Integer.parseInt(options.get("NGramTokenizer_minNGram"));
+                        int maxNGram = Integer.parseInt(options.get("NGramTokenizer_maxNGram"));
+                        tokenizerFactory = new NGramTokenizerFactory(minNGram,maxNGram);
+                        break;
                 }
-            }
-            i++;
+                int nGramOrder = Integer.parseInt(options.get("TokenizedLM_nGramOrder"));
+                for (int i = 0; i < categories.length; i++)
+                    lms[i] = new TokenizedLM(tokenizerFactory, nGramOrder);
+                break;*/
         }
-        // Crear clasificador a partir de los language models
-        DynamicLMClassifier<NGramProcessLM> classifier = new DynamicLMClassifier<NGramProcessLM>(categories, lms);
 
-        resource = resourceLoader.getResource("classpath:" + MODELS_DIR + "/lingpipe");
-        // guardar modelos de lenguaje
-        for(int j = 0; j < lms.length; ++j) {
+        // Entrenar Language Models
+        // lms[0] es el LM para comentarios positivos y lms[1] el LM para los negativos
+        for (String positive: positives)
+            lms[0].handle(positive);
+        for (String negative: negatives)
+            lms[1].handle(negative);
+
+        // Guardar Language Models
+        for(int i = 0; i < lms.length; ++i) {
             try {
-                dir = resource.getFile();
-                File saveToFile = new File(dir.toString() + "/test1/lm_" + categories[j] + ".model");
+                File saveToFile = new File(dir.toString() + "/" + modelLocation + "/lm_" + categories[i] + ".model");
                 OutputStream fileOut = FileUtils.openOutputStream(saveToFile);
                 BufferedOutputStream bufOut = new BufferedOutputStream(fileOut);
-                //ObjectOutputStream objOut = new ObjectOutputStream(fileOut);
-                lms[j].writeTo(bufOut);
-                //lms[j].compileTo(objOut);
+                switch (options.get("LanguageModel")) {
+                    case "NGramProcessLM":
+                        ((NGramProcessLM) lms[i]).writeTo(bufOut);
+                        break;
+                    case "NGramBoundaryLM":
+                        ((NGramBoundaryLM) lms[i]).writeTo(bufOut);
+                        break;
+                }
                 fileOut.close();
                 bufOut.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        // guardar también modelo del clasificador
+
+        // Construir clasificador a partir de los LM
+        DynamicLMClassifier<LanguageModel.Dynamic> classifier = new DynamicLMClassifier(categories, (LanguageModel.Dynamic[]) lms);
+
+        // Guardar modelo del clasificador
         try {
-            dir = resource.getFile();
-            File saveToFile = new File(dir.toString() + "/test1/classifier.model");
+            File saveToFile = new File(dir.toString() + "/" + modelLocation  + "/classifier.model");
             FileOutputStream fileOut = FileUtils.openOutputStream(saveToFile);
             ObjectOutputStream objOut = new ObjectOutputStream(fileOut);
             classifier.compileTo(objOut);
@@ -198,64 +263,6 @@ public class LingPipe implements SentimentAdapter {
             e.printStackTrace();
         }
 
-        return;
-    }
-
-    public void createModel2() {
-        Resource resource = resourceLoader.getResource("classpath:/datasets/" + "polarityMovieReviews");
-        File dir = null;
-        try {
-            dir = resource.getFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        // Array con los directorios donde está el dataset ("pos" y "neg")
-        String[] categories = dir.list();
-        // Analizamos en conjuntos de 8 palabras
-        int nGram = 8;
-        // Instanciamos el clasificador
-        DynamicLMClassifier<NGramProcessLM> classifier = DynamicLMClassifier.createNGramProcess(categories,nGram);
-
-        /*
-        Entrenamos el clasificador con el dataset
-         */
-        for (String category: categories) {
-            Classification classification = new Classification(category);
-            // Accedemos a los archivos de cada directorio (/pos y /neg)
-            File file = new File(dir, category);
-            File[] trainFiles = file.listFiles();
-
-            for (File trainFile: trainFiles) {
-                String review = null;
-                try {
-                    review = Files.readFromFile(trainFile, "UTF-8");
-                    twitterTokenizer.setLanguage("en");
-                    twitterTokenizer.setSearchTerm("");
-                    review = twitterTokenizer.cleanUp(review);
-                    Classified<CharSequence> classified = new Classified<CharSequence>(review, classification);
-                    classifier.handle(classified);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        // Guardar el modelo
-        resource = resourceLoader.getResource("classpath:" + MODELS_DIR + "/lingpipe");
-        try {
-            dir = resource.getFile();
-            File saveToFile = new File(dir.toString() + "/test2/classifier.model");
-            FileOutputStream fileOut = FileUtils.openOutputStream(saveToFile);
-            ObjectOutputStream objOut = new ObjectOutputStream(fileOut);
-            classifier.compileTo(objOut);
-            objOut.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return;
     }
 
 }

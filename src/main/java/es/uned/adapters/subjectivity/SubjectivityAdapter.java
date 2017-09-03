@@ -15,8 +15,8 @@ public interface SubjectivityAdapter {
 
     void analyze(Map<Integer,CommentWithSentiment> comments, SearchParams search, Map<String,String> options);
 
-    void trainModel(String modelLocation, List<String> positives, List<String> negatives);
+    void trainModel(String modelLocation, List<String> subjectives, List<String> objectives);
 
-    void createModel();
+    void createModel(String modelLocation, Map<String,String> options, List<String> subjectives, List<String> objectives);
 
 }

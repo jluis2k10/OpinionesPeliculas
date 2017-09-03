@@ -74,12 +74,12 @@ public class Datumbox implements SubjectivityAdapter {
     }
 
     @Override
-    public void trainModel(String modelLocation, List<String> positives, List<String> negatives) {
+    public void trainModel(String modelLocation, List<String> subjectives, List<String> objectives) {
 
     }
 
     @Override
-    public void createModel() {
+    public void createModel(String modelLocation, Map<String,String> options, List<String> subjectives, List<String> objectives) {
 
     }
 }

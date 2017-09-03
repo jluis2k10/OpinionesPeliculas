@@ -26,14 +26,9 @@ import java.util.Map;
 @Controller
 public class MainController {
 
-    @Autowired
-    private SourceAdapterFactory sourceFactory;
-
-    @Autowired
-    private SubjectivityAdapterFactory subjectivityFactory;
-
-    @Autowired
-    private SentimentAdapterFactory sentimentFactory;
+    @Autowired private SourceAdapterFactory sourceFactory;
+    @Autowired private SubjectivityAdapterFactory subjectivityFactory;
+    @Autowired private SentimentAdapterFactory sentimentFactory;
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public String home(Model model) {
@@ -45,7 +40,6 @@ public class MainController {
     public String home(Model model, @ModelAttribute("searchForm") SearchParams searchParams,
                        BindingResult searchFormErrors, HttpServletRequest request) {
         Map<String,String> optionalParameters = searchParams.getOptionalParameters(request.getParameterMap());
-
         SourceAdapter sourceAdapter = sourceFactory.get(searchParams.getSourceClass());
         HashMap<Integer,CommentWithSentiment> comments = sourceAdapter.getComments(searchParams);
 
@@ -61,11 +55,11 @@ public class MainController {
         return "results";
     }
 
-    @RequestMapping(value = "crear")
-    public String crear() {
+    @RequestMapping(value = "test")
+    public String testClassifier() {
         //SentimentAdapter sentimentAdapter = sentimentFactory.get("es.uned.adapters.sentiment.LingPipe");
-        SentimentAdapter sentimentAdapter = sentimentFactory.get("es.uned.adapters.sentiment.Datumbox");
-        sentimentAdapter.createModel();
+
+        //sentimentAdapter.createModel();
         return "home";
     }
 
