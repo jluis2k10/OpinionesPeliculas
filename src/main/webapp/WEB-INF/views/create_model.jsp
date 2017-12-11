@@ -141,7 +141,7 @@
 <script type="text/javascript" src="${path}/js/create_models.js"></script>
 
 <script>
-    var adapters = null;
+    var classifiers = null;
     $(document).ready(function(){
 
         // Activar tooltips
@@ -151,7 +151,7 @@
         });
 
         // Recuperar adaptadores disponibles y construir opciones del select
-        adapters = populateAdapters("${path}");
+        classifiers = getClassifiers("${path}");
 
         // Mostrar/ocultar textareas y fileinputs para los datasets
         if ($("input[name='textDataset']").val() === "true") {
@@ -169,19 +169,20 @@
 
     /* Acción al cambiar el tipo de clasificador */
     $("input[name='classifierType']").change(function() {
-        adapters = populateAdapters("${path}");
+        classifiers = getClassifiers("${path}");
         switchDatasetTags();
     });
 
     /* Acción al seleccionar el clasificador */
     $("select[name='adapterSelect']").change(function() {
-        populateModelCreationParameters(adapters);
+        var selectedClassifier = getSelectedClassifier(classifiers);
+        populateClassifierParameters(selectedClassifier);
     });
 
     /* Acción al seleccionar una de las opciones de los parámetros para crear un nuevo modelo
      * Podemos tener "subparámetros" para las opciones de los parámetros. */
     $(".parameters-container").on('change', 'select, input:checked', function () {
-        attachOptionParameters($(this), adapters);
+        attachOptionParameters($(this), classifiers);
     });
 
     /* Acción al cambiar el tipo de dataset a utilizar (texto/archivos) */

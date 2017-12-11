@@ -67,6 +67,35 @@
                     <option value=""></option>
                 </select>
             </div>
+            <div class="col-xs-12">
+                <p class="separator"><span>Pre-procesar resultados</span></p>
+            </div>
+            <spring:bind path="cleanTweet">
+                <div class="col-xs-3 cleanTweet-container" style="display: none;">
+                    <div class="form-group">
+                        <p><strong>¿Limpiar Tweets?</strong></p>
+                        <label class="radio-inline">
+                            <form:radiobutton path="cleanTweet" id="true" value="true"></form:radiobutton> Sí
+                        </label>
+                        <label class="radio-inline">
+                            <form:radiobutton path="cleanTweet" id="false" value="false" checked="checked"></form:radiobutton> No
+                        </label>
+                    </div>
+                </div>
+            </spring:bind>
+            <spring:bind path="delStopWords">
+                <div class="col-xs-3">
+                    <div class="form-group">
+                        <p><strong>¿Eliminar stop-words?</strong></p>
+                        <label class="radio-inline">
+                            <form:radiobutton path="delStopWords" id="true" value="true"></form:radiobutton> Sí
+                        </label>
+                        <label class="radio-inline">
+                            <form:radiobutton path="delStopWords" id="false" value="false" checked="checked"></form:radiobutton> No
+                        </label>
+                    </div>
+                </div>
+            </spring:bind>
         </fieldset>
     </div>
 
@@ -152,7 +181,6 @@
         </div>
     </div>
 </form:form>
-
 <%@ include file="_js.jsp"%>
 <link rel="stylesheet" href="${path}/css/bootstrap-datetimepicker.min.css" />
 <link rel="stylesheet" href="${path}/css/select2.min.css" />
@@ -170,7 +198,7 @@
     $subjectivityAdapters = null;
 
     $(document).ready(function() {
-        /* Recuperar las posibles fuentes de comentarios */
+        /* Recuperar las fuentes de comentarios disponibles */
         $.ajax({
             type: "GET",
             contentType: "application/json",
@@ -224,56 +252,8 @@
         });
     });
 
-    /* Select para elegir película y encontrar su identificador en IMDB */
-    $('.imdb-select').select2({
-        theme: "bootstrap",
-        placeholder: "Título de película",
-        language: "es",
-        ajax: {
-            url: "${path}/api/imdb-lookup",
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return {
-                    q: params.term,
-                    page: params.page
-                };
-            },
-            processResults: function(data, params) {
-                params.page = params.page || 1;
-                // Eliminamos de los resultados los que no tengan imdbID
-                for (var i=0; i<data.films.length; i++) {
-                    if (!data.films[i].imdbID)
-                        data.films.splice(i, 1);
-                }
-                // select2 necesita atributos id y text en el objeto que maneja
-                var select2Data = $.map(data.films, function (obj) {
-                    obj.id = obj.id || obj.imdbID;
-                    obj.text = obj.text || obj.title;
-                    return obj;
-                });
-                return {
-                    results: select2Data,
-                    pagination: {
-                        more: (params.page * 10) < data.total_count
-                    }
-                };
-            },
-            cache: true
-        },
-        escapeMarkup: function(markup) {
-            return markup;
-        },
-        minimumInputLength: 1,
-        templateResult: function(result) {
-            if (result.loading) return result.text;
-            return result.text + " (" + result.year + ")";
-        },
-        templateSelection: function(result) {
-            return result.title || result.text;
-        }
-    });
-
+    // Select para elegir película y encontrar su identificador en IMDB
+    createIMDBSelect("${path}");
     // Al seleccionar la película pasamos el imdbID al input de la búsqueda
     $('.imdb-select').on('select2:selecting', function(e) {
         $('#searchTerm').val(e.params.args.data.id);
@@ -309,7 +289,7 @@
         }
     });
 
-    /* Acción al seleccionar una opción del select con los adaptadores para el análisis de sentimiento */
+    /* Acción al seleccionar una opción del select con los modelos para el análisis de sentimiento */
     $("#sentimentAdapter").change(function () {
         $selected = $(this).find("option:selected")[0];
         $adapterClass = $selected.value;
@@ -318,6 +298,17 @@
         });
         populateModels("sentiment", $adapter[0]);       // Rellener el select con los modelos del adaptador
         makeAdapterOptions("sentiment", $adapter[0]);   // Construir las opciones para el adaptador
+    });
+
+    /* Acción al seleccionar una opción del select con los modelos para el análisis de subjetividad */
+    $("#subjectivityAdapter").change(function () {
+        $selected = $(this).find("option:selected")[0];
+        $adapterClass = $selected.value;
+        $adapter = $.grep($subjectivityAdapters, function(e) {
+            return e.class === $adapterClass;
+        });
+        populateModels("subjectivity", $adapter[0]);       // Rellener el select con los modelos del adaptador
+        makeAdapterOptions("subjectivity", $adapter[0]);   // Construir las opciones para el adaptador
     });
 </script>
 <%@ include file="_footer.jsp"%>

@@ -1,35 +1,39 @@
-/* Crear enlaces con las fuentes de comentarios posibles */
+/* Crear enlaces con las fuentes de comentarios disponibles */
 function makeSourcesButton(sources) {
     $.each(sources, function (index, source) {
         $("#sources-dropdown").append("<li><a href='javascript:void(0)' onclick='makeSourcesOptions(this); return false;'" +
             "data-name='"+source.name+"'" +
-            "data-adapter='"+source.adapterClass+"'" +
-            "data-sinceDate='"+source.sinceDateEnabled+"'" +
-            "data-untilDate='"+source.untilDateEnabled+"'" +
-            "data-limit='"+source.limitEnabled+"'" +
-            "data-imdbID='"+source.imdbIDEnabled+"'" +
-            "data-language='"+source.languageEnabled+"'>" + source.name + "</a></li>");
+            " data-adapter='"+source.adapterClass+"'" +
+            " data-sinceDate='"+source.sinceDateEnabled+"'" +
+            " data-untilDate='"+source.untilDateEnabled+"'" +
+            " data-limit='"+source.limitEnabled+"'" +
+            " data-imdbID='"+source.imdbIDEnabled+"'" +
+            " data-language='"+source.languageEnabled+"'" +
+            " data-cleanTweet='"+source.cleanTweet+"'>" + source.name + "</a></li>");
     })
 }
 
-/* Crear enlaces con las fuentes de comentarios especiíficas para entrenamiento de analizador */
+/* Crear enlaces con las fuentes de comentarios especiíficas para entrenamiento de analizador
+ * Se añaden las opciones de subir datasets o de introducirlos en cajas de texto */
 function makeTrainSourcesButton() {
     $("#sources-dropdown").append("<li><a href='javascript:void(0)' onclick='makeSourcesOptions(this); return false;'" +
         "data-name='Subir Datasets'" +
-        "data-adapter='FileDataset'" +
-        "data-sinceDate='false'" +
-        "data-untilDate='false'" +
-        "data-limit='false'" +
-        "data-imdbID='false'" +
-        "data-language='true'>Subir Datasets</a></li>");
+        " data-adapter='FileDataset'" +
+        " data-sinceDate='false'" +
+        " data-untilDate='false'" +
+        " data-limit='false'" +
+        " data-imdbID='false'" +
+        " data-language='true'" +
+        " data-cleanTweet='true'>Subir Datasets</a></li>");
     $("#sources-dropdown").append("<li><a href='javascript:void(0)' onclick='makeSourcesOptions(this); return false;'" +
-        "data-name='Introducir Datasets'" +
-        "data-adapter='TextDataset'" +
-        "data-sinceDate='false'" +
-        "data-untilDate='false'" +
-        "data-limit='false'" +
-        "data-imdbID='false'" +
-        "data-language='true'>Introducir Datasets</a></li>");
+        " data-name='Introducir Datasets'" +
+        " data-adapter='TextDataset'" +
+        " data-sinceDate='false'" +
+        " data-untilDate='false'" +
+        " data-limit='false'" +
+        " data-imdbID='false'" +
+        " data-language='true'" +
+        " data-cleanTweet='true'>Introducir Datasets</a></li>");
 }
 
 /* Presentar los elementos del formulario necesarios según la fuente de comentarios */
@@ -37,7 +41,7 @@ function makeSourcesOptions(e) {
     $(".source-placeholder").html(e.dataset.name);
     $("#sourceClass").val(e.dataset.adapter);
     if (e.dataset.imdbid === "true") {
-        $("#searchTerm").attr("disabled", "disabled");
+        $("#searchTerm").attr("readonly", "readonly");
         $(".imdbID-container").show();
         $("span.select2-container").width("100%");
     } else {
@@ -64,8 +68,13 @@ function makeSourcesOptions(e) {
     } else {
         $(".language-container").hide();
     }
+    if (e.dataset.cleantweet === "true") {
+        $(".cleanTweet-container").show();
+    } else {
+        $(".cleanTweet-container").hide();
+    }
 
-    // Para la página de entremiento de modelos tenemos dos botones más
+    // Para la página de entrenamiento de modelos tenemos dos botones más
     if (e.dataset.name === "Subir Datasets") {
         $("#searchTerm").attr("disabled", "disabled");
         $(".datasets-container").show();
@@ -129,14 +138,14 @@ function populateModels(adapterType, adapter) {
 function makeAdapterOptions(adapterType, adapter) {
     if (adapterType === "subjectivity") {
         $container = $(".subjectivity-form-container");
-        $(".subjectivity-option").remove();
+        $(".subjectivity-option").remove(); // Borramos todas las opciones anteriores que puedan existir
     } else {
         $container = $(".sentiment-container");
         $(".sentiment-option").remove();    // Borramos todas las opciones anteriores que puedan existir
     }
     if (typeof adapter === "undefined") // Salimos si no hay adaptador disponible
         return;
-    if (adapter.parameters.length > 0) {
+    if (typeof adapter.parameters != "undefined" && adapter.parameters.length > 0) {
         $.each(adapter.parameters, function (index, parameter) {
             switch (parameter.type) {
                 case 'radio':
@@ -167,6 +176,59 @@ function hasModelForSelectedLanguage(adapter) {
     return result;
 }
 
+/* Crear seleccionable para elegir películas y obtener su IMDBID */
+function createIMDBSelect(path) {
+    $('.imdb-select').select2({
+        theme: "bootstrap",
+        placeholder: "Título de película",
+        language: "es",
+        ajax: {
+            url: "/api/imdb-lookup",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return {
+                    q: params.term,
+                    page: params.page
+                };
+            },
+            processResults: function(data, params) {
+                params.page = params.page || 1;
+                // Eliminamos de los resultados los que no tengan imdbID
+                for (var i=0; i<data.films.length; i++) {
+                    if (!data.films[i].imdbID)
+                        data.films.splice(i, 1);
+                }
+                // select2 necesita atributos id y text en el objeto que maneja
+                var select2Data = $.map(data.films, function (obj) {
+                    obj.id = obj.id || obj.imdbID;
+                    obj.text = obj.text || obj.title;
+                    return obj;
+                });
+                return {
+                    results: select2Data,
+                    pagination: {
+                        more: (params.page * 10) < data.total_count
+                    }
+                };
+            },
+            cache: true
+        },
+        escapeMarkup: function(markup) {
+            return markup;
+        },
+        minimumInputLength: 1,
+        templateResult: function(result) {
+            if (result.loading) return result.text;
+            return result.text + " (" + result.year + ")";
+        },
+        templateSelection: function(result) {
+            return result.title || result.text;
+        }
+    });
+}
+
+/* Crear opciones tipo Radio */
 function makeRadioOptions(container, parameter, adapterType, adapterID) {
     var optionDiv = $("<div class='col-xs-3 " + adapterType + "-option'></div>");
     var innerDiv = $("<div class='form-group'></div>");
@@ -193,6 +255,7 @@ function makeRadioOptions(container, parameter, adapterType, adapterID) {
     optionDiv.appendTo(container);
 }
 
+/* Crear opciones tipo select */
 function makeSelectOptions(container, parameter, adapterType, adapterID) {
     var optionDiv = $("<div class='col-xs-3 " + adapterType + "-option'></div>");
 
@@ -217,6 +280,7 @@ function makeSelectOptions(container, parameter, adapterType, adapterID) {
     optionDiv.appendTo(container);
 }
 
+/* Crear input numérico */
 function makeNumberOptions(container, parameter, adapterType, adapterID) {
     var optionDiv = $("<div class='col-xs-3 " + adapterType + "-option'></div>");
     var innerDiv = $("<div class='form-group'></div>");
@@ -244,6 +308,7 @@ function makeNumberOptions(container, parameter, adapterType, adapterID) {
     optionDiv.appendTo(container);
 }
 
+/* Crear input de texto */
 function makeTextOptions(container, parameter, adapterType, adapterID) {
     var optionDiv = $("<div class='col-xs-3 " + adapterType + "-option'></div>");
     var innerDiv = $("<div class='form-group'></div>");
@@ -310,7 +375,7 @@ function populateTrainModels(adapters) {
         if ($.inArray(lang, adapter_langs) >= 0 && adapter.models_enabled) {
             var optGroup = $("<optgroup label='" + adapter.name + "'></optgroup>");
             $.each(adapter.models, function(index2, model) {
-                if (model.lang === lang) {
+                if (model.lang === lang && model.trainable) {
                     var opt = $("<option value='" + model.location + "' data-adapterclass='" + adapter.class + "'>" + model.name + "</option>");
                     opt.appendTo(optGroup);
                 }

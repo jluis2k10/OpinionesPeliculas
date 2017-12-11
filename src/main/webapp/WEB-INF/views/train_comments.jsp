@@ -28,7 +28,7 @@
 </div>
 <div class="row">
     <div class="col-xs-12">
-        <form:form method="post" modelAttribute="trainForm" action="${path}/train" enctype="multipart/form-data">
+        <form:form method="post" modelAttribute="trainForm" action="${path}/models/train" enctype="multipart/form-data">
             <form:hidden path="analysisType" id="analysisType"></form:hidden>
             <form:hidden path="sourceClass" id="sourceClass" value="TextDataset"></form:hidden>
             <form:hidden path="searchTerm"></form:hidden>
@@ -50,6 +50,8 @@
     });
     var positivesOrSubjectives = new Map();
     var negativesOrObjectives = new Map();
+
+    /* Añadir comentario al Map de positivos/subjetivos */
     function addPosSub(button) {
         // Cambiar estilo del botón
         $(button).removeClass("btn-default");
@@ -66,6 +68,7 @@
         positivesOrSubjectives.set(i, comment); // Añadir comentario al mapa de positivos/subjetivos
     }
 
+    /* Añadir comentario al Map de negativos/objetivos */
     function addNegObj(button) {
         // Cambiar estilo del botón
         $(button).removeClass("btn-default");
@@ -82,6 +85,7 @@
         negativesOrObjectives.set(i, comment); // Añadir comentario al mapa de negativos/objetivos
     }
 
+    /* Eliminar comentario del Map en el que esté */
     function clearAction(button) {
         var siblingButton = $(button).siblings(".btn");
         $(siblingButton).removeClass("btn-success");
@@ -92,6 +96,8 @@
         negativesOrObjectives.delete(i);
     }
 
+    /* Acción al enviar el formulario.
+       Añadimos los Mapas a un campo de texto oculto del formulario antes de enviarlo. */
     $("#trainForm").submit(function(e) {
         e.preventDefault();
         for (var positiveOrSubjective of positivesOrSubjectives) {

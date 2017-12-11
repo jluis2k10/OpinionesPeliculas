@@ -4,21 +4,54 @@ fieldset {
     xmin-width: 0;
     padding: 10px;
     position: relative;
-    border-radius:4px;
-    background-color:#f5f5f5;
-    padding-left:10px!important;
+    border-radius: 4px;
+    background-color: #f5f5f5;
+    padding-left: 10px !important;
 }
 
 legend {
-    font-size:14px;
-    font-weight:bold;
-    margin-bottom: 0px;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 0;
     width: 35%;
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 5px 5px 5px 10px;
     background-color: #ffffff;
 }
+p.separator {
+    position: relative;
+    overflow: hidden;
+}
+
+p.separator span {
+    display: inline-block;
+    vertical-align: baseline;
+    zoom: 1;
+    *display: inline;
+    *vertical-align: inherit;
+    position: relative;
+    padding: 0 15px;
+}
+
+p.separator {
+    font-weight: bold;
+    margin-top: 5px;
+    padding-left: 20px;
+}
+
+p.separator span:before, p.separator span:after {
+    content: '';
+    display: block;
+    width: 1000px;
+    position: absolute;
+    top: 0.73em;
+    border-top: 1px solid #ddd;
+}
+
+p.separator span:before { right: 100%; }
+p.separator span:after { left: 100%; }
+
 
 .popover {
     max-width: 400px !important;

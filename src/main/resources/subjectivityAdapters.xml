@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <adapters>
 
-    <adapter id="S01" name="Datumbox" class="es.uned.adapters.subjectivity.Datumbox" models="true" lang="en" trainable="true">
+    <adapter id="S01" name="Datumbox" class="es.uned.adapters.subjectivity.Datumbox" models="true" lang="en" model_creation="true">
         <description><![CDATA[Descripción adaptador]]></description>
-        <parameter name="Preprocesar comentario" type="radio" id="preprocesar">
-            <option name="Sí" value="yes"/>
-            <option name="No" value="no"/>
-            <description><![CDATA[Descripción parámetro]]></description>
-        </parameter>
         <parameter name="Seleccionable" type="select" id="selectID">
             <option name="Opcion 1" value="op1" />
             <option name="Option 2" value="op2" />
@@ -22,6 +17,38 @@
         <parameter name="Texto" type="text" id="textID" default="Texto por defecto">
             <description>Descriptción texto</description>
         </parameter>
+    </adapter>
+
+    <adapter id="S02" name="Lingpipe" class="es.uned.adapters.subjectivity.Lingpipe" models="true" lang="en" model_creation="true">
+        <description></description>
+        <model_creation_parameters>
+            <parameter name="Language Model" type="select" id="LanguageModel">
+                <option name="NGramProcessLM" value="NGramProcessLM">
+                    <parameter name="N-Gram" type="number" id="NGramProcessLM_nGram" default="8">
+                        <option name="min" value="1" />
+                    </parameter>
+                    <parameter name="Número de Caracteres" type="number" id="NGramProcessLM_numChars" default="65535">
+                        <option name="min" value="1" />
+                        <option name="max" value="65535" />
+                    </parameter>
+                    <parameter name="Lambda Factor" type="double" id="NGramProcessLM_lambdaFactor" default="8.0">
+                        <option name="min" value="0.0" />
+                    </parameter>
+                </option>
+                <option name="NGramBoundaryLM" value="NGramBoundaryLM">
+                    <parameter name="N-Gram" type="number" id="NGramBoundaryLM_nGram" default="8">
+                        <option name="min" value="1" />
+                    </parameter>
+                    <parameter name="Número de Caracteres" type="number" id="NGramBoundaryLM_numChars" default="65534">
+                        <option name="min" value="1" />
+                        <option name="max" value="65534" />
+                    </parameter>
+                    <parameter name="Lambda Factor" type="double" id="NGramBoundaryLM_lambdaFactor" default="8.0">
+                        <option name="min" value="0.0" />
+                    </parameter>
+                </option>
+            </parameter>
+        </model_creation_parameters>
     </adapter>
 
 </adapters>

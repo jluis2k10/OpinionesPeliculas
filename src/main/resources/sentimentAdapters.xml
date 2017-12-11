@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <adapters>
 
-    <adapter id="P01" name="Datumbox" class="es.uned.adapters.sentiment.Datumbox" models="true" lang="es,en" trainable="true" model_creation="true">
+    <adapter id="P01" name="Datumbox" class="es.uned.adapters.sentiment.Datumbox" models="true" lang="es,en" model_creation="true">
         <description><![CDATA[Descripción adaptador]]></description>
-        <parameter name="Preprocesar comentario" type="radio" id="preprocesar">
-            <option name="Sí" value="yes"/>
-            <option name="No" value="no"/>
-            <description><![CDATA[Descripción parámetro]]></description>
-        </parameter>
         <parameter name="Seleccionable" type="select" id="selectID">
             <option name="Opcion 1" value="op1" />
             <option name="Option 2" value="op2" />
@@ -105,7 +100,7 @@
         </model_creation_parameters>
     </adapter>
 
-    <adapter id="P02" name="LingPipe" class="es.uned.adapters.sentiment.LingPipe" models="true" lang="en" trainable="true" model_creation="true">
+    <adapter id="P02" name="LingPipe" class="es.uned.adapters.sentiment.LingPipe" models="true" lang="en" model_creation="true">
         <description></description>
         <model_creation_parameters>
             <parameter name="Language Model" type="select" id="LanguageModel">

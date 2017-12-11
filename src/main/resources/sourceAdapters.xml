@@ -1,12 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <adapters>
 
-    <adapter name="Twitter" limit="true" siceDate="false" untilDate="true" language="true" imdbID="false">
+    <adapter name="Twitter" limit="true" siceDate="false" untilDate="true" language="true" imdbID="false" cleanTweet="true">
         <class>es.uned.adapters.sources.TwitterSearch</class>
     </adapter>
 
-    <adapter name="Frase" limit="false" sinceDate="false" untilDate="false" language="true" imdbID="false">
+    <adapter name="Frase" limit="false" sinceDate="false" untilDate="false" language="true" imdbID="false" cleanTweet="false">
         <class>es.uned.adapters.sources.SentenceSearch</class>
+    </adapter>
+
+    <adapter name="IMDB" limit="true" sinceDate="false" untilDate="false" language="true" imdbID="true" cleanTweet="false">
+        <class>es.uned.adapters.sources.IMDBSearch</class>
+    </adapter>
+
+    <adapter name="Trakt" limit="true" sinceDate="false" untilDate="false" language="false" imdbID="true" cleanTweet="false">
+        <class>es.uned.adapters.sources.TraktSearch</class>
     </adapter>
 
 </adapters>

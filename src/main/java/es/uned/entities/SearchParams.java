@@ -18,6 +18,8 @@ public class SearchParams {
     private String sinceDate;
     private String untilDate;
     private String lang;
+    private boolean cleanTweet;
+    private boolean delStopWords;
     private String sentimentAdapter;
     private String sentimentModel;
     private boolean classifySubjectivity;
@@ -25,8 +27,9 @@ public class SearchParams {
     private String subjectivityModel;
     private boolean discardNonSubjective;
 
-    private final String PARAMS_KEYS = "(?:searchTerm|sourceClass|limit|sinceDate|untilDate|lang|sentimentAdapter|" +
-            "sentimentModel|classifySubjectivity|subjectivityAdapter|subjectivityModel|discardNonSubjective)";
+    private final String PARAMS_KEYS = "(?:searchTerm|sourceClass|limit|sinceDate|untilDate|lang|cleanTweet|" +
+            "delStopWords|sentimentAdapter|sentimentModel|classifySubjectivity|subjectivityAdapter|subjectivityModel|" +
+            "discardNonSubjective)";
 
     public Map<String,String> getOptionalParameters(Map<String,String[]> parameters) {
 
@@ -89,6 +92,22 @@ public class SearchParams {
 
     public void setLang(String lang) {
         this.lang = lang;
+    }
+
+    public boolean isCleanTweet() {
+        return cleanTweet;
+    }
+
+    public void setCleanTweet(boolean cleanTweet) {
+        this.cleanTweet = cleanTweet;
+    }
+
+    public boolean isDelStopWords() {
+        return delStopWords;
+    }
+
+    public void setDelStopWords(boolean delStopWords) {
+        this.delStopWords = delStopWords;
     }
 
     public String getSentimentAdapter() {

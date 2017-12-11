@@ -1,5 +1,5 @@
-function populateAdapters(path) {
-    // Recuperar adaptadores disponibles
+/* Recuperar clasificadores de polaridad o de subjetividad disponibles */
+function getClassifiers(path) {
     var url = path + "/api/subjectivity-adapters";
     if ($("input[name='classifierType']:checked").val() === "polarity")
         url = path + "/api/sentiment-adapters";
@@ -9,17 +9,18 @@ function populateAdapters(path) {
         url: url,
         timeout: 5000,
         success: function(data) {
-            adapters = data;
+            classifiers = data;
             var $adapterSelect = $("#adapterSelect");
             $adapterSelect.empty();
-            $.each(adapters, function(index, adapter) {
-                if (adapter.model_creation) {
-                    $adapterSelect.append(new Option(adapter.name, adapter.class));
+            $.each(classifiers, function(index, classifier) {
+                if (classifier.model_creation) {
+                    $adapterSelect.append(new Option(classifier.name, classifier.class));
                 }
             });
             // Construir el formulario para los parámetros disponibles para la creación del modelo
-            populateModelCreationParameters(adapters);
-            return adapters;
+            var selectedClassifier = getSelectedClassifier(classifiers);
+            populateClassifierParameters(selectedClassifier);
+            return classifiers;
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             console.error("Request: " + JSON.stringify(XMLHttpRequest) + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);
@@ -28,16 +29,22 @@ function populateAdapters(path) {
     });
 }
 
-function populateModelCreationParameters(adapters) {
-    $(".parameters-container").empty();
+/* Obtener el clasificador seleccionado por el usuario */
+function getSelectedClassifier(classifiers) {
     var adapterClass = $("#adapterSelect").val();
     $("#adapterClass").val(adapterClass); // Aprovechamos para cambiar el valor en el input oculto del nuevo modelo
-    var selectedAdapter = $.grep(adapters, function (adapter, index) {
-        return (adapter.class === adapterClass);
+    var selectedClassifier = $.grep(classifiers, function (classifier, index) {
+        return (classifier.class === adapterClass);
     })[0];
+    return selectedClassifier;
+}
 
+/* Crear formulario con las opciones para construir un nuevo modelo del clasificador seleccionado */
+function populateClassifierParameters(classifier) {
+    $(".parameters-container").empty();
+    if (typeof classifier === 'undefined') return;
     // Cambiar también los idiomas posibles para el modelo en función de los aceptados por el adaptador
-    var avaliableLanguages = selectedAdapter.lang.split(",");
+    var avaliableLanguages = classifier.lang.split(",");
     var $langSelect = $("#language");
     $langSelect.empty();
     $.each(avaliableLanguages, function(index, lang) {
@@ -50,7 +57,7 @@ function populateModelCreationParameters(adapters) {
     });
 
     // Construir los parámetros disponibles para la creación de un nuevo modelo
-    $.each(selectedAdapter.model_creation_parameters, function (index, parameter) {
+    $.each(classifier.model_creation_parameters, function (index, parameter) {
         var $fieldset = $("<fieldset class='col-xs-12'></fieldset>");
         var $legend = $("<legend>" + parameter.name + "</legend>");
         $legend.appendTo($fieldset);
@@ -58,19 +65,16 @@ function populateModelCreationParameters(adapters) {
         $parameterHTML.appendTo($fieldset);
         $fieldset.appendTo($(".parameters-container"));
         var $select = $fieldset.find('select, input:checked');
-        attachOptionParameters($select, adapters);
+        attachOptionParameters($select, classifier);
     })
 }
 
-function attachOptionParameters($select, adapters) {
+/* Crear formulario con parámetros opcionales del clasificador */
+function attachOptionParameters($select, classifier) {
     var $fieldset = $select.closest('fieldset');
     $fieldset.find("div.option-parameter").remove();
 
-    var adapterClass = $("#adapterSelect").val();
-    var selectedAdapter = $.grep(adapters, function (adapter, index) {
-        return (adapter.class === adapterClass);
-    })[0];
-    var adapterParameter = $.grep(selectedAdapter.model_creation_parameters, function(parameter, index) {
+    var adapterParameter = $.grep(classifier.model_creation_parameters, function(parameter, index) {
         return (parameter.id === $select.attr("id") || parameter.id === $select.attr("name"));
     })[0];
     var selectedOption = $.grep(adapterParameter.options, function(option, index) {
@@ -85,6 +89,7 @@ function attachOptionParameters($select, adapters) {
     }
 }
 
+/* Crear campos de formulario para cada parámetro opcional del clasificador */
 function makeParameter(parameter, cssClass) {
     switch (parameter.type) {
         case "select":
@@ -102,6 +107,7 @@ function makeParameter(parameter, cssClass) {
     }
 }
 
+/* Crear opción de tipo Select */
 function makeSelectParameter(parameter, cssClass) {
     var $innerDiv = $("<div></div>").attr("class", "col-xs-3 form-group " + cssClass + "");
     var $label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
@@ -121,6 +127,7 @@ function makeSelectParameter(parameter, cssClass) {
     return $innerDiv;
 }
 
+/* Crear opción de tipo Campo de Texto */
 function makeTextParameter(parameter, cssClass) {
     var $innerDiv = $("<div></div>").attr("class", "col-xs-3 form-group " + cssClass + "");
     var $label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
@@ -136,6 +143,7 @@ function makeTextParameter(parameter, cssClass) {
     return $innerDiv;
 }
 
+/* Crear opción de tipo numérico entero */
 function makeNumberParameter(parameter, cssClass) {
     var $innerDiv = $("<div></div>").attr("class", "col-xs-3 form-group " + cssClass + "");
     var $label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
@@ -158,6 +166,7 @@ function makeNumberParameter(parameter, cssClass) {
     return $innerDiv;
 }
 
+/* Crear opción de tipo numérico doble (con decimales) */
 function makeDoubleParameter(parameter, cssClass) {
     var $innerDiv = $("<div></div>").attr("class", "col-xs-3 form-group " + cssClass + "");
     var $label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
@@ -180,6 +189,7 @@ function makeDoubleParameter(parameter, cssClass) {
     return $innerDiv;
 }
 
+/* Crear opción de tipo doble */
 function makeRadioParameter(parameter, cssClass) {
     var $innerDiv = $("<div></div>").attr("class", "col-xs-3 form-group " + cssClass + "");
     var $optionHeaderPar = $("<p></p>");
@@ -204,6 +214,7 @@ function makeRadioParameter(parameter, cssClass) {
     return $innerDiv;
 }
 
+/* Cambiar texto que etiqueta los inputs de los datasets */
 function switchDatasetTags() {
     if ($("input[name='classifierType']:checked").val() === "polarity") {
         $("label[for='psText']").text("Comentarios positivos");

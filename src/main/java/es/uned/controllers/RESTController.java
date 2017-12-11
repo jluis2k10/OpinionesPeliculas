@@ -34,13 +34,13 @@ public class RESTController {
 
     @RequestMapping(value = "/sentiment-adapters", method = RequestMethod.GET)
     public ResponseEntity<ArrayNode> sentimentAdapters() {
-        ArrayNode response = configParser.getSentimentAdapters("sentiment");
+        ArrayNode response = configParser.getAdapters("sentiment");
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @RequestMapping(value = "/subjectivity-adapters", method = RequestMethod.GET)
     public ResponseEntity<ArrayNode> subjectivityAdapters() {
-        ArrayNode response = configParser.getSentimentAdapters("subjectivity");
+        ArrayNode response = configParser.getAdapters("subjectivity");
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

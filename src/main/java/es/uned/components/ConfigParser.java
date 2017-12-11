@@ -66,6 +66,7 @@ public class ConfigParser {
                     adapterNode.put("untilDateEnabled", element.getAttribute("untilDate").equals("true"));
                     adapterNode.put("languageEnabled", element.getAttribute("language").equals("true"));
                     adapterNode.put("imdbIDEnabled", element.getAttribute("imdbID").equals("true"));
+                    adapterNode.put("cleanTweet", element.getAttribute("cleanTweet").equals("true"));
                     results.add(adapterNode);
                 }
             }
@@ -80,11 +81,11 @@ public class ConfigParser {
     }
 
     /**
-     * Adaptadores disponibles para el análisis de sentimiento.
+     * Adaptadores disponibles.
      * Genera objeto JSON desde el archivo de configuración
      * @return Objeto ArrayNode que representa al archivo de configuración XML
      */
-    public ArrayNode getSentimentAdapters(String adapterType) {
+    public ArrayNode getAdapters(String adapterType) {
         ArrayNode results = mapper.createArrayNode();
         Resource resource = null;
         switch (adapterType) {
@@ -113,7 +114,6 @@ public class ConfigParser {
                     adapterNode.put("class", element.getAttribute("class"));
                     adapterNode.put("lang", element.getAttribute("lang"));
                     adapterNode.put("models_enabled", element.getAttribute("models").equals("true"));
-                    adapterNode.put("trainable", element.getAttribute("trainable").equals("true"));
                     adapterNode.put("model_creation", element.getAttribute("model_creation").equals("true"));
                     adapterNode.put("description", element.getElementsByTagName("description").item(0).getTextContent());
                     if (adapterNode.get("models_enabled").asBoolean())
@@ -232,6 +232,7 @@ public class ConfigParser {
             modelNode.put("name", model.getName());
             modelNode.put("location", model.getLocation());
             modelNode.put("lang", model.getLanguage());
+            modelNode.put("trainable", model.isTrainable());
             modelNode.put("description", model.getDescription());
             results.add(modelNode);
         }

@@ -3,7 +3,7 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ include file="_header.jsp"%>
 
-<form:form method="post" modelAttribute="trainForm" action="${path}/train" enctype="multipart/form-data">
+<form:form method="post" modelAttribute="trainForm" action="${path}/models/train" enctype="multipart/form-data">
     <!-- Fuente de comentarios para entrenar -->
     <div class="row">
         <fieldset class="col-xs-12">
@@ -153,6 +153,10 @@
 </form:form>
 
 <%@ include file="_js.jsp"%>
+<link rel="stylesheet" href="${path}/css/select2.min.css" />
+<link rel="stylesheet" href="${path}/css/select2-bootstrap.min.css" />
+<script type="text/javascript" src="${path}/js/select2.min.js"></script>
+<script type="text/javascript" src="${path}/js/select2.es.js"></script>
 <script type="text/javascript" src="${path}/js/custom.js"></script>
 
 <script>
@@ -176,6 +180,13 @@
         });
 
         makeTrainModels("${path}");
+    });
+
+    // Select para elegir película y encontrar su identificador en IMDB
+    createIMDBSelect("${path}");
+    // Al seleccionar la película pasamos el imdbID al input de la búsqueda
+    $('.imdb-select').on('select2:selecting', function(e) {
+        $('#searchTerm').val(e.params.args.data.id);
     });
 
     /* Acción al seleccionar el idioma */
