@@ -3,7 +3,7 @@ package es.uned.adapters.sources;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.uned.entities.CommentWithSentiment;
-import es.uned.entities.SearchParams;
+import es.uned.entities.Search;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -18,7 +18,9 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.LinkedList;
 
 /**
  *
@@ -30,8 +32,8 @@ public class TraktSearch implements SourceAdapter {
     private Environment environment;
 
     @Override
-    public HashMap<Integer, CommentWithSentiment> getComments(SearchParams params) {
-        HashMap<Integer,CommentWithSentiment> comments = new HashMap<>();
+    public void doSearch(Search search) {
+        LinkedList<CommentWithSentiment> comments = new LinkedList<>();
         HttpClient httpClient = HttpClientBuilder.create().build();
         URI uri = null;
 
@@ -39,9 +41,9 @@ public class TraktSearch implements SourceAdapter {
             uri = new URIBuilder()
                     .setScheme("https")
                     .setHost("api.trakt.tv")
-                    .setPath("/movies/" + params.getSearchTerm() + "/comments/newest")
+                    .setPath("/movies/" + search.getTerm() + "/comments/newest")
                     .setParameter("page", "1")
-                    .setParameter("limit", Integer.toString(params.getLimit()))
+                    .setParameter("limit", Integer.toString(search.getLimit()))
                     .build();
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -61,21 +63,22 @@ public class TraktSearch implements SourceAdapter {
             String json = EntityUtils.toString(entity);
             ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNode = mapper.readTree(json);
-
-            for (JsonNode TraktComment : jsonNode) {
+            SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+            for (JsonNode traktComment : jsonNode) {
                 CommentWithSentiment comment = new CommentWithSentiment.Builder()
-                        .searchTerm(params.getSearchTerm())
-                        .comment(TraktComment.get("comment").asText())
+                        .search(search)
+                        .sourceUrl("https://trakt.tv/comments/" + traktComment.get("id").asText())
+                        .date(dateFormatter.parse(traktComment.get("created_at").asText()))
+                        .comment(traktComment.get("comment").asText())
                         .build();
-                comments.put(comment.getComment().hashCode(), comment);
-                //comments.add(new CommentWithSentiment(comment.get("comment").asText(),
-                //        comment.get("user").get("username").asText(),
-                //        dateFormat.parse(comment.get("created_at").asText())));
+                comments.add(comment);
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
 
-        return comments;
+        search.setComments(comments);
     }
 }

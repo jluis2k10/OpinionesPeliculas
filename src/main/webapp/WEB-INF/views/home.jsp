@@ -8,17 +8,17 @@
     <div class="row">
         <fieldset class="col-xs-12">
             <legend>Opciones de búsqueda</legend>
-            <spring:bind path="searchTerm">
+            <spring:bind path="term">
                 <div class="col-xs-12 ${status.error ? "has-error" : ""}">
                     <div class="input-group form-group">
                         <div class="input-group-btn">
                             <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Origen <span class="caret"></span></button>
                             <ul class="dropdown-menu" id="sources-dropdown"></ul>
                         </div>
-                        <form:input path="searchTerm" type="text" cssClass="form-control" placeholder="Término de búsqueda" aria-describedby="errorsSearchTerm"></form:input>
+                        <form:input path="term" type="text" cssClass="form-control" placeholder="Término de búsqueda" aria-describedby="errorsTerm"></form:input>
                         <div class="input-group-addon source-placeholder"></div>
                     </div>
-                    <form:errors path="searchTerm" cssClass="help-block" id="errorsSearchTerm"></form:errors>
+                    <form:errors path="term" cssClass="help-block" id="errorsTerm"></form:errors>
                 </div>
             </spring:bind>
             <spring:bind path="limit">
@@ -175,11 +175,13 @@
         </fieldset>
     </div>
     <div class="row">
-        <form:hidden path="sourceClass" value="" id="sourceClass"></form:hidden>
         <div class="col-xs-12">
             <button type="submit" class="btn btn-primary">Enviar</button>
         </div>
     </div>
+    <form:hidden path="source" value="" id="source"></form:hidden>
+    <form:hidden path="sourceClass" value="" id="sourceClass"></form:hidden>
+    <form:hidden path="created" value="" id="created"></form:hidden>
 </form:form>
 <%@ include file="_js.jsp"%>
 <link rel="stylesheet" href="${path}/css/bootstrap-datetimepicker.min.css" />
@@ -198,6 +200,7 @@
     $subjectivityAdapters = null;
 
     $(document).ready(function() {
+        $("#created").val(new Date().toLocaleString());
         /* Recuperar las fuentes de comentarios disponibles */
         $.ajax({
             type: "GET",
@@ -256,7 +259,7 @@
     createIMDBSelect("${path}");
     // Al seleccionar la película pasamos el imdbID al input de la búsqueda
     $('.imdb-select').on('select2:selecting', function(e) {
-        $('#searchTerm').val(e.params.args.data.id);
+        $('#term').val(e.params.args.data.id);
     });
 
     /* Inicializar selectores de fecha */

@@ -39,13 +39,14 @@ function makeTrainSourcesButton() {
 /* Presentar los elementos del formulario necesarios según la fuente de comentarios */
 function makeSourcesOptions(e) {
     $(".source-placeholder").html(e.dataset.name);
+    $("#source").val(e.dataset.name);
     $("#sourceClass").val(e.dataset.adapter);
     if (e.dataset.imdbid === "true") {
-        $("#searchTerm").attr("readonly", "readonly");
+        $("#term").attr("readonly", "readonly");
         $(".imdbID-container").show();
         $("span.select2-container").width("100%");
     } else {
-        $("#searchTerm").removeAttr("disabled");
+        $("#term").removeAttr("disabled");
         $(".imdbID-container").hide();
     }
     if (e.dataset.limit === "true") {
@@ -76,12 +77,12 @@ function makeSourcesOptions(e) {
 
     // Para la página de entrenamiento de modelos tenemos dos botones más
     if (e.dataset.name === "Subir Datasets") {
-        $("#searchTerm").attr("disabled", "disabled");
+        $("#term").attr("disabled", "disabled");
         $(".datasets-container").show();
         $(".text-datasets").hide();
         $(".file-datasets").show();
     } else if (e.dataset.name === "Introducir Datasets") {
-        $("#searchTerm").attr("disabled", "disabled");
+        $("#tern").attr("disabled", "disabled");
         $(".datasets-container").show();
         $(".file-datasets").hide();
         $(".text-datasets").show();

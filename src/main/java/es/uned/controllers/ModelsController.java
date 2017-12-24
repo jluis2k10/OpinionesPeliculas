@@ -6,9 +6,8 @@ import es.uned.adapters.SubjectivityAdapterFactory;
 import es.uned.adapters.sentiment.SentimentAdapter;
 import es.uned.adapters.sources.SourceAdapter;
 import es.uned.adapters.subjectivity.SubjectivityAdapter;
-import es.uned.components.Train2SearchConverter;
 import es.uned.entities.AdapterModel;
-import es.uned.entities.CommentWithSentiment;
+import es.uned.entities.Search;
 import es.uned.entities.TrainParams;
 import es.uned.services.AdapterModelService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +33,6 @@ public class ModelsController {
     @Autowired private SubjectivityAdapterFactory subjectivityFactory;
     @Autowired private SentimentAdapterFactory sentimentFactory;
     @Autowired private AdapterModelService adapterModelService;
-    @Autowired private Train2SearchConverter train2SearchConverter;
 
     @RequestMapping(value = "create", method = RequestMethod.GET)
     public String create(Model model) {
@@ -80,9 +76,9 @@ public class ModelsController {
             neg_obj = trainForm.sentenceList(trainForm.getNoText());
         } else {
             SourceAdapter sourceAdapter = sourceFactory.get(trainForm.getSourceClass());
-            HashMap<Integer,CommentWithSentiment> comments = sourceAdapter.getComments(train2SearchConverter.convert(trainForm));
+            Search search = new Search(trainForm);
             model.addAttribute("trainForm", trainForm);
-            model.addAttribute("comments", comments);
+            model.addAttribute("comments", search.getComments());
             return "train_comments";
         }
 

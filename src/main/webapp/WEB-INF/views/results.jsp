@@ -5,9 +5,9 @@
         <c:if test="${!empty comments}">
             <ol>
                 <c:forEach var="comment" items="${comments}">
-                    <li>${comment.value.comment}
-                        <p>${comment.value.tokenizedComment}</p>
-                        <p><strong>${comment.value.predictedSentiment}</strong>, ${comment.value.sentimentScore}, <strong>${comment.value.predictedSubjectivity}</strong>, ${comment.value.subjectivityScore}</p>
+                    <li>${comment.comment}
+                        <p>${comment.tokenizedComment}</p>
+                        <p><strong>${comment.sentiment}</strong>, ${comment.sentimentScore}, <strong>${comment.subjectivity}</strong>, ${comment.subjectivityScore}</p>
                     </li>
                 </c:forEach>
             </ol>

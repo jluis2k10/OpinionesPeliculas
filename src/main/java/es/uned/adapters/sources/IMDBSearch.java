@@ -3,7 +3,7 @@ package es.uned.adapters.sources;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.uned.entities.CommentWithSentiment;
-import es.uned.entities.SearchParams;
+import es.uned.entities.Search;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -18,7 +18,9 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.LinkedList;
 
 /**
  *
@@ -30,8 +32,8 @@ public class IMDBSearch implements SourceAdapter {
     private Environment environment;
 
     @Override
-    public HashMap<Integer, CommentWithSentiment> getComments(SearchParams params) {
-        HashMap<Integer,CommentWithSentiment> comments = new HashMap<>();
+    public void doSearch(Search search) {
+        LinkedList<CommentWithSentiment> comments = new LinkedList<>();
         HttpClient httpClient = HttpClientBuilder.create().build();
         URI uri = null;
 
@@ -43,10 +45,10 @@ public class IMDBSearch implements SourceAdapter {
                     .setParameter("api", "v1")
                     .setParameter("appid", "iphone1_1")
                     .setParameter("apiPolicy", "app1_1")
-                    .setParameter("locale", params.getLang())
+                    .setParameter("locale", search.getLang())
                     .setParameter("apiKey", environment.getProperty("imdb.apiKey"))
-                    .setParameter("limit", Integer.toString(params.getLimit()))
-                    .setParameter("tconst", params.getSearchTerm())
+                    .setParameter("limit", Integer.toString(search.getLimit()))
+                    .setParameter("tconst", search.getTerm())
                     .build();
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -64,19 +66,22 @@ public class IMDBSearch implements SourceAdapter {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNode = mapper.readTree(json);
             JsonNode userComments = jsonNode.get("data").get("user_comments");
+            SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
             for (JsonNode userComment : userComments) {
                 CommentWithSentiment comment = new CommentWithSentiment.Builder()
-                        .searchTerm(params.getSearchTerm())
+                        .search(search)
+                        .sourceUrl("http://www.imdb.com/title/" + search.getTerm() + "/reviews")
+                        .date(dateFormatter.parse(userComment.get("date").asText()))
                         .comment(userComment.get("text").asText())
                         .build();
-                comments.put(comment.getComment().hashCode(), comment);
-                //comments.add(new CommentWithSentiment(comment.get("text").asText(), comment.get("user_name").asText(),
-                //        dateFormat.parse(comment.get("date").asText())));
+                comments.add(comment);
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
 
-        return comments;
+        search.setComments(comments);
     }
 }

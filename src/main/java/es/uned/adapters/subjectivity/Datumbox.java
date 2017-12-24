@@ -8,13 +8,12 @@ import es.uned.adapters.AdapterType;
 import es.uned.adapters.common.CommonDatumbox;
 import es.uned.components.Tokenizer;
 import es.uned.entities.CommentWithSentiment;
-import es.uned.entities.SearchParams;
+import es.uned.entities.Search;
+import es.uned.entities.Subjectivity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.Iterator;
 
 /**
  *
@@ -39,7 +38,7 @@ public class Datumbox extends CommonDatumbox implements SubjectivityAdapter {
     }
 
     @Override
-    public void analyze(Map<Integer, CommentWithSentiment> comments, SearchParams search, Map<String, String> options) {
+    public void analyze(Search search) {
         // Configuración del modelo
         Configuration configuration = defineConfiguration();
 
@@ -47,27 +46,32 @@ public class Datumbox extends CommonDatumbox implements SubjectivityAdapter {
         TextClassifier subjectivityClassifier = MLBuilder.load(TextClassifier.class, search.getSubjectivityModel(), configuration);
 
         // Crear tokenizer
-        Tokenizer tokenizer = tokenizerBuilder.searchTerm(search.getSearchTerm())
+        Tokenizer tokenizer = tokenizerBuilder.searchTerm(search.getTerm())
                 .language(search.getLang())
                 .removeStopWords(search.isDelStopWords())
                 .cleanTweet(search.isCleanTweet())
                 .build();
 
-        Set<Integer> commentsToRemove = new HashSet<>();
-
-        comments.forEach((k, comment) -> {
+        Iterator<CommentWithSentiment> it = search.getComments().iterator();
+        while (it.hasNext()) {
+            CommentWithSentiment comment = it.next();
             if (!comment.isTokenized()) {
                 comment.setTokenized(true);
                 comment.setTokenizedComment(tokenizer.tokenize(comment.getComment()));
             }
             Record subjectivity = subjectivityClassifier.predict(comment.getTokenizedComment());
-            String pred = subjectivity.getYPredicted().toString();
             String prob = subjectivity.getYPredictedProbabilities().get(subjectivity.getYPredicted()).toString();
-            comment.setPredictedSubjectivity(pred);
             comment.setSubjectivityScore(Double.parseDouble(prob));
-            if (pred.equals("objective") && search.isDiscardNonSubjective())
-                commentsToRemove.add(k);
-        });
-        comments.keySet().removeAll(commentsToRemove);
+            switch (subjectivity.getYPredicted().toString()) {
+                case "subjective":
+                    comment.setSubjectivity(Subjectivity.SUBJECTIVE);
+                    break;
+                case "objective":
+                    comment.setSubjectivity(Subjectivity.OBJECTIVE);
+                    if (search.isDiscardNonSubjective())
+                        it.remove();
+                    break;
+            }
+        }
     }
 }

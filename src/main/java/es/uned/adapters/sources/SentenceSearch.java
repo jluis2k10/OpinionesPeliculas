@@ -1,10 +1,11 @@
 package es.uned.adapters.sources;
 
 import es.uned.entities.CommentWithSentiment;
-import es.uned.entities.SearchParams;
+import es.uned.entities.Search;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
+import java.util.Date;
+import java.util.LinkedList;
 
 /**
  *
@@ -13,10 +14,16 @@ import java.util.HashMap;
 public class SentenceSearch implements SourceAdapter {
 
     @Override
-    public HashMap<Integer, CommentWithSentiment> getComments(SearchParams params) {
-        HashMap<Integer, CommentWithSentiment> results = new HashMap<>();
-        results.put(params.getSearchTerm().hashCode(),  new CommentWithSentiment.Builder().comment(params.getSearchTerm()).build());
-        return results;
+    public void doSearch(Search search) {
+        LinkedList<CommentWithSentiment> comments = new LinkedList<>();
+        CommentWithSentiment comment = new CommentWithSentiment.Builder()
+                .search(search)
+                .sourceUrl("")
+                .date(new Date())
+                .comment(search.getTerm())
+                .build();
+        comments.add(comment);
+        search.setComments(comments);
     }
 
 }

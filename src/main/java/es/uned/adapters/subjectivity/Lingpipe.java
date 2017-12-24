@@ -8,7 +8,8 @@ import es.uned.adapters.AdapterType;
 import es.uned.adapters.common.CommonLingpipe;
 import es.uned.components.Tokenizer;
 import es.uned.entities.CommentWithSentiment;
-import es.uned.entities.SearchParams;
+import es.uned.entities.Search;
+import es.uned.entities.Subjectivity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -16,9 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.Iterator;
 
 /**
  *
@@ -46,7 +45,7 @@ public class Lingpipe extends CommonLingpipe implements SubjectivityAdapter {
     }
 
     @Override
-    public void analyze(Map<Integer, CommentWithSentiment> comments, SearchParams search, Map<String, String> options) {
+    public void analyze(Search search) {
         Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR + "/"  + search.getSubjectivityModel() + "/classifier.model");
         File modelFile = null;
 
@@ -61,25 +60,32 @@ public class Lingpipe extends CommonLingpipe implements SubjectivityAdapter {
         }
 
         // Crear tokenizer
-        Tokenizer tokenizer = tokenizerBuilder.searchTerm(search.getSearchTerm())
+        Tokenizer tokenizer = tokenizerBuilder.searchTerm(search.getTerm())
                 .language(search.getLang())
                 .removeStopWords(search.isDelStopWords())
                 .cleanTweet(search.isCleanTweet())
                 .build();
 
         final BaseClassifier<String> finalClassifier = bClassifier;
-        Set<Integer> commentsToRemove = new HashSet<>();
-        comments.forEach((k, comment) -> {
+        Iterator<CommentWithSentiment> it = search.getComments().iterator();
+        while (it.hasNext()) {
+            CommentWithSentiment comment = it.next();
             if (!comment.isTokenized()) {
                 comment.setTokenized(true);
                 comment.setTokenizedComment(tokenizer.tokenize(comment.getComment()));
             }
             Classification classification = finalClassifier.classify(comment.getTokenizedComment());
-            comment.setPredictedSubjectivity(classification.bestCategory());
             comment.setSubjectivityScore(((JointClassification) classification).conditionalProbability(classification.bestCategory()));
-            if (classification.bestCategory().equals("objective") && search.isDiscardNonSubjective())
-                commentsToRemove.add(k);
-        });
-        comments.keySet().removeAll(commentsToRemove);
+            switch (classification.bestCategory()) {
+                case "subjective":
+                    comment.setSubjectivity(Subjectivity.SUBJECTIVE);
+                    break;
+                case "objective":
+                    comment.setSubjectivity(Subjectivity.OBJECTIVE);
+                    if (search.isDiscardNonSubjective())
+                        it.remove();
+                    break;
+            }
+        }
     }
 }

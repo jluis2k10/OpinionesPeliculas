@@ -7,12 +7,10 @@ import com.datumbox.framework.core.machinelearning.MLBuilder;
 import es.uned.adapters.AdapterType;
 import es.uned.adapters.common.CommonDatumbox;
 import es.uned.components.Tokenizer;
-import es.uned.entities.CommentWithSentiment;
-import es.uned.entities.SearchParams;
+import es.uned.entities.Search;
+import es.uned.entities.Sentiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 /**
  *
@@ -20,7 +18,8 @@ import java.util.Map;
 @Component("es.uned.adapters.sentiment.Datumbox")
 public class Datumbox extends CommonDatumbox implements SentimentAdapter {
 
-    @Autowired private Tokenizer.TokenizerBuilder tokenizerBuilder;
+    @Autowired
+    private Tokenizer.TokenizerBuilder tokenizerBuilder;
 
     /* Debe coincidir con ID del XML */
     private final String myID = "P01";
@@ -36,7 +35,7 @@ public class Datumbox extends CommonDatumbox implements SentimentAdapter {
         return adapterType;
     }
 
-    public void analyze(Map<Integer,CommentWithSentiment> comments, SearchParams search, Map<String,String> options) {
+    public void analyze(Search search) {
         // Configuración del modelo
         Configuration configuration = defineConfiguration();
 
@@ -44,21 +43,32 @@ public class Datumbox extends CommonDatumbox implements SentimentAdapter {
         TextClassifier sentimentClassifier = MLBuilder.load(TextClassifier.class, search.getSentimentModel(), configuration);
 
         // Crear tokenizer
-        Tokenizer tokenizer = tokenizerBuilder.searchTerm(search.getSearchTerm())
+        Tokenizer tokenizer = tokenizerBuilder.searchTerm(search.getTerm())
                 .language(search.getLang())
                 .removeStopWords(search.isDelStopWords())
                 .cleanTweet(search.isCleanTweet())
                 .build();
 
-        comments.forEach((k, comment) -> {
+        search.getComments().forEach(comment -> {
             if (!comment.isTokenized()) {
                 comment.setTokenized(true);
                 comment.setTokenizedComment(tokenizer.tokenize(comment.getComment()));
             }
             Record sentiment = sentimentClassifier.predict(comment.getTokenizedComment());
-            String pred = sentiment.getYPredicted().toString();
+            Sentiment sentimentType = null;
+            switch (sentiment.getYPredicted().toString()) {
+                case "positive":
+                    sentimentType = Sentiment.POSITIVE;
+                    break;
+                case "negative":
+                    sentimentType = Sentiment.NEGATIVE;
+                    break;
+                case "neutral":
+                    sentimentType = Sentiment.NEUTRAL;
+                    break;
+            }
             String prob = sentiment.getYPredictedProbabilities().get(sentiment.getYPredicted()).toString();
-            comment.setPredictedSentiment(pred);
+            comment.setSentiment(sentimentType);
             comment.setSentimentScore(Double.parseDouble(prob));
         });
     }

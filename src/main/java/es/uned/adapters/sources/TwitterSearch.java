@@ -1,7 +1,7 @@
 package es.uned.adapters.sources;
 
 import es.uned.entities.CommentWithSentiment;
-import es.uned.entities.SearchParams;
+import es.uned.entities.Search;
 import org.springframework.core.env.Environment;
 import org.springframework.social.twitter.api.SearchParameters;
 import org.springframework.social.twitter.api.SearchResults;
@@ -15,6 +15,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  *
@@ -27,29 +28,30 @@ public class TwitterSearch implements SourceAdapter {
     private Environment environment;
 
     @Override
-    public HashMap<Integer,CommentWithSentiment> getComments(SearchParams params) {
+    public void doSearch(Search search) {
+        // Hashmap para evitar meter comentarios duplicados
         HashMap<Integer,CommentWithSentiment> comments = new HashMap<>();
         Twitter twitter = new TwitterTemplate(
                 environment.getProperty("twitter.consumerKey"),
                 environment.getProperty("twitter.consumerSecret")
         );
 
-        SearchParameters parameters = new SearchParameters(params.getSearchTerm())
-                .lang(params.getLang())
+        SearchParameters parameters = new SearchParameters(search.getTerm())
+                .lang(search.getLang())
                 .resultType(SearchParameters.ResultType.RECENT)
                 .count(100)
                 .includeEntities(false);
-        if (!params.getUntilDate().equals("")) {
-            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+        if (!search.getUntilDate().equals("")) {
+            SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
             try {
-                Date untilDate = formatter.parse(params.getUntilDate());
+                Date untilDate = dateFormatter.parse(search.getUntilDate());
                 parameters.until(untilDate);
             } catch (ParseException e) {
                 e.printStackTrace();
             }
         }
 
-        while (comments.size() < params.getLimit()) {
+        while (comments.size() < search.getLimit()) {
             SearchResults results = twitter.searchOperations().search(parameters);
             if (results.getTweets().size() == 0)
                 break;
@@ -57,10 +59,12 @@ public class TwitterSearch implements SourceAdapter {
             for (Tweet tweet : results.getTweets()) {
                 if (tweet.getRetweetCount() == 0 && // No retweets
                         tweet.getText().toLowerCase().indexOf("http") == -1 && // Que no contengan enlaces
-                        tweet.getText().toLowerCase().indexOf(params.getSearchTerm().toLowerCase()) != -1 && // Que contengan el término de búsqueda
-                        comments.size() < params.getLimit()) {
+                        tweet.getText().toLowerCase().indexOf(search.getTerm().toLowerCase()) != -1 && // Que contengan el término de búsqueda
+                        comments.size() < search.getLimit()) {
                     CommentWithSentiment comment = new CommentWithSentiment.Builder()
-                            .searchTerm(params.getSearchTerm())
+                            .search(search)
+                            .sourceUrl("https://twitter.com/" + tweet.getFromUser() + "/status/" + tweet.getId())
+                            .date(tweet.getCreatedAt())
                             .comment(tweet.getText())
                             .build();
                     comments.put(comment.getComment().hashCode(), comment);
@@ -71,7 +75,7 @@ public class TwitterSearch implements SourceAdapter {
             Long maxID = results.getTweets().get(last).getId();
             parameters.maxId(maxID-1);
         }
-
-        return comments;
+        // Convertimos hashmap a lista y la guardamos
+        search.setComments(new LinkedList<>(comments.values()));
     }
 }

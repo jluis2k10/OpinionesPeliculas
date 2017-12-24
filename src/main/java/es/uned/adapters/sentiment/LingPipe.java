@@ -7,8 +7,8 @@ import com.aliasi.util.AbstractExternalizable;
 import es.uned.adapters.AdapterType;
 import es.uned.adapters.common.CommonLingpipe;
 import es.uned.components.Tokenizer;
-import es.uned.entities.CommentWithSentiment;
-import es.uned.entities.SearchParams;
+import es.uned.entities.Search;
+import es.uned.entities.Sentiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
 /**
  *
@@ -44,7 +43,7 @@ public class LingPipe extends CommonLingpipe implements SentimentAdapter {
     }
 
     @Override
-    public void analyze(Map<Integer,CommentWithSentiment> comments, SearchParams search, Map<String,String> options) {
+    public void analyze(Search search) {
         Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR + "/"  + search.getSentimentModel() + "/classifier.model");
         File modelFile = null;
         BaseClassifier<String> classifier = null;
@@ -58,7 +57,7 @@ public class LingPipe extends CommonLingpipe implements SentimentAdapter {
         }
 
         // Crear tokenizer
-        Tokenizer tokenizer = tokenizerBuilder.searchTerm(search.getSearchTerm())
+        Tokenizer tokenizer = tokenizerBuilder.searchTerm(search.getTerm())
                 .language(search.getLang())
                 .removeStopWords(search.isDelStopWords())
                 .cleanTweet(search.isCleanTweet())
@@ -66,13 +65,20 @@ public class LingPipe extends CommonLingpipe implements SentimentAdapter {
 
         BaseClassifier<String> finalClassifier = classifier;
 
-        comments.forEach((k, comment) -> {
+        search.getComments().forEach(comment -> {
             if (!comment.isTokenized()) {
                 comment.setTokenized(true);
                 comment.setTokenizedComment(tokenizer.tokenize(comment.getComment()));
             }
             Classification classification = finalClassifier.classify(comment.getTokenizedComment());
-            comment.setPredictedSentiment(classification.bestCategory());
+            switch (classification.bestCategory()) {
+                case "pos":
+                    comment.setSentiment(Sentiment.POSITIVE);
+                    break;
+                case "neg":
+                    comment.setSentiment(Sentiment.NEGATIVE);
+                    break;
+            }
             comment.setSentimentScore(((JointClassification) classification).conditionalProbability(classification.bestCategory()));
         });
 

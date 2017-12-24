@@ -11,12 +11,12 @@ import java.util.Set;
  *
  */
 @Service
-public class AdapterModelServiceImpl implements AdapterModelService {
+public class MyAdapterModelService implements AdapterModelService {
 
     private final AdapterModelRepo adapterModelRepo;
 
     @Autowired
-    public AdapterModelServiceImpl(AdapterModelRepo adapterModelRepo) {
+    public MyAdapterModelService(AdapterModelRepo adapterModelRepo) {
         this.adapterModelRepo = adapterModelRepo;
     }
 
