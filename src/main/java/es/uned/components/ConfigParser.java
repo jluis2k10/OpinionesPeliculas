@@ -3,7 +3,7 @@ package es.uned.components;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import es.uned.entities.AdapterModel;
+import es.uned.entities.AdapterModels;
 import es.uned.services.AdapterModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -226,8 +226,8 @@ public class ConfigParser {
     private ArrayNode getAdapterModels(String adapterClass) {
         ObjectMapper mapper = new ObjectMapper();
         ArrayNode results = mapper.createArrayNode();
-        Set<AdapterModel> models = adapterModelService.findByAdapterClass(adapterClass);
-        for(AdapterModel model: models) {
+        Set<AdapterModels> models = adapterModelService.findByAdapterClass(adapterClass);
+        for(AdapterModels model: models) {
             ObjectNode modelNode = mapper.createObjectNode();
             modelNode.put("name", model.getName());
             modelNode.put("location", model.getLocation());

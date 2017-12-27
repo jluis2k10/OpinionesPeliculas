@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  */
 @Entity
 @Table(name = "Models")
-public class AdapterModel {
+public class AdapterModels {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,6 +38,10 @@ public class AdapterModel {
     @Column(name = "trainable")
     private boolean trainable = true;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner")
+    private Account owner;
+
     @Column(name = "description", nullable = true)
     private String description;
 
@@ -47,6 +51,7 @@ public class AdapterModel {
     @Transient private MultipartFile psFile; // positive or subjective file
     @Transient private MultipartFile noFile; // negative or objective file
 
+    @Transient
     private final String PARAMS_KEYS = "(?:id|name|adapterClass|language|location|trainable|description|" +
             "textDataset|psText|noText|psFile|noFile)";
 
@@ -141,6 +146,14 @@ public class AdapterModel {
 
     public void setTrainable(boolean trainable) {
         this.trainable = trainable;
+    }
+
+    public Account getOwner() {
+        return owner;
+    }
+
+    public void setOwner(Account owner) {
+        this.owner = owner;
     }
 
     public String getDescription() {

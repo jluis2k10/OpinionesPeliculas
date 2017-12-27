@@ -27,12 +27,14 @@ public class CommentWithSentiment {
     @Column(name = "date")
     private Date date;
 
+    @Lob
     @Column(name = "comment", nullable = false)
     private String comment;
 
     @Column(name = "tokenized")
     private boolean tokenized = false;
 
+    @Lob
     @Column(name = "tokenized_comment")
     private String tokenizedComment;
 

@@ -1,6 +1,6 @@
 package es.uned.repositories;
 
-import es.uned.entities.AdapterModel;
+import es.uned.entities.AdapterModels;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -10,8 +10,8 @@ import java.util.Set;
  *
  */
 @Repository
-public interface AdapterModelRepo extends JpaRepository<AdapterModel, Long> {
+public interface AdapterModelRepo extends JpaRepository<AdapterModels, Long> {
 
-    Set<AdapterModel> findAllByAdapterClass(String adapterClass);
+    Set<AdapterModels> findAllByAdapterClass(String adapterClass);
 
 }

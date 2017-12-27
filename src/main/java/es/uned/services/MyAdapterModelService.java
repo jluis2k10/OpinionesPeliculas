@@ -1,6 +1,6 @@
 package es.uned.services;
 
-import es.uned.entities.AdapterModel;
+import es.uned.entities.AdapterModels;
 import es.uned.repositories.AdapterModelRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,12 +21,12 @@ public class MyAdapterModelService implements AdapterModelService {
     }
 
     @Override
-    public void save(AdapterModel adapterModel) {
-        adapterModelRepo.save(adapterModel);
+    public void save(AdapterModels adapterModels) {
+        adapterModelRepo.save(adapterModels);
     }
 
     @Override
-    public Set<AdapterModel> findByAdapterClass(String adapterClass) {
+    public Set<AdapterModels> findByAdapterClass(String adapterClass) {
         return adapterModelRepo.findAllByAdapterClass(adapterClass);
     }
 }

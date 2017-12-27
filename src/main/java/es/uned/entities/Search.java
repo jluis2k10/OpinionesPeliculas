@@ -48,11 +48,11 @@ public class Search {
     private String sentimentAdapter;
     @Column(name = "sentiment_model", nullable = false)
     private String sentimentModel;
-    @Column(name = "classify_subjectivity", nullable = false)
+    @Column(name = "classify_subjectivity")
     private boolean classifySubjectivity;
-    @Column(name = "subjectivity_adapter", nullable = false)
+    @Column(name = "subjectivity_adapter")
     private String subjectivityAdapter;
-    @Column(name = "subjectivity_model", nullable = false)
+    @Column(name = "subjectivity_model")
     private String subjectivityModel;
     @Column(name = "discard_non_subjective")
     private boolean discardNonSubjective;

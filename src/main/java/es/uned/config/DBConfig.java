@@ -48,6 +48,7 @@ public class DBConfig {
 
     // Inicializar BBDD con los scripts SQL
     private DatabasePopulator createDatabasePopulator() throws IOException {
+        System.out.println(sqlScripts);
         ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
         databasePopulator.setSqlScriptEncoding("UTF-8");
         databasePopulator.setContinueOnError(true);

@@ -200,7 +200,6 @@
     $subjectivityAdapters = null;
 
     $(document).ready(function() {
-        $("#created").val(new Date().toLocaleString());
         /* Recuperar las fuentes de comentarios disponibles */
         $.ajax({
             type: "GET",
@@ -313,5 +312,11 @@
         populateModels("subjectivity", $adapter[0]);       // Rellener el select con los modelos del adaptador
         makeAdapterOptions("subjectivity", $adapter[0]);   // Construir las opciones para el adaptador
     });
+
+    /* Acción al enviar el formulario */
+    $("#searchForm").submit(function (e) {
+        $("#created").val(new Date().toLocaleString()); // Fecha de creación de la búsqueda
+        //e.preventDefault();
+    })
 </script>
 <%@ include file="_footer.jsp"%>

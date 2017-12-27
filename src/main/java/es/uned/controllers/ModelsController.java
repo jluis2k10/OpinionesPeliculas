@@ -6,7 +6,7 @@ import es.uned.adapters.SubjectivityAdapterFactory;
 import es.uned.adapters.sentiment.SentimentAdapter;
 import es.uned.adapters.sources.SourceAdapter;
 import es.uned.adapters.subjectivity.SubjectivityAdapter;
-import es.uned.entities.AdapterModel;
+import es.uned.entities.AdapterModels;
 import es.uned.entities.Search;
 import es.uned.entities.TrainParams;
 import es.uned.services.AdapterModelService;
@@ -36,24 +36,24 @@ public class ModelsController {
 
     @RequestMapping(value = "create", method = RequestMethod.GET)
     public String create(Model model) {
-        model.addAttribute("modelForm", new AdapterModel());
+        model.addAttribute("modelForm", new AdapterModels());
         return "create_model";
     }
 
     @RequestMapping(value = "create", method = RequestMethod.POST)
-    public String create(Model model, @ModelAttribute("modelForm") AdapterModel adapterModel,
+    public String create(Model model, @ModelAttribute("modelForm") AdapterModels adapterModels,
                          BindingResult modelFormErrors, HttpServletRequest servletRequest) {
-        Map<String,String> modelParameters = adapterModel.getModelParameters(servletRequest.getParameterMap());
-        List<String> positivesSubjectives = adapterModel.getPositivesSubjectives();
-        List<String> negativesSubjectives = adapterModel.getNegativesObjectives();
+        Map<String,String> modelParameters = adapterModels.getModelParameters(servletRequest.getParameterMap());
+        List<String> positivesSubjectives = adapterModels.getPositivesSubjectives();
+        List<String> negativesSubjectives = adapterModels.getNegativesObjectives();
         if (modelParameters.get("classifierType").equals("polarity")) {
-            SentimentAdapter sentimentAdapter = sentimentFactory.get(adapterModel.getAdapterClass());
-            sentimentAdapter.createModel(adapterModel.getLocation(), modelParameters, positivesSubjectives, negativesSubjectives);
+            SentimentAdapter sentimentAdapter = sentimentFactory.get(adapterModels.getAdapterClass());
+            sentimentAdapter.createModel(adapterModels.getLocation(), modelParameters, positivesSubjectives, negativesSubjectives);
         } else {
-            SubjectivityAdapter subjectivityAdapter = subjectivityFactory.get(adapterModel.getAdapterClass());
-            subjectivityAdapter.createModel(adapterModel.getLocation(), modelParameters, positivesSubjectives, negativesSubjectives);
+            SubjectivityAdapter subjectivityAdapter = subjectivityFactory.get(adapterModels.getAdapterClass());
+            subjectivityAdapter.createModel(adapterModels.getLocation(), modelParameters, positivesSubjectives, negativesSubjectives);
         }
-        adapterModelService.save(adapterModel);
+        adapterModelService.save(adapterModels);
         return "create_model";
     }
 
