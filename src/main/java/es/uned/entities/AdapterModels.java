@@ -42,6 +42,9 @@ public class AdapterModels {
     @JoinColumn(name = "owner")
     private Account owner;
 
+    @Column(name = "public")
+    private boolean isPublic;
+
     @Column(name = "description", nullable = true)
     private String description;
 
@@ -154,6 +157,14 @@ public class AdapterModels {
 
     public void setOwner(Account owner) {
         this.owner = owner;
+    }
+
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(boolean aPublic) {
+        isPublic = aPublic;
     }
 
     public String getDescription() {

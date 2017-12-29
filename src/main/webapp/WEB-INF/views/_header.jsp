@@ -28,8 +28,10 @@
 
         <div class="collapse navbar-collapse" id="navbar-collapse">
             <ul class="nav navbar-nav">
-                <li><a href="${path}/models/train">Entrenar</a></li>
-                <li><a href="${path}/models/create">Crear modelo</a></li>
+                <sec:authorize access="isAuthenticated()">
+                    <li><a href="${path}/models/train">Entrenar</a></li>
+                    <li><a href="${path}/models/create">Crear modelo</a></li>
+                </sec:authorize>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <sec:authorize access="isAnonymous()">

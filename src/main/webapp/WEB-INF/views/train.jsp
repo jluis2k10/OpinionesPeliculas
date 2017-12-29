@@ -158,9 +158,8 @@
 <script type="text/javascript" src="${path}/js/select2.min.js"></script>
 <script type="text/javascript" src="${path}/js/select2.es.js"></script>
 <script type="text/javascript" src="${path}/js/custom.js"></script>
-
+<sec:authentication property="principal.username"></sec:authentication>
 <script>
-
     $(document).ready(function() {
         // Recuperar fuentes de comentarios
         $.ajax({
@@ -178,7 +177,6 @@
                 console.error("Request: " + JSON.stringify(XMLHttpRequest) + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);
             }
         });
-
         makeTrainModels("${path}");
     });
 

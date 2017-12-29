@@ -331,25 +331,22 @@ function makeTextOptions(container, parameter, adapterType, adapterID) {
 }
 
 /* Rellenar seleccionable con los modelos que pueden ser entrenados */
-function makeTrainModels(path) {
+function makeTrainModels(path, userID) {
     var analysisType = $("input[name='analysisType']:checked", "#trainForm").val();
     var getAdaptersURL;
-    switch (analysisType) {
-        // Aprovechamos también para cambiar el texto de las etiquetas para los inputs
-        case "polarity":
-            getAdaptersURL = path + "/api/sentiment-adapters";
-            $("label[for='psText']").text("Comentarios positivos");
-            $("label[for='noText']").text("Comentarios negativos");
-            $("label[for='psFileUpload']").text("Comentarios positivos");
-            $("label[for='noFileUpload']").text("Comentarios negativos");
-            break;
-        case "subjectivity":
-            getAdaptersURL = path + "/api/subjectivity-adapters";
-            $("label[for='psText']").text("Comentarios subjetivos");
-            $("label[for='noText']").text("Comentarios objetivos");
-            $("label[for='psFileUpload']").text("Comentarios subjetivos");
-            $("label[for='noFileUpload']").text("Comentarios objetivos");
-            break;
+    // Aprovechamos también para cambiar el texto de las etiquetas para los inputs
+    if (analysisType === "polarity") {
+        getAdaptersURL = path + "/api/sentiment-adapters/" + userID;
+        $("label[for='psText']").text("Comentarios positivos");
+        $("label[for='noText']").text("Comentarios negativos");
+        $("label[for='psFileUpload']").text("Comentarios positivos");
+        $("label[for='noFileUpload']").text("Comentarios negativos");
+    } else {
+        getAdaptersURL = path + "/api/subjectivity-adapters/" + userID;
+        $("label[for='psText']").text("Comentarios subjetivos");
+        $("label[for='noText']").text("Comentarios objetivos");
+        $("label[for='psFileUpload']").text("Comentarios subjetivos");
+        $("label[for='noFileUpload']").text("Comentarios objetivos");
     }
     /* Recuperar los adaptadores */
     $.ajax({
@@ -369,6 +366,7 @@ function makeTrainModels(path) {
 
 /* Rellenar seleccionable de modelos a entrenar */
 function populateTrainModels(adapters) {
+    console.log(adapters);
     $("#modelLocation").empty() // Reseteamos select;
     var lang = $("input[name='lang']:checked", "#trainForm").val();
     $.each(adapters, function (index, adapter) {
@@ -376,6 +374,7 @@ function populateTrainModels(adapters) {
         if ($.inArray(lang, adapter_langs) >= 0 && adapter.models_enabled) {
             var optGroup = $("<optgroup label='" + adapter.name + "'></optgroup>");
             $.each(adapter.models, function(index2, model) {
+                console.log(model);
                 if (model.lang === lang && model.trainable) {
                     var opt = $("<option value='" + model.location + "' data-adapterclass='" + adapter.class + "'>" + model.name + "</option>");
                     opt.appendTo(optGroup);

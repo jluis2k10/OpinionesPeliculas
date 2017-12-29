@@ -10,6 +10,5 @@ import java.util.Set;
 public interface AdapterModelService {
 
     void save(AdapterModels adapterModels);
-    Set<AdapterModels> findByAdapterClass(String adapterClass);
-
+    Set<AdapterModels> findByAdapterClass(String adapterClass, Long userID);
 }

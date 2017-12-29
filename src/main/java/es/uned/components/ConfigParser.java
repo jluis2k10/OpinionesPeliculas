@@ -85,7 +85,7 @@ public class ConfigParser {
      * Genera objeto JSON desde el archivo de configuración
      * @return Objeto ArrayNode que representa al archivo de configuración XML
      */
-    public ArrayNode getAdapters(String adapterType) {
+    public ArrayNode getAdapters(String adapterType, Long userID) {
         ArrayNode results = mapper.createArrayNode();
         Resource resource = null;
         switch (adapterType) {
@@ -117,7 +117,7 @@ public class ConfigParser {
                     adapterNode.put("model_creation", element.getAttribute("model_creation").equals("true"));
                     adapterNode.put("description", element.getElementsByTagName("description").item(0).getTextContent());
                     if (adapterNode.get("models_enabled").asBoolean())
-                        adapterNode.set("models", this.getAdapterModels(element.getAttribute("class")));
+                        adapterNode.set("models", this.getAdapterModels(element.getAttribute("class"), userID));
 
                     this.constructAdapterParameters(adapterNode, element);
                     results.add(adapterNode);
@@ -223,16 +223,18 @@ public class ConfigParser {
      * @param adapterClass Identificador del adaptador para el cual obtener los modelos disponibles.
      * @return Objeto ArrayNode que representa en formato JSON los modelos disponibles
      */
-    private ArrayNode getAdapterModels(String adapterClass) {
+    private ArrayNode getAdapterModels(String adapterClass, Long userID) {
         ObjectMapper mapper = new ObjectMapper();
         ArrayNode results = mapper.createArrayNode();
-        Set<AdapterModels> models = adapterModelService.findByAdapterClass(adapterClass);
+        Set<AdapterModels> models = adapterModelService.findByAdapterClass(adapterClass, userID);
         for(AdapterModels model: models) {
             ObjectNode modelNode = mapper.createObjectNode();
             modelNode.put("name", model.getName());
             modelNode.put("location", model.getLocation());
             modelNode.put("lang", model.getLanguage());
             modelNode.put("trainable", model.isTrainable());
+            modelNode.put("owner_id", model.getOwner().getId());
+            modelNode.put("is_public", model.isPublic());
             modelNode.put("description", model.getDescription());
             results.add(modelNode);
         }

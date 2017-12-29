@@ -90,6 +90,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/admin/**").hasRole("ADMIN")
                 .antMatchers("/registro").anonymous()
                 .antMatchers("/login").anonymous()
+                .antMatchers("/models/create").authenticated()
+                .antMatchers("/models/train").authenticated()
                 .and().formLogin()
                     .loginPage("/login")
                     .usernameParameter("username")

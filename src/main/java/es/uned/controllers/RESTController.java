@@ -8,10 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 /**
  *
@@ -32,15 +31,21 @@ public class RESTController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @RequestMapping(value = "/sentiment-adapters", method = RequestMethod.GET)
-    public ResponseEntity<ArrayNode> sentimentAdapters() {
-        ArrayNode response = configParser.getAdapters("sentiment");
+    @RequestMapping(value = {"/sentiment-adapters", "/sentiment-adapters/{userID}"}, method = RequestMethod.GET)
+    public ResponseEntity<ArrayNode> sentimentAdapters(@PathVariable Optional<Long> userID ) {
+        Long uid = null;
+        if (userID.isPresent())
+            uid = userID.get();
+        ArrayNode response = configParser.getAdapters("sentiment", uid);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @RequestMapping(value = "/subjectivity-adapters", method = RequestMethod.GET)
-    public ResponseEntity<ArrayNode> subjectivityAdapters() {
-        ArrayNode response = configParser.getAdapters("subjectivity");
+    @RequestMapping(value = {"/subjectivity-adapters", "/subjectivity-adapters/{userID}"}, method = RequestMethod.GET)
+    public ResponseEntity<ArrayNode> subjectivityAdapters(@PathVariable Optional<Long> userID) {
+        Long uid = null;
+        if (userID.isPresent())
+            uid = userID.get();
+        ArrayNode response = configParser.getAdapters("subjectivity", uid);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

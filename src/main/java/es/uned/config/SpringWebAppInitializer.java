@@ -1,7 +1,9 @@
 package es.uned.config;
 
+import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
+import javax.servlet.Filter;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletRegistration;
 import java.io.File;
@@ -37,5 +39,15 @@ public class SpringWebAppInitializer extends AbstractAnnotationConfigDispatcherS
                         maxUploadSizeInMb, maxUploadSizeInMb * 2,
                         maxUploadSizeInMb / 2);
         registration.setMultipartConfig(multipartConfigElement);
+    }
+
+    /* Sirve para que las vistas tengan acceso a las variables obtenidas de la entidad que
+    sean lazy-loading (se mantienen en la sesión durante la transacción completa, hasta que
+    se genera la vista). */
+    @Override
+    protected Filter[] getServletFilters() {
+        return new Filter[]{
+                new OpenEntityManagerInViewFilter()
+        };
     }
 }
