@@ -51,13 +51,10 @@
             <spring:bind path="lang">
                 <div class="col-xs-3 language-container ${status.error ? "has-error" : ""}" style="display: none;">
                     <div class="form-group">
-                        <p><strong>Idioma</strong></p>
-                        <label class="radio-inline">
-                            <form:radiobutton path="lang" id="en" value="en" checked="checked"></form:radiobutton> Inglés
-                        </label>
-                        <label class="radio-inline">
-                            <form:radiobutton path="lang" id="es" value="es"></form:radiobutton> Español
-                        </label>
+                        <form:label path="lang">Idioma</form:label>
+                        <form:select path="lang" cssClass="form-control">
+                            <form:option value="NONE" label="--Selecciona--"></form:option>
+                        </form:select>
                     </div>
                 </div>
             </spring:bind>
@@ -96,6 +93,30 @@
                     </div>
                 </div>
             </spring:bind>
+        </fieldset>
+    </div>
+
+    <!-- Grupo para Análisis de Sentimiento -->
+    <div class="row">
+        <fieldset class="col-xs-12 sentiment-container">
+            <legend>Análisis de Sentimiento</legend>
+            <spring:bind path="sentimentAdapter">
+                <div class="col-xs-6">
+                    <div class="form-group ${status.error ? "has-error" : ""}">
+                        <form:label path="sentimentAdapter">Analizador</form:label>
+                        <form:select path="sentimentAdapter" cssClass="form-control"></form:select>
+                    </div>
+                </div>
+            </spring:bind>
+            <spring:bind path="sentimentModel">
+                <div class="col-xs-6 sentimentModel-container" style="display: none;">
+                    <div class="form-group ${status.error ? "has-error" : ""}">
+                        <form:label path="sentimentModel">Modelo</form:label>
+                        <form:select path="sentimentModel" cssClass="form-control"></form:select>
+                    </div>
+                </div>
+            </spring:bind>
+            <div class="col-xs-12 clearfix"></div>
         </fieldset>
     </div>
 
@@ -151,29 +172,6 @@
         </fieldset>
     </div>
 
-    <!-- Grupo para Análisis de Sentimiento -->
-    <div class="row">
-        <fieldset class="col-xs-12 sentiment-container">
-            <legend>Análisis de Sentimiento</legend>
-            <spring:bind path="sentimentAdapter">
-                <div class="col-xs-6">
-                    <div class="form-group ${status.error ? "has-error" : ""}">
-                        <form:label path="sentimentAdapter">Analizador</form:label>
-                        <form:select path="sentimentAdapter" cssClass="form-control"></form:select>
-                    </div>
-                </div>
-            </spring:bind>
-            <spring:bind path="sentimentModel">
-                <div class="col-xs-6 sentimentModel-container" style="display: none;">
-                    <div class="form-group ${status.error ? "has-error" : ""}">
-                        <form:label path="sentimentModel">Modelo</form:label>
-                        <form:select path="sentimentModel" cssClass="form-control"></form:select>
-                    </div>
-                </div>
-            </spring:bind>
-            <div class="col-xs-12 clearfix"></div>
-        </fieldset>
-    </div>
     <div class="row">
         <div class="col-xs-12">
             <button type="submit" class="btn btn-primary">Enviar</button>
@@ -196,62 +194,37 @@
 <script type="text/javascript" src="${path}/js/custom.js"></script>
 
 <script>
-    $sentimentAdapters = null;
-    $subjectivityAdapters = null;
+    var sentimentAdapters = null;
+    var subjectivityAdapters = null;
 
-    $(document).ready(function() {
-        /* Recuperar las fuentes de comentarios disponibles */
-        $.ajax({
-            type: "GET",
-            contentType: "application/json",
-            url: "${path}/api/comments-source",
-            timeout: 5000,
-            success: function(data) {
-                makeSourcesButton(data);
-                var first_link = $("#sources-dropdown li:first-child a");
-                makeSourcesOptions(first_link.get(0));
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                console.error("Request: " + JSON.stringify(XMLHttpRequest) + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);
-            }
+    $.when(getCommentSources(), getSentimentAdapters(), getSubjectivityAdapters())
+        .done(function(_commentSources, _sentimentAdapters, _subjectivityAdapters) {
+            sentimentAdapters = _sentimentAdapters;
+            subjectivityAdapters = _subjectivityAdapters;
+            makeSourcesButton(_commentSources);
+            populateAdapters("sentiment", sentimentAdapters);
+            populateAdapters("subjectivity", subjectivityAdapters);
+            /* Añadir eventlistener para la acción al seleccionar una fuente de comentarios */
+            $('.sourceButton').click(function () {
+                $.when(makeSourceOptions($(this).children(":first").get(0), _commentSources))
+                    .done(function() {
+                        populateAdapters("sentiment", sentimentAdapters);
+                        populateAdapters("subjectivity", subjectivityAdapters);
+                    })
+                    .fail(function() {
+                        console.error("Error al hacer click en fuente de comentarios");
+                    })
+            });
+        })
+        .fail(function() {
+            console.error("Error");
         });
 
+    $(document).ready(function() {
         /* Mostrar/ocultar formulario de subjetividad en función de si se debe analizar o no la subjetividad */
         if ($("input[name='classifySubjectivity']").get(0).checked) {
             $(".subjectivity-form-container").show();
         }
-
-        /* Recuperar los adaptadores para el análisis de subjetividad */
-        $.ajax({
-            type: "GET",
-            contentType: "application/json",
-            url: "${path}/api/subjectivity-adapters",
-            timeout: 5000,
-            success: function(data) {
-                $subjectivityAdapters = data;
-                if ($("input[name='classifySubjectivity']").get(0).checked) {
-                    populateAdapters("subjectivity", data);
-                }
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                console.error("Request: " + JSON.stringify(XMLHttpRequest) + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);
-            }
-        });
-
-        /* Recuperar los adaptadores para el análisis de sentimiento */
-        $.ajax({
-            type: "GET",
-            contentType: "application/json",
-            url: "${path}/api/sentiment-adapters",
-            timeout: 5000,
-            success: function(data) {
-                $sentimentAdapters = data;
-                populateAdapters("sentiment", data);
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                console.error("Request: " + JSON.stringify(XMLHttpRequest) + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);
-            }
-        });
     });
 
     // Select para elegir película y encontrar su identificador en IMDB
@@ -274,17 +247,17 @@
     });
 
     /* Acción al seleccionar el idioma */
-    $("input[name='lang']").change(function() {
-        populateAdapters("sentiment", $sentimentAdapters);
+    $("#lang").change(function() {
+        populateAdapters("sentiment", sentimentAdapters);
         if ($("input[name='classifySubjectivity']").get(0).checked) {
-            populateAdapters("subjectivity", $subjectivityAdapters);
+            populateAdapters("subjectivity", subjectivityAdapters);
         };
     });
 
     /* Acción al seleccionar si se deben analizar subjetividad o no */
     $("input[name='classifySubjectivity']").change(function() {
         if (this.checked && this.value === "true") {
-            populateAdapters("subjectivity", $subjectivityAdapters);
+            populateAdapters("subjectivity", subjectivityAdapters);
             $(".subjectivity-form-container").show();
         } else {
             $(".subjectivity-form-container").hide();
@@ -295,7 +268,7 @@
     $("#sentimentAdapter").change(function () {
         $selected = $(this).find("option:selected")[0];
         $adapterClass = $selected.value;
-        $adapter = $.grep($sentimentAdapters, function(e) {
+        $adapter = $.grep(sentimentAdapters, function(e) {
             return e.class === $adapterClass;
         });
         populateModels("sentiment", $adapter[0]);       // Rellener el select con los modelos del adaptador
@@ -306,7 +279,7 @@
     $("#subjectivityAdapter").change(function () {
         $selected = $(this).find("option:selected")[0];
         $adapterClass = $selected.value;
-        $adapter = $.grep($subjectivityAdapters, function(e) {
+        $adapter = $.grep(subjectivityAdapters, function(e) {
             return e.class === $adapterClass;
         });
         populateModels("subjectivity", $adapter[0]);       // Rellener el select con los modelos del adaptador

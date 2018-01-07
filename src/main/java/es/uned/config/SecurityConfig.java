@@ -90,8 +90,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/admin/**").hasRole("ADMIN")
                 .antMatchers("/registro").anonymous()
                 .antMatchers("/login").anonymous()
-                .antMatchers("/models/create").authenticated()
-                .antMatchers("/models/train").authenticated()
+                .antMatchers("/models/**").authenticated()
                 .and().formLogin()
                     .loginPage("/login")
                     .usernameParameter("username")
@@ -110,7 +109,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     .tokenValiditySeconds(86400*7)
                 .and().csrf()   // protección contra ataques CSRF
                 .and().exceptionHandling()
-                    .accessDeniedPage("/denegado");
+                    .accessDeniedPage("/denied");
     }
 
 }

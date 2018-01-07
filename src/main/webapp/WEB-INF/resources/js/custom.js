@@ -1,88 +1,145 @@
-/* Crear enlaces con las fuentes de comentarios disponibles */
+/* Crear enlaces para el botón con las fuentes de comentarios disponibles */
 function makeSourcesButton(sources) {
     $.each(sources, function (index, source) {
-        $("#sources-dropdown").append("<li><a href='javascript:void(0)' onclick='makeSourcesOptions(this); return false;'" +
-            "data-name='"+source.name+"'" +
-            " data-adapter='"+source.adapterClass+"'" +
-            " data-sinceDate='"+source.sinceDateEnabled+"'" +
-            " data-untilDate='"+source.untilDateEnabled+"'" +
-            " data-limit='"+source.limitEnabled+"'" +
-            " data-imdbID='"+source.imdbIDEnabled+"'" +
-            " data-language='"+source.languageEnabled+"'" +
-            " data-cleanTweet='"+source.cleanTweet+"'>" + source.name + "</a></li>");
-    })
+        $("#sources-dropdown").append("<li class='sourceButton'><a href='#'" +
+            "data-name='"+source.name+"'>" + source.name + "</a></li>");
+    });
+    var first_link = $("#sources-dropdown li:first-child a");
+    makeSourceOptions(first_link.get(0), sources);
 }
 
-/* Crear enlaces con las fuentes de comentarios especiíficas para entrenamiento de analizador
- * Se añaden las opciones de subir datasets o de introducirlos en cajas de texto */
-function makeTrainSourcesButton() {
-    $("#sources-dropdown").append("<li><a href='javascript:void(0)' onclick='makeSourcesOptions(this); return false;'" +
-        "data-name='Subir Datasets'" +
-        " data-adapter='FileDataset'" +
-        " data-sinceDate='false'" +
-        " data-untilDate='false'" +
-        " data-limit='false'" +
-        " data-imdbID='false'" +
-        " data-language='true'" +
-        " data-cleanTweet='true'>Subir Datasets</a></li>");
-    $("#sources-dropdown").append("<li><a href='javascript:void(0)' onclick='makeSourcesOptions(this); return false;'" +
-        " data-name='Introducir Datasets'" +
-        " data-adapter='TextDataset'" +
-        " data-sinceDate='false'" +
-        " data-untilDate='false'" +
-        " data-limit='false'" +
-        " data-imdbID='false'" +
-        " data-language='true'" +
-        " data-cleanTweet='true'>Introducir Datasets</a></li>");
+/* Recuperar las fuentes de comentarios disponibles */
+function getCommentSources(lang) {
+    var url = "/api/comments-source";
+    if (lang != undefined)
+        url += "?lang=" + lang;
+    return Promise.resolve($.ajax({
+        type: "GET",
+        contentType: "application/json",
+        url: url,
+        timeout: 5000
+    }));
 }
 
-/* Presentar los elementos del formulario necesarios según la fuente de comentarios */
-function makeSourcesOptions(e) {
+/* Recuperar los adaptadores para el análisis de sentimiento */
+function getSentimentAdapters() {
+    return Promise.resolve($.ajax({
+        type: "GET",
+        contentType: "application/json",
+        url: "/api/sentiment-adapters",
+        timeout: 5000
+    }));
+}
+
+/* Recuperar los adaptadores para el análisis de subjetividad */
+function getSubjectivityAdapters(){
+    return Promise.resolve($.ajax({
+        type: "GET",
+        contentType: "application/json",
+        url: "/api/subjectivity-adapters",
+        timeout: 5000
+    }));
+}
+
+/* Añadir de forma manual dos fuentes de comentarios: subir archivos y escribir comentarios */
+function genExtraSources(sources) {
+    var uploadFile = {
+        name:               "Archivo de Datasets",
+        adapterClass:       "FileDataset",
+        sinceDateEnabled:   false,
+        untilDateEnabled:   false,
+        limitEnabled:       false,
+        imdbIDEnabled:      false,
+        language: {
+            Español:        "es",
+            Inglés:         "en"
+        },
+        cleanTweet:         false
+    };
+    var textDataset = {
+        name:               "Escribir Datasets",
+        adapterClass:       "TextDataset",
+        sinceDateEnabled:   false,
+        untilDateEnabled:   false,
+        limitEnabled:       false,
+        imdbIDEnabled:      false,
+        language: {
+            Español:        "es",
+            Inglés:         "en"
+        },
+        cleanTweet:         false
+    };
+    sources.push(uploadFile, textDataset);
+    return sources;
+}
+
+/* Averiguar qué fuente de comentarios es la seleccionada y dar la orden de construir
+ * las opciones asociadas a dicha fuente */
+function makeSourceOptions(e, sources) {
     $(".source-placeholder").html(e.dataset.name);
     $("#source").val(e.dataset.name);
-    $("#sourceClass").val(e.dataset.adapter);
-    if (e.dataset.imdbid === "true") {
+    $.each(sources, function (i, source) {
+        if (source.name === e.dataset.name) {
+            constructSourceOptions(source);
+        }
+    });
+}
+
+/* Construir opciones disponibles para una fuente de comentarios */
+function constructSourceOptions(source) {
+    $("#sourceClass").val(source.adapterClass);
+    if (source.imdbIDEnabled) {
         $("#term").attr("readonly", "readonly");
         $(".imdbID-container").show();
         $("span.select2-container").width("100%");
     } else {
-        $("#term").removeAttr("disabled");
+        $("#term").removeAttr("readonly");
         $(".imdbID-container").hide();
     }
-    if (e.dataset.limit === "true") {
+    if (source.limitEnabled) {
         $(".limit-container").show();
     } else {
         $(".limit-container").hide();
     }
-    if (e.dataset.sincedate === "true"){
+    if (source.sinceDateEnabled){
         $(".sinceDate-container").show();
     } else {
         $(".sinceDate-container").hide();
     }
-    if (e.dataset.untildate === "true"){
+    if (source.untilDateEnabled){
         $(".untilDate-container").show();
     } else {
         $(".untilDate-container").hide();
     }
-    if (e.dataset.language === "true") {
-        $(".language-container").show();
-    } else {
-        $(".language-container").hide();
-    }
-    if (e.dataset.cleantweet === "true") {
+    if (source.cleanTweet) {
         $(".cleanTweet-container").show();
     } else {
         $(".cleanTweet-container").hide();
     }
+    if (source.chooseLanguage) {
+        $(".language-container").show();
+    } else {
+        $(".language-container").hide();
+    }
+    // Construir select con los idiomas disponibles
+    $current_lang = $("#lang option:selected").val();
+    $("#lang").find('option').remove();
+    $.each(source.languages, function (key, val) {
+        $("#lang").append($("<option></option>")
+            .attr("value", val)
+            .text(key));
+        if (val === $current_lang)
+            $("#lang").val(val);
+    });
 
     // Para la página de entrenamiento de modelos tenemos dos botones más
-    if (e.dataset.name === "Subir Datasets") {
-        $("#term").attr("disabled", "disabled");
+    if (source.adapterClass === "FileDataset") {
+        $("#term").attr("readonly", "readonly");
         $(".datasets-container").show();
         $(".text-datasets").hide();
         $(".file-datasets").show();
-    } else if (e.dataset.name === "Introducir Datasets") {
-        $("#tern").attr("disabled", "disabled");
+    } else if (source.adapterClass === "TextDataset") {
+        $("#term").attr("readonly", "readonly");
         $(".datasets-container").show();
         $(".file-datasets").hide();
         $(".text-datasets").show();
@@ -104,7 +161,7 @@ function populateAdapters(adapterType, adapters) {
     $.each(adapters, function (index, adapter) {
         var adapterLanguages = adapter.lang.split(",");
         $.each(adapterLanguages, function (index2, adapterLanguage) {
-            if (adapterLanguage === $("input[name='lang']:checked").val() &&
+            if (adapterLanguage === $("#lang option:selected").val() &&
                 (hasModelForSelectedLanguage(adapter) || !adapter.models_enabled)) {
                 adaptersPerLanguage.push(adapter);
                 $select.append(new Option(adapter.name, adapter.class));
@@ -127,7 +184,7 @@ function populateModels(adapterType, adapter) {
     $select.empty(); // Primero borramos las opciones anteriores (se suponen de otro adaptador)
     if (typeof adapter !== "undefined" && adapter.models_enabled && hasModelForSelectedLanguage(adapter)) {
         $.each(adapter.models, function (index, model) {
-            if (model.lang === $("input[name='lang']:checked").val())
+            if (model.lang === $("#lang option:selected").val())
                 $select.append(new Option(model.name, model.location));
         });
         $container.show();
@@ -136,6 +193,7 @@ function populateModels(adapterType, adapter) {
     }
 }
 
+/* Dar la orden de construir cada una de las opciones disponibles para un adaptador */
 function makeAdapterOptions(adapterType, adapter) {
     if (adapterType === "subjectivity") {
         $container = $(".subjectivity-form-container");
@@ -172,7 +230,7 @@ function makeAdapterOptions(adapterType, adapter) {
 function hasModelForSelectedLanguage(adapter) {
     var result = false;
     $.each(adapter.models, function (index, model) {
-        result = result || model.lang === $("input[name='lang']:checked").val();
+        result = result || model.lang === $("#lang option:selected").val();
     });
     return result;
 }
@@ -328,65 +386,4 @@ function makeTextOptions(container, parameter, adapterType, adapterID) {
     input.appendTo(innerDiv);
 
     optionDiv.appendTo(container);
-}
-
-/* Rellenar seleccionable con los modelos que pueden ser entrenados */
-function makeTrainModels(path, userID) {
-    var analysisType = $("input[name='analysisType']:checked", "#trainForm").val();
-    var getAdaptersURL;
-    // Aprovechamos también para cambiar el texto de las etiquetas para los inputs
-    if (analysisType === "polarity") {
-        getAdaptersURL = path + "/api/sentiment-adapters/" + userID;
-        $("label[for='psText']").text("Comentarios positivos");
-        $("label[for='noText']").text("Comentarios negativos");
-        $("label[for='psFileUpload']").text("Comentarios positivos");
-        $("label[for='noFileUpload']").text("Comentarios negativos");
-    } else {
-        getAdaptersURL = path + "/api/subjectivity-adapters/" + userID;
-        $("label[for='psText']").text("Comentarios subjetivos");
-        $("label[for='noText']").text("Comentarios objetivos");
-        $("label[for='psFileUpload']").text("Comentarios subjetivos");
-        $("label[for='noFileUpload']").text("Comentarios objetivos");
-    }
-    /* Recuperar los adaptadores */
-    $.ajax({
-        type: "GET",
-        contentType: "application/json",
-        url: getAdaptersURL,
-        timeout: 5000,
-        success: function(data) {
-            populateTrainModels(data);
-            populateAdapterClassInput();
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            console.error("Request: " + JSON.stringify(XMLHttpRequest) + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);
-        }
-    });
-}
-
-/* Rellenar seleccionable de modelos a entrenar */
-function populateTrainModels(adapters) {
-    console.log(adapters);
-    $("#modelLocation").empty() // Reseteamos select;
-    var lang = $("input[name='lang']:checked", "#trainForm").val();
-    $.each(adapters, function (index, adapter) {
-        var adapter_langs = adapter.lang.split(",");
-        if ($.inArray(lang, adapter_langs) >= 0 && adapter.models_enabled) {
-            var optGroup = $("<optgroup label='" + adapter.name + "'></optgroup>");
-            $.each(adapter.models, function(index2, model) {
-                console.log(model);
-                if (model.lang === lang && model.trainable) {
-                    var opt = $("<option value='" + model.location + "' data-adapterclass='" + adapter.class + "'>" + model.name + "</option>");
-                    opt.appendTo(optGroup);
-                }
-            })
-            optGroup.appendTo("#modelLocation");
-        }
-    });
-}
-
-/* Rellenar el input oculto que indica la clase del adaptador según el modelo seleccionado */
-function populateAdapterClassInput() {
-    var selected = $("#modelLocation").find(":selected").data("adapterclass");
-    $("#adapterClass").val(selected);
 }

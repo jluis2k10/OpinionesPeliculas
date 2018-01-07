@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Optional;
 
 /**
@@ -26,26 +27,31 @@ public class RESTController {
     private TrakttvLookup trakttvLookup;
 
     @RequestMapping(value = "/comments-source", method = RequestMethod.GET)
-    public ResponseEntity<ArrayNode>  sources() {
-        ArrayNode response = configParser.getSources();
+    public ResponseEntity<ArrayNode> sources(@RequestParam("lang") Optional<String> lang) {
+        ArrayNode response = null;
+        if (lang.isPresent())
+            response = configParser.getAllSources(lang.get());
+        else
+            response = configParser.getAllSources(null);
+        //ArrayNode response = configParser.getSources(selectedLang);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @RequestMapping(value = {"/sentiment-adapters", "/sentiment-adapters/{userID}"}, method = RequestMethod.GET)
-    public ResponseEntity<ArrayNode> sentimentAdapters(@PathVariable Optional<Long> userID ) {
-        Long uid = null;
-        if (userID.isPresent())
-            uid = userID.get();
-        ArrayNode response = configParser.getAdapters("sentiment", uid);
+    @RequestMapping(value = "/sentiment-adapters", method = RequestMethod.GET)
+    public ResponseEntity<ArrayNode> sentimentAdapters(Principal principal, @RequestParam("create_params") Optional<String> create_params) {
+        boolean creation = false;
+        if (create_params.isPresent() && create_params.get().equals("true"))
+            creation = true;
+        ArrayNode response = configParser.getAdapters("sentiment", principal, creation);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @RequestMapping(value = {"/subjectivity-adapters", "/subjectivity-adapters/{userID}"}, method = RequestMethod.GET)
-    public ResponseEntity<ArrayNode> subjectivityAdapters(@PathVariable Optional<Long> userID) {
-        Long uid = null;
-        if (userID.isPresent())
-            uid = userID.get();
-        ArrayNode response = configParser.getAdapters("subjectivity", uid);
+    @RequestMapping(value = "/subjectivity-adapters", method = RequestMethod.GET)
+    public ResponseEntity<ArrayNode> subjectivityAdapters(Principal principal, @RequestParam("create_params") Optional<String> create_params) {
+        boolean creation = false;
+        if (create_params.isPresent() && create_params.get().equals("true"))
+            creation = true;
+        ArrayNode response = configParser.getAdapters("subjectivity", principal, creation);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

@@ -3,22 +3,22 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ include file="_header.jsp"%>
 
-<form:form method="post" modelAttribute="trainForm" action="${path}/models/train" enctype="multipart/form-data">
+<form:form method="post" modelAttribute="trainForm" enctype="multipart/form-data">
     <!-- Fuente de comentarios para entrenar -->
     <div class="row">
         <fieldset class="col-xs-12">
             <legend>Fuente para entrenamiento</legend>
-            <spring:bind path="searchTerm">
+            <spring:bind path="term">
                 <div class="col-xs-12 ${status.error ? "has-error" : ""}">
                     <div class="input-group form-group">
                         <div class="input-group-btn">
                             <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Origen <span class="caret"></span></button>
                             <ul class="dropdown-menu" id="sources-dropdown"></ul>
                         </div>
-                        <form:input path="searchTerm" type="text" cssClass="form-control" placeholder="Término de búsqueda" aria-describedby="errorsSearchTerm"></form:input>
+                        <form:input path="term" type="text" cssClass="form-control" placeholder="Término de búsqueda" aria-describedby="errorsSearchTerm"></form:input>
                         <div class="input-group-addon source-placeholder"></div>
                     </div>
-                    <form:errors path="searchTerm" cssClass="help-block" id="errorsSearchTerm"></form:errors>
+                    <form:errors path="term" cssClass="help-block" id="errorsSearchTerm"></form:errors>
                 </div>
             </spring:bind>
             <spring:bind path="limit">
@@ -48,19 +48,7 @@
                     </div>
                 </div>
             </spring:bind>
-            <spring:bind path="lang">
-                <div class="col-xs-3 language-container ${status.error ? "has-error" : ""}" style="display: none;">
-                    <div class="form-group">
-                        <p><strong>Idioma</strong></p>
-                        <label class="radio-inline">
-                            <form:radiobutton path="lang" id="en" value="en" checked="checked"></form:radiobutton> Inglés
-                        </label>
-                        <label class="radio-inline">
-                            <form:radiobutton path="lang" id="es" value="es"></form:radiobutton> Español
-                        </label>
-                    </div>
-                </div>
-            </spring:bind>
+
             <div class="col-xs-3 imdbID-container" style="display: none;">
                 <label for="imdbID">Película</label>
                 <select class="imdb-select form-control" id="imdbID">
@@ -68,36 +56,7 @@
                 </select>
             </div>
         </fieldset>
-    </div>
-
-    <!-- Modelos disponibles para entrenamiento -->
-    <div class="row">
-        <fieldset class="col-xs-12">
-            <legend>Modelo a entrenar</legend>
-            <spring:bind path="analysisType">
-                <div class="col-xs-3">
-                    <div class="form-group">
-                        <p><strong>Tipo de analizador</strong></p>
-                        <label class="radio-inline">
-                            <form:radiobutton path="analysisType" id="polarity" value="polarity" checked="checked"></form:radiobutton> Polaridad
-                        </label>
-                        <label class="radio-inline">
-                            <form:radiobutton path="analysisType" id="subjectivity" value="subjectivity"></form:radiobutton> Subjetividad
-                        </label>
-                    </div>
-                </div>
-            </spring:bind>
-            <spring:bind path="modelLocation">
-                <div class="col-xs-6">
-                    <div class="form-group ${status.error ? "has-error" : ""}">
-                        <form:label path="modelLocation">Modelo</form:label>
-                        <form:select path="modelLocation" cssClass="form-control"></form:select>
-                    </div>
-                </div>
-            </spring:bind>
-            <form:hidden path="adapterClass" value="" id="adapterClass"></form:hidden>
-        </fieldset>
-    </div>
+    </div> <!-- Fin fuentes de comentarios -->
 
     <!-- Subir o introducir Datasets -->
     <div class="row datasets-container" style="display: none;">
@@ -142,9 +101,12 @@
                 </spring:bind>
             </div>
         </fieldset>
-    </div>
-
+    </div> <!-- Fin introducir datasets -->
     <div class="row">
+        <form:hidden path="lang"></form:hidden>
+        <form:hidden path="adapterType"></form:hidden>
+        <form:hidden path="modelLocation"></form:hidden>
+        <form:hidden path="adapterClass"></form:hidden>
         <form:hidden path="sourceClass" value="" id="sourceClass"></form:hidden>
         <div class="col-xs-12">
             <button type="submit" class="btn btn-primary">Entrenar modelo</button>
@@ -158,50 +120,27 @@
 <script type="text/javascript" src="${path}/js/select2.min.js"></script>
 <script type="text/javascript" src="${path}/js/select2.es.js"></script>
 <script type="text/javascript" src="${path}/js/custom.js"></script>
-<sec:authentication property="principal.username"></sec:authentication>
+
 <script>
-    $(document).ready(function() {
-        // Recuperar fuentes de comentarios
-        $.ajax({
-            type: "GET",
-            contentType: "application/json",
-            url: "${path}/api/comments-source",
-            timeout: 5000,
-            success: function(data) {
-                makeSourcesButton(data);
-                makeTrainSourcesButton();
-                var first_link = $("#sources-dropdown li:first-child a");
-                makeSourcesOptions(first_link.get(0));
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                console.error("Request: " + JSON.stringify(XMLHttpRequest) + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);
-            }
+    $.when(getCommentSources("${trainForm.lang}"))
+        .done(function(_commentSources) {
+            _commentSources = genExtraSources(_commentSources);
+            makeSourcesButton(_commentSources);
+            /* Añadir eventlistener para la acción al seleccionar una fuente de comentarios */
+            $('.sourceButton').click(function () {
+                makeSourceOptions($(this).children(":first").get(0), _commentSources);
+            });
+        })
+        .fail(function () {
+            console.error("Error");
         });
-        makeTrainModels("${path}");
-    });
 
     // Select para elegir película y encontrar su identificador en IMDB
     createIMDBSelect("${path}");
     // Al seleccionar la película pasamos el imdbID al input de la búsqueda
     $('.imdb-select').on('select2:selecting', function(e) {
-        $('#searchTerm').val(e.params.args.data.id);
+        $('#term').val(e.params.args.data.id);
     });
-
-    /* Acción al seleccionar el idioma */
-    $("input[name='lang']").change(function() {
-        makeTrainModels("${path}");
-    });
-
-    /* Acción al seleccionar el tipo de analizador */
-    $("input[name='analysisType']").change(function() {
-        makeTrainModels("${path}");
-    });
-
-    /* Acción al seleccionar el modelo del analizador */
-    $("select[name='modelLocation']").change(function() {
-        populateAdapterClassInput();
-    });
-
 </script>
 
 <%@ include file="_footer.jsp"%>

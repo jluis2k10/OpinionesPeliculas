@@ -86,7 +86,7 @@ public class Search {
      * @param trainParams objeto @link{es.uned.entities.TrainParams}
      */
     public Search(TrainParams trainParams) {
-        setTerm(trainParams.getSearchTerm());
+        setTerm(trainParams.getTerm());
         setSourceClass(trainParams.getSourceClass());
         setLimit(trainParams.getLimit());
         setSinceDate(trainParams.getSinceDate());

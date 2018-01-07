@@ -33,4 +33,7 @@ public class MyAccountService implements AccountService {
         accountRepo.save(account);
     }
 
+    public Account findByUserName(String userName) {
+        return accountRepo.findByUserName(userName);
+    }
 }

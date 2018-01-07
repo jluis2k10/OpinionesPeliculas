@@ -1,5 +1,6 @@
 package es.uned.entities;
 
+import es.uned.adapters.AdapterType;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +27,9 @@ public class AdapterModels {
     @Column(name = "name", length = 50, unique = true, nullable = false)
     private String name;
 
+    @Column(name = "adapter_type", length = 13)
+    private AdapterType adapterType;
+
     @Column(name = "adapter_class", nullable = false)
     private String adapterClass;
 
@@ -42,8 +46,8 @@ public class AdapterModels {
     @JoinColumn(name = "owner")
     private Account owner;
 
-    @Column(name = "public")
-    private boolean isPublic;
+    @Column(name = "open")
+    private boolean open;
 
     @Column(name = "description", nullable = true)
     private String description;
@@ -119,6 +123,14 @@ public class AdapterModels {
         this.name = name;
     }
 
+    public AdapterType getAdapterType() {
+        return adapterType;
+    }
+
+    public void setAdapterType(AdapterType adapterType) {
+        this.adapterType = adapterType;
+    }
+
     public String getAdapterClass() {
         return adapterClass;
     }
@@ -159,12 +171,12 @@ public class AdapterModels {
         this.owner = owner;
     }
 
-    public boolean isPublic() {
-        return isPublic;
+    public boolean isOpen() {
+        return open;
     }
 
-    public void setPublic(boolean aPublic) {
-        isPublic = aPublic;
+    public void setOpen(boolean open) {
+        this.open = open;
     }
 
     public String getDescription() {

@@ -12,7 +12,7 @@ import java.util.Map;
 public interface SentimentAdapter {
 
     String MODELS_DIR = "/models/sentiment";
-    AdapterType adapterType = AdapterType.SUBJECTIVITY;
+    AdapterType adapterType = AdapterType.SENTIMENT;
 
     void analyze(Search search);
 

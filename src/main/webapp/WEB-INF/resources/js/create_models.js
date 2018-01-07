@@ -1,32 +1,14 @@
 /* Recuperar clasificadores de polaridad o de subjetividad disponibles */
-function getClassifiers(path) {
-    var url = path + "/api/subjectivity-adapters";
+function getClassifiers() {
+    var url = "/api/subjectivity-adapters?create_params=true";
     if ($("input[name='classifierType']:checked").val() === "polarity")
-        url = path + "/api/sentiment-adapters";
-    $.ajax({
+        url = "/api/sentiment-adapters?create_params=true";
+    return Promise.resolve($.ajax({
         type: "GET",
         contentType: "application/json",
         url: url,
-        timeout: 5000,
-        success: function(data) {
-            classifiers = data;
-            var $adapterSelect = $("#adapterSelect");
-            $adapterSelect.empty();
-            $.each(classifiers, function(index, classifier) {
-                if (classifier.model_creation) {
-                    $adapterSelect.append(new Option(classifier.name, classifier.class));
-                }
-            });
-            // Construir el formulario para los parámetros disponibles para la creación del modelo
-            var selectedClassifier = getSelectedClassifier(classifiers);
-            populateClassifierParameters(selectedClassifier);
-            return classifiers;
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            console.error("Request: " + JSON.stringify(XMLHttpRequest) + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);
-            return null;
-        }
-    });
+        timeout: 5000
+    }));
 }
 
 /* Obtener el clasificador seleccionado por el usuario */
@@ -57,7 +39,7 @@ function populateClassifierParameters(classifier) {
     });
 
     // Construir los parámetros disponibles para la creación de un nuevo modelo
-    $.each(classifier.model_creation_parameters, function (index, parameter) {
+    $.each(classifier.model_creation_params, function (index, parameter) {
         var $fieldset = $("<fieldset class='col-xs-12'></fieldset>");
         var $legend = $("<legend>" + parameter.name + "</legend>");
         $legend.appendTo($fieldset);
@@ -74,7 +56,7 @@ function attachOptionParameters($select, classifier) {
     var $fieldset = $select.closest('fieldset');
     $fieldset.find("div.option-parameter").remove();
 
-    var adapterParameter = $.grep(classifier.model_creation_parameters, function(parameter, index) {
+    var adapterParameter = $.grep(classifier.model_creation_params, function(parameter, index) {
         return (parameter.id === $select.attr("id") || parameter.id === $select.attr("name"));
     })[0];
     var selectedOption = $.grep(adapterParameter.options, function(option, index) {

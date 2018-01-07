@@ -8,7 +8,7 @@
             <c:forEach var="comment" items="${comments}" varStatus="status">
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        ${comment.value.comment}
+                        ${comment.comment}
                     </div>
                     <div class="panel-footer">
                         <button type="button" class="btn btn-default" data-index="${status.index}" onclick="addPosSub(this)">
@@ -28,10 +28,10 @@
 </div>
 <div class="row">
     <div class="col-xs-12">
-        <form:form method="post" modelAttribute="trainForm" action="${path}/models/train" enctype="multipart/form-data">
-            <form:hidden path="analysisType" id="analysisType"></form:hidden>
+        <form:form method="post" modelAttribute="trainForm" enctype="multipart/form-data">
+            <form:hidden path="adapterType" id="adapterType"></form:hidden>
             <form:hidden path="sourceClass" id="sourceClass" value="TextDataset"></form:hidden>
-            <form:hidden path="searchTerm"></form:hidden>
+            <form:hidden path="term"></form:hidden>
             <form:hidden path="modelLocation"></form:hidden>
             <form:hidden path="adapterClass"></form:hidden>
             <form:hidden path="psText" id="psText"></form:hidden>
@@ -43,7 +43,7 @@
 <%@ include file="_js.jsp"%>
 <script>
     $(document).ready(function() {
-        if ($("#analysisType").val() === "subjectivity") {
+        if ($("#adapterType").val() === "SUBJECTIVITY") {
             $(".text-ok").text(" Subjetivo");
             $(".text-ko").text(" Objetivo");
         }

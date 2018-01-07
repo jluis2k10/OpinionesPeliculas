@@ -1,5 +1,6 @@
 package es.uned.entities;
 
+import es.uned.adapters.AdapterType;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -15,19 +16,28 @@ import java.util.List;
  */
 public class TrainParams {
 
-    private String searchTerm;
+    private String term;
     private String sourceClass;
     private int limit;
     private String sinceDate;
     private String untilDate;
     private String lang;
-    private String analysisType;
+    private AdapterType adapterType;
     private String modelLocation;
     private String adapterClass;
     private String psText; // positive or subjective text
     private String noText; // negative or objective text
     private MultipartFile psFile; // positive or subjective file
     private MultipartFile noFile; // negative or objective file
+
+    public TrainParams() {}
+
+    public TrainParams(AdapterModels model) {
+        this.lang = model.getLanguage();
+        this.adapterType = model.getAdapterType();
+        this.modelLocation = model.getLocation();
+        this.adapterClass = model.getAdapterClass();
+    }
 
     public List<String> sentenceList(MultipartFile file) {
         List<String> sentences = new ArrayList<>();
@@ -49,12 +59,12 @@ public class TrainParams {
         return new ArrayList<>(Arrays.asList(lines));
     }
 
-    public String getSearchTerm() {
-        return searchTerm;
+    public String getTerm() {
+        return term;
     }
 
-    public void setSearchTerm(String searchTerm) {
-        this.searchTerm = searchTerm;
+    public void setTerm(String term) {
+        this.term = term;
     }
 
     public String getSourceClass() {
@@ -97,12 +107,12 @@ public class TrainParams {
         this.lang = lang;
     }
 
-    public String getAnalysisType() {
-        return analysisType;
+    public AdapterType getAdapterType() {
+        return adapterType;
     }
 
-    public void setAnalysisType(String analysisType) {
-        this.analysisType = analysisType;
+    public void setAdapterType(AdapterType adapterType) {
+        this.adapterType = adapterType;
     }
 
     public String getModelLocation() {
