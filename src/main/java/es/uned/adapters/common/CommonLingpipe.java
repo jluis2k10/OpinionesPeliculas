@@ -36,8 +36,8 @@ public abstract class CommonLingpipe {
         ObjectHandler<CharSequence>[] lms = null;
         String[] categories = new String[2];
         if (get_adapter_type() == AdapterType.SENTIMENT) {
-            categories[0] = "positive";
-            categories[1] = "negative";
+            categories[0] = "pos";
+            categories[1] = "neg";
         } else {
             categories[0] = "subjective";
             categories[1] = "objective";
@@ -144,8 +144,8 @@ public abstract class CommonLingpipe {
 
         String[] categories = new String[2];
         if (get_adapter_type() == AdapterType.SENTIMENT) {
-            categories[0] = "positive";
-            categories[1] = "negative";
+            categories[0] = "pos";
+            categories[1] = "neg";
         } else {
             categories[0] = "subjective";
             categories[1] = "objective";

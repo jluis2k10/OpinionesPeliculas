@@ -27,35 +27,35 @@
                     <tbody>
                     <c:forEach var="model" items="${sentimentModels}">
                         <tr>
-                            <th>${model.id}</th>
-                            <th>${model.name}</th>
-                            <th>${model.language}</th>
-                            <th>${model.adapterClass}</th>
-                            <th>
+                            <td>${model.id}</td>
+                            <td>${model.name}</td>
+                            <td>${model.language}</td>
+                            <td>${model.adapterClass}</td>
+                            <td>
                                 <div class="btn-group">
                                     <c:if test="${model.trainable}">
-                                        <a href="${path}/models/train/${model.id}" class="btn btn-default" aria-label="Left Align" title="Entrenar">
-                                            <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+                                        <a href="${path}/models/train/${model.id}" class="btn btn-default" title="Entrenar">
+                                            <span class="glyphicon glyphicon-cog"></span>
                                         </a>
                                     </c:if>
                                     <c:choose>
                                         <c:when test="${model.open}">
-                                            <button type="button" class="btn btn-default" aria-label="Left Align" title="Hacer privado">
-                                                <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                                            <button type="button" class="btn btn-default isopen" title="Hacer privado" data-modelid="${model.id}">
+                                                <span class="glyphicon glyphicon-eye-open"></span>
                                             </button>
                                         </c:when>
                                         <c:otherwise>
-                                            <button type="button" class="btn btn-default" aria-label="Left Align" title="Hacer público">
-                                                <span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span>
+                                            <button type="button" class="btn btn-default isopen" title="Hacer público"  data-modelid="${model.id}">
+                                                <span class="glyphicon glyphicon-eye-close"></span>
                                             </button>
                                         </c:otherwise>
                                     </c:choose>
                                     </button>
-                                    <button type="button" class="btn btn-danger" aria-label="Left Align" title="Eliminar">
-                                        <span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span>
+                                    <button type="button" class="btn btn-danger delete-model" title="Eliminar" data-modelid="${model.id}">
+                                        <span class="glyphicon glyphicon-trash"></span>
                                     </button>
                                 </div>
-                            </th>
+                            </td>
                         </tr>
                     </c:forEach>
                     </tbody>
@@ -82,35 +82,35 @@
                     <tbody>
                     <c:forEach var="model" items="${subjectivityModels}">
                         <tr>
-                            <th>${model.id}</th>
-                            <th>${model.name}</th>
-                            <th>${model.language}</th>
-                            <th>${model.adapterClass}</th>
-                            <th>
+                            <td>${model.id}</td>
+                            <td>${model.name}</td>
+                            <td>${model.language}</td>
+                            <td>${model.adapterClass}</td>
+                            <td>
                                 <div class="btn-group">
                                     <c:if test="${model.trainable}">
-                                        <a href="${path}/models/train/${model.id}" class="btn btn-default" aria-label="Left Align" title="Entrenar">
-                                            <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+                                        <a href="${path}/models/train/${model.id}" class="btn btn-default" title="Entrenar">
+                                            <span class="glyphicon glyphicon-cog"></span>
                                         </a>
                                     </c:if>
                                     <c:choose>
                                         <c:when test="${model.open}">
-                                            <button type="button" class="btn btn-default" aria-label="Left Align" title="Hacer privado">
-                                                <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                                            <button type="button" class="btn btn-default isopen" title="Hacer privado" data-modelid="${model.id}">
+                                                <span class="glyphicon glyphicon-eye-open"></span>
                                             </button>
                                         </c:when>
                                         <c:otherwise>
-                                            <button type="button" class="btn btn-default" aria-label="Left Align" title="Hacer público">
-                                                <span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span>
+                                            <button type="button" class="btn btn-default isopen" title="Hacer público"  data-modelid="${model.id}">
+                                                <span class="glyphicon glyphicon-eye-close"></span>
                                             </button>
                                         </c:otherwise>
                                     </c:choose>
                                     </button>
-                                    <button type="button" class="btn btn-danger" aria-label="Left Align" title="Eliminar">
-                                        <span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span>
+                                    <button type="button" class="btn btn-danger delete-model" title="Eliminar" data-modelid="${model.id}">
+                                        <span class="glyphicon glyphicon-trash"></span>
                                     </button>
                                 </div>
-                            </th>
+                            </td>
                         </tr>
                     </c:forEach>
                     </tbody>
@@ -139,34 +139,34 @@
                         <tbody>
                         <c:forEach var="model" items="${allSentimentModels}">
                             <tr>
-                                <th>${model.id}</th>
-                                <th>${model.name}</th>
-                                <th>${model.language}</th>
-                                <th>${model.adapterClass}</th>
-                                <th>${model.owner.userName}</th>
-                                <th><div class="btn-group">
+                                <td>${model.id}</td>
+                                <td>${model.name}</td>
+                                <td>${model.language}</td>
+                                <td>${model.adapterClass}</td>
+                                <td>${model.owner.userName}</td>
+                                <td><div class="btn-group">
                                     <c:if test="${model.trainable}">
-                                        <a href="${path}/models/train/${model.id}" class="btn btn-default" aria-label="Left Align" title="Entrenar">
+                                        <a href="${path}/models/train/${model.id}" class="btn btn-default" title="Entrenar">
                                             <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
                                         </a>
                                     </c:if>
                                     <c:choose>
                                         <c:when test="${model.open}">
-                                            <button type="button" class="btn btn-default" aria-label="Left Align" title="Hacer privado">
-                                                <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                                            <button type="button" class="btn btn-default isopen" title="Hacer privado" data-modelid="${model.id}">
+                                                <span class="glyphicon glyphicon-eye-open"></span>
                                             </button>
                                         </c:when>
                                         <c:otherwise>
-                                            <button type="button" class="btn btn-default" aria-label="Left Align" title="Hacer público">
-                                                <span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span>
+                                            <button type="button" class="btn btn-default isopen" title="Hacer público"  data-modelid="${model.id}">
+                                                <span class="glyphicon glyphicon-eye-close"></span>
                                             </button>
                                         </c:otherwise>
                                     </c:choose>
                                     </button>
-                                    <button type="button" class="btn btn-danger" aria-label="Left Align" title="Eliminar">
-                                        <span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span>
+                                    <button type="button" class="btn btn-danger delete-model" title="Eliminar" data-modelid="${model.id}">
+                                        <span class="glyphicon glyphicon-trash"></span>
                                     </button>
-                                </div></th>
+                                </div></td>
                             </tr>
                         </c:forEach>
                         </tbody>
@@ -194,36 +194,36 @@
                         <tbody>
                         <c:forEach var="model" items="${allSubjectivityModels}">
                             <tr>
-                                <th>${model.id}</th>
-                                <th>${model.name}</th>
-                                <th>${model.language}</th>
-                                <th>${model.adapterClass}</th>
-                                <th>${model.owner.userName}</th>
-                                <th>
+                                <td>${model.id}</td>
+                                <td>${model.name}</td>
+                                <td>${model.language}</td>
+                                <td>${model.adapterClass}</td>
+                                <td>${model.owner.userName}</td>
+                                <td>
                                     <div class="btn-group">
                                         <c:if test="${model.trainable}">
-                                            <a href="${path}/models/train/${model.id}" class="btn btn-default" aria-label="Left Align" title="Entrenar">
-                                                <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+                                            <a href="${path}/models/train/${model.id}" class="btn btn-default" title="Entrenar">
+                                                <span class="glyphicon glyphicon-cog"></span>
                                             </a>
                                         </c:if>
                                         <c:choose>
                                             <c:when test="${model.open}">
-                                                <button type="button" class="btn btn-default" aria-label="Left Align" title="Hacer privado">
-                                                    <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                                                <button type="button" class="btn btn-default isopen" title="Hacer privado" data-modelid="${model.id}">
+                                                    <span class="glyphicon glyphicon-eye-open"></span>
                                                 </button>
                                             </c:when>
                                             <c:otherwise>
-                                                <button type="button" class="btn btn-default" aria-label="Left Align" title="Hacer público">
-                                                    <span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span>
+                                                <button type="button" class="btn btn-default isopen" title="Hacer público" data-modelid="${model.id}">
+                                                    <span class="glyphicon glyphicon-eye-close"></span>
                                                 </button>
                                             </c:otherwise>
                                         </c:choose>
                                         </button>
-                                        <button type="button" class="btn btn-danger" aria-label="Left Align" title="Eliminar">
-                                            <span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span>
+                                        <button type="button" class="btn btn-danger delete-model" title="Eliminar" data-modelid="${model.id}">
+                                            <span class="glyphicon glyphicon-trash"></span>
                                         </button>
                                     </div>
-                                </th>
+                                </td>
                             </tr>
                         </c:forEach>
                         </tbody>
@@ -236,16 +236,48 @@
         </div>
     </sec:authorize>
 </div>
+<!-- Modal confirmación borrado -->
+<div id="modal-confirm" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="alertdialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="confirmLabel">Advertencia</h4>
+            </div>
+            <div class="modal-body">
+                <p>¿Desea borrar el modelo <strong><strong>? No hay vuelta atrás.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger delete-confirm">Borrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <%@ include file="_js.jsp"%>
 
 <link rel="stylesheet" href="${path}/css/dataTables.bootstrap.min.css" />
 <script type="text/javascript" src="${path}/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="${path}/js/dataTables.bootstrap.min.js"></script>
+<script type="text/javascript" src="${path}/js/custom.js"></script>
 
 <script>
+    var table = null;
     $(document).ready(function() {
-        $('.data-table').DataTable({
+        /* Recuperar token csrf para e incluirlo como cabecera en cada envío ajax */
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        $(document).ajaxSend(function(e, xhr, options) {
+            xhr.setRequestHeader(header, token);
+        });
+        
+        $("#modal-confirm").modal({
+            keyboard: true,
+            show: false
+        });
+
+        table = $('.data-table').DataTable({
             language: {
                 "sProcessing":     "Procesando...",
                 "sLengthMenu":     "Mostrar _MENU_ entradas",
@@ -272,6 +304,85 @@
             }
         });
     });
+
+    // Acción al hacer click en los botones para hacer el modelo público/privado
+    $(".isopen").click(function (e) {
+        $button = $(e.target);
+        $span = $button.find("span");
+        $spanclass = $span.attr("class");
+
+        $button.prop("disabled", true);
+        $span.removeClass().addClass("glyphicon glyphicon-refresh");
+
+        $.when(switchOpen($button.data("modelid")))
+            .always(function () {
+                $button.prop("disabled", false);
+            })
+            .done(function () {
+                if ($spanclass === "glyphicon glyphicon-eye-open") {
+                    $span.removeClass().addClass("glyphicon glyphicon-eye-close");
+                    $button.prop("title", "Hacer público");
+                } else {
+                    $span.removeClass().addClass("glyphicon glyphicon-eye-open");
+                    $button.prop("title", "Hacer privado");
+                }
+            })
+            .fail(function () {
+                $span.removeClass().addClass($spanclass);
+            });
+    });
+    
+    $(".delete-model").click(function (e) {
+        var modal = $('#modal-confirm').modal('toggle');
+        $deleteBtn = $(e.target);
+        $row = $deleteBtn.closest("tr");
+        $row.addClass("selected");
+        $modelName = $row.find("td").eq(1).html();
+        modal.find(".modal-body").html("<p>¿Desea borrar el modelo <strong>" + $modelName + "</strong>? No hay vuelta atrás.</p>");
+        modal.find(".delete-confirm").data({
+            "modelid": $deleteBtn.data("modelid"),
+            "modelname": $modelName
+        });
+    });
+
+    $(".delete-confirm").click(function (e) {
+        var modal = $('#modal-confirm');
+        $deleteBtn = $(e.target);
+        $.when(deleteModel($deleteBtn.data("modelid")))
+            .always(function () {
+                modal.modal('toggle');
+            })
+            .done(function () {
+                table.row(".selected").remove().draw(false);
+                alertMsg("success", "Modelo <strong>" + $deleteBtn.data("modelname") + "</strong> eliminado correctamente.");
+            })
+            .fail(function () {
+                alertMsg("danger", "No se ha podido eliminar el modelo <strong>" + $deleteBtn.data("modelname") + "</strong>.");
+            })
+    });
+
+    function switchOpen(id) {
+        return Promise.resolve($.ajax({
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            url: "/models/switchModelOpen",
+            data: JSON.stringify(id),
+            timeout: 5000
+        }));
+    }
+
+    function deleteModel(id) {
+        return Promise.resolve($.ajax({
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            url: "models/deleteModel",
+            data: JSON.stringify(id),
+            timeout: 5000
+        }));
+    }
+
 </script>
 
 <%@ include file="_footer.jsp"%>

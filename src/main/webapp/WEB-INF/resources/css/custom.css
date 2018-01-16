@@ -40,20 +40,38 @@ p.separator {
     padding-left: 20px;
 }
 
-p.separator span:before, p.separator span:after {
-    content: '';
-    display: block;
-    width: 1000px;
+/* Loader */
+.cover {
+    height: 100vh;
+    width: 100vw;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 100000;
+    position: fixed;
+    display: none;
+}
+#loader {
     position: absolute;
-    top: 0.73em;
-    border-top: 1px solid #ddd;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    width: 150px;
+    height: 150px;
+    margin: -75px 0 0 -75px;
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    width: 120px;
+    height: 120px;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
 }
 
-p.separator span:before { right: 100%; }
-p.separator span:after { left: 100%; }
+@-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
 
-
-.popover {
-    max-width: 400px !important;
-    width: 400px;
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

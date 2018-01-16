@@ -387,3 +387,24 @@ function makeTextOptions(container, parameter, adapterType, adapterID) {
 
     optionDiv.appendTo(container);
 }
+
+function alertMsg(alertType, msg) {
+    $alertDiv = $("<div>");
+    $alertDiv.addClass("alert fade in alert-dismissible");
+    $alertDiv.addClass("alert-" + alertType);
+    $alertDiv.attr("role", "alert");
+
+    $closeButton = $("<button>");
+    $closeButton.addClass("close");
+    $closeButton.attr({
+        "aria-label": "Cerrar",
+        "type": "button",
+        "data-dismiss": "alert"
+    });
+    $closeButton.append("<span aria-hidden='true'>&times;</span>");
+
+    $alertDiv.append($closeButton);
+    $alertDiv.append(msg);
+
+    $(".main-content").prepend($alertDiv);
+}

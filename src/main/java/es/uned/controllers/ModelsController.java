@@ -14,13 +14,12 @@ import es.uned.entities.TrainParams;
 import es.uned.services.AccountService;
 import es.uned.services.AdapterModelService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
@@ -134,4 +133,35 @@ public class ModelsController {
         return "my-models";
     }
 
+    @RequestMapping(value = "/switchModelOpen", method = RequestMethod.POST)
+    public ResponseEntity<String> switchModelOpen(@RequestBody Long modelID, Principal principal) {
+        AdapterModels model = adapterModelService.findOne(modelID);
+        if (principal == null || model == null)
+            return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
+        Account account = accountService.findByUserName(principal.getName());
+        if (model.getOwner() == account || account.isAdmin()) {
+            model.setOpen(!model.isOpen());
+            adapterModelService.save(model);
+            return new ResponseEntity<>("Ok", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
+    }
+
+    @RequestMapping(value = "/deleteModel", method = RequestMethod.POST)
+    public ResponseEntity<String> deleteModel(@RequestBody Long modelID, Principal principal) {
+        AdapterModels model = adapterModelService.findOne(modelID);
+        if (principal == null || model == null)
+            return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
+        Account account = accountService.findByUserName(principal.getName());
+        if (model.getOwner() == account || account.isAdmin()) {
+            String adapterPath = null;
+            if (model.getAdapterType() == AdapterType.SENTIMENT)
+                adapterPath = sentimentFactory.get(model.getAdapterClass()).get_adapter_path();
+            else
+                adapterPath = subjectivityFactory.get(model.getAdapterClass()).get_adapter_path();
+            if (adapterModelService.delete(adapterPath, model))
+                return new ResponseEntity<>("Ok", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
+    }
 }

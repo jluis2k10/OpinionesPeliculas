@@ -14,6 +14,8 @@ public interface SubjectivityAdapter {
     String MODELS_DIR = "/models/subjectivity";
     AdapterType adapterType = AdapterType.SUBJECTIVITY;
 
+    String get_adapter_path();
+
     void analyze(Search search);
 
     void trainModel(String modelLocation, List<String> subjectives, List<String> objectives);

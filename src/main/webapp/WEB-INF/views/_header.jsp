@@ -14,6 +14,7 @@
     <title>${title}</title>
 </head>
 <body>
+<div class="cover"><div id="loader"></div></div>
 <nav class="navbar navbar-default navbar-static-top">
     <div class="container">
         <div class="navbar-header">
@@ -49,4 +50,4 @@
         </div>
     </div>
 </nav>
-<div class="container">
+<div class="container main-content">
