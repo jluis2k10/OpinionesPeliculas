@@ -2,6 +2,7 @@ package es.uned.adapters.sources;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import es.uned.components.TrakttvLookup;
 import es.uned.entities.CommentWithSentiment;
 import es.uned.entities.Search;
 import org.apache.http.HttpEntity;
@@ -11,6 +12,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +32,9 @@ public class TraktSearch implements SourceAdapter {
 
     @Inject
     private Environment environment;
+
+    @Autowired
+    private TrakttvLookup trakttvLookup;
 
     @Override
     public void doSearch(Search search) {
@@ -78,7 +83,7 @@ public class TraktSearch implements SourceAdapter {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-
+        search.setTitle(trakttvLookup.imdbToTitle(search.getTerm()));
         search.setComments(comments);
     }
 }

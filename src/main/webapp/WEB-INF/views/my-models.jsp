@@ -32,26 +32,26 @@
                             <td>${model.language}</td>
                             <td>${model.adapterClass}</td>
                             <td>
-                                <div class="btn-group">
+                                <div class="btn-group btn-group-xs">
                                     <c:if test="${model.trainable}">
-                                        <a href="${path}/models/train/${model.id}" class="btn btn-default" title="Entrenar">
+                                        <a href="${path}/models/train/${model.id}" class="btn btn-default btn-xs" title="Entrenar">
                                             <span class="glyphicon glyphicon-cog"></span>
                                         </a>
                                     </c:if>
                                     <c:choose>
                                         <c:when test="${model.open}">
-                                            <button type="button" class="btn btn-default isopen" title="Hacer privado" data-modelid="${model.id}">
+                                            <button type="button" class="btn btn-default isopen btn-xs" title="Hacer privado" data-modelid="${model.id}">
                                                 <span class="glyphicon glyphicon-eye-open"></span>
                                             </button>
                                         </c:when>
                                         <c:otherwise>
-                                            <button type="button" class="btn btn-default isopen" title="Hacer público"  data-modelid="${model.id}">
+                                            <button type="button" class="btn btn-default isopen btn-xs" title="Hacer público"  data-modelid="${model.id}">
                                                 <span class="glyphicon glyphicon-eye-close"></span>
                                             </button>
                                         </c:otherwise>
                                     </c:choose>
                                     </button>
-                                    <button type="button" class="btn btn-danger delete-model" title="Eliminar" data-modelid="${model.id}">
+                                    <button type="button" class="btn btn-danger delete-model btn-xs" title="Eliminar" data-modelid="${model.id}">
                                         <span class="glyphicon glyphicon-trash"></span>
                                     </button>
                                 </div>
@@ -87,26 +87,26 @@
                             <td>${model.language}</td>
                             <td>${model.adapterClass}</td>
                             <td>
-                                <div class="btn-group">
+                                <div class="btn-group btn-group-xs">
                                     <c:if test="${model.trainable}">
-                                        <a href="${path}/models/train/${model.id}" class="btn btn-default" title="Entrenar">
+                                        <a href="${path}/models/train/${model.id}" class="btn btn-default btn-xs" title="Entrenar">
                                             <span class="glyphicon glyphicon-cog"></span>
                                         </a>
                                     </c:if>
                                     <c:choose>
                                         <c:when test="${model.open}">
-                                            <button type="button" class="btn btn-default isopen" title="Hacer privado" data-modelid="${model.id}">
+                                            <button type="button" class="btn btn-default isopen btn-xs" title="Hacer privado" data-modelid="${model.id}">
                                                 <span class="glyphicon glyphicon-eye-open"></span>
                                             </button>
                                         </c:when>
                                         <c:otherwise>
-                                            <button type="button" class="btn btn-default isopen" title="Hacer público"  data-modelid="${model.id}">
+                                            <button type="button" class="btn btn-default isopen btn-xs" title="Hacer público"  data-modelid="${model.id}">
                                                 <span class="glyphicon glyphicon-eye-close"></span>
                                             </button>
                                         </c:otherwise>
                                     </c:choose>
                                     </button>
-                                    <button type="button" class="btn btn-danger delete-model" title="Eliminar" data-modelid="${model.id}">
+                                    <button type="button" class="btn btn-danger delete-model btn-xs" title="Eliminar" data-modelid="${model.id}">
                                         <span class="glyphicon glyphicon-trash"></span>
                                     </button>
                                 </div>
@@ -144,26 +144,26 @@
                                 <td>${model.language}</td>
                                 <td>${model.adapterClass}</td>
                                 <td>${model.owner.userName}</td>
-                                <td><div class="btn-group">
+                                <td><div class="btn-group btn-group-xs">
                                     <c:if test="${model.trainable}">
-                                        <a href="${path}/models/train/${model.id}" class="btn btn-default" title="Entrenar">
+                                        <a href="${path}/models/train/${model.id}" class="btn btn-default btn-xs" title="Entrenar">
                                             <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
                                         </a>
                                     </c:if>
                                     <c:choose>
                                         <c:when test="${model.open}">
-                                            <button type="button" class="btn btn-default isopen" title="Hacer privado" data-modelid="${model.id}">
+                                            <button type="button" class="btn btn-default isopen btn-xs" title="Hacer privado" data-modelid="${model.id}">
                                                 <span class="glyphicon glyphicon-eye-open"></span>
                                             </button>
                                         </c:when>
                                         <c:otherwise>
-                                            <button type="button" class="btn btn-default isopen" title="Hacer público"  data-modelid="${model.id}">
+                                            <button type="button" class="btn btn-default isopen btn-xs" title="Hacer público"  data-modelid="${model.id}">
                                                 <span class="glyphicon glyphicon-eye-close"></span>
                                             </button>
                                         </c:otherwise>
                                     </c:choose>
                                     </button>
-                                    <button type="button" class="btn btn-danger delete-model" title="Eliminar" data-modelid="${model.id}">
+                                    <button type="button" class="btn btn-danger delete-model btn-xs" title="Eliminar" data-modelid="${model.id}">
                                         <span class="glyphicon glyphicon-trash"></span>
                                     </button>
                                 </div></td>
@@ -200,26 +200,26 @@
                                 <td>${model.adapterClass}</td>
                                 <td>${model.owner.userName}</td>
                                 <td>
-                                    <div class="btn-group">
+                                    <div class="btn-group btn-group-xs">
                                         <c:if test="${model.trainable}">
-                                            <a href="${path}/models/train/${model.id}" class="btn btn-default" title="Entrenar">
+                                            <a href="${path}/models/train/${model.id}" class="btn btn-default btn-xs" title="Entrenar">
                                                 <span class="glyphicon glyphicon-cog"></span>
                                             </a>
                                         </c:if>
                                         <c:choose>
                                             <c:when test="${model.open}">
-                                                <button type="button" class="btn btn-default isopen" title="Hacer privado" data-modelid="${model.id}">
+                                                <button type="button" class="btn btn-default isopen btn-xs" title="Hacer privado" data-modelid="${model.id}">
                                                     <span class="glyphicon glyphicon-eye-open"></span>
                                                 </button>
                                             </c:when>
                                             <c:otherwise>
-                                                <button type="button" class="btn btn-default isopen" title="Hacer público" data-modelid="${model.id}">
+                                                <button type="button" class="btn btn-default isopen btn-xs" title="Hacer público" data-modelid="${model.id}">
                                                     <span class="glyphicon glyphicon-eye-close"></span>
                                                 </button>
                                             </c:otherwise>
                                         </c:choose>
                                         </button>
-                                        <button type="button" class="btn btn-danger delete-model" title="Eliminar" data-modelid="${model.id}">
+                                        <button type="button" class="btn btn-danger delete-model btn-xs" title="Eliminar" data-modelid="${model.id}">
                                             <span class="glyphicon glyphicon-trash"></span>
                                         </button>
                                     </div>
@@ -265,43 +265,29 @@
 <script>
     var table = null;
     $(document).ready(function() {
-        /* Recuperar token csrf para e incluirlo como cabecera en cada envío ajax */
+        /* Recuperar token csrf para incluirlo como cabecera en cada envío ajax */
         var token = $("meta[name='_csrf']").attr("content");
         var header = $("meta[name='_csrf_header']").attr("content");
         $(document).ajaxSend(function(e, xhr, options) {
             xhr.setRequestHeader(header, token);
         });
-        
+
+        // Inicialización de modal con mensaje de confirmación de borrado
         $("#modal-confirm").modal({
             keyboard: true,
             show: false
         });
 
+        // Inicializar datatables
+        var localized = datatablesLocalization();
         table = $('.data-table').DataTable({
-            language: {
-                "sProcessing":     "Procesando...",
-                "sLengthMenu":     "Mostrar _MENU_ entradas",
-                "sZeroRecords":    "No se encontraron resultados",
-                "sEmptyTable":     "Ningún dato disponible en esta tabla",
-                "sInfo":           "Mostrando entradas _START_ a _END_ de un total de _TOTAL_ entradas",
-                "sInfoEmpty":      "Mostrando 0 entradas",
-                "sInfoFiltered":   "(filtrado de un total de _MAX_ entradas)",
-                "sInfoPostFix":    "",
-                "sSearch":         "Buscar:",
-                "sUrl":            "",
-                "sInfoThousands":  ",",
-                "sLoadingRecords": "Cargando...",
-                "oPaginate": {
-                    "sFirst":    "Primero",
-                    "sLast":     "Último",
-                    "sNext":     "Siguiente",
-                    "sPrevious": "Anterior"
-                },
-                "oAria": {
-                    "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-                    "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-                }
-            }
+            language: localized
+        });
+
+        /* Acción al esconderse el modal */
+        $("#modal-confirm").on('hidden.bs.modal', function (e) {
+            $selectedRow = $(".data-table tbody").find("tr.selected");
+            $selectedRow.removeClass("selected");
         });
     });
 
@@ -329,9 +315,11 @@
             })
             .fail(function () {
                 $span.removeClass().addClass($spanclass);
+                alertMsg("danger", "No se ha podido cambiar el estado del modelo indicado.");
             });
     });
-    
+
+    /* Acción al hacer click en el botón de borrar modelo de en el listado de modelos de usuario */
     $(".delete-model").click(function (e) {
         var modal = $('#modal-confirm').modal('toggle');
         $deleteBtn = $(e.target);
@@ -345,6 +333,7 @@
         });
     });
 
+    /* Acción al hacer click en el botón de confirmación de borrar modelo en el modal */
     $(".delete-confirm").click(function (e) {
         var modal = $('#modal-confirm');
         $deleteBtn = $(e.target);
@@ -361,6 +350,7 @@
             })
     });
 
+    /* Petición AJAX POST para cambiar el estado (público/privado) de un modelo */
     function switchOpen(id) {
         return Promise.resolve($.ajax({
             type: "POST",
@@ -372,6 +362,7 @@
         }));
     }
 
+    /* Petición AJAX POST para eliminar un modelo del usuario */
     function deleteModel(id) {
         return Promise.resolve($.ajax({
             type: "POST",

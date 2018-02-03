@@ -32,7 +32,7 @@ public class Account {
     @JoinTable(name = "Accounts_to_Roles",
             joinColumns = {@JoinColumn(name = "account_id", referencedColumnName = "id")},
             inverseJoinColumns = {@JoinColumn(name = "role_id", referencedColumnName = "id")})
-    private List<AccountRole> accountRoles = new ArrayList<>();
+    private List<AccountRole> roles = new ArrayList<>();
 
     @Transient
     private String passwordConfirm;
@@ -41,7 +41,7 @@ public class Account {
     private String newPassword;
 
     public boolean isAdmin() {
-        Iterator<AccountRole> it = accountRoles.iterator();
+        Iterator<AccountRole> it = roles.iterator();
         while (it.hasNext()) {
             if (it.next().getRole().equals("ADMIN"))
                 return true;
@@ -89,12 +89,12 @@ public class Account {
         this.active = active;
     }
 
-    public List<AccountRole> getAccountRoles() {
-        return accountRoles;
+    public List<AccountRole> getRoles() {
+        return roles;
     }
 
-    public void setAccountRoles(List<AccountRole> accountRoles) {
-        this.accountRoles = accountRoles;
+    public void setRoles(List<AccountRole> accountRoles) {
+        this.roles = accountRoles;
     }
 
     public String getPasswordConfirm() {

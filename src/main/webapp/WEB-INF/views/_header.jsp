@@ -32,6 +32,7 @@
                 <sec:authorize access="isAuthenticated()">
                     <li><a href="${path}/models">Mis modelos</a></li>
                     <li><a href="${path}/models/create">Crear modelo</a></li>
+                    <li><a href="${path}/searches">Mis Búsquedas</a></li>
                 </sec:authorize>
             </ul>
             <ul class="nav navbar-nav navbar-right">

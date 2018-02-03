@@ -1,9 +1,13 @@
 package es.uned.entities;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,11 +23,18 @@ public class Search {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner")
+    private Account owner;
+
     @Column(name = "source", length = 50, nullable = false)
     private String source;
 
     @Column(name = "term", nullable = false)
     private String term;
+
+    @Column(name = "title")
+    private String title;
 
     @Temporal(value = TemporalType.TIMESTAMP)
     @DateTimeFormat(pattern = "dd/MM/yyyy HH:mm:ss")
@@ -113,40 +124,102 @@ public class Search {
         });
     }
 
-    public String getPARAMS_KEYS() {
-        return PARAMS_KEYS;
+    public ObjectNode toJSON() {
+        ObjectMapper mapper = new ObjectMapper();
+        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        ObjectNode searchNode = mapper.createObjectNode();
+
+        searchNode.put("id", getId());
+        searchNode.put("owner", getOwner().getUserName());
+        if (getTerm().startsWith("tt"))
+            searchNode.put("term", getTitle());
+        else
+            searchNode.put("term", getTerm());
+        searchNode.put("source", getSource());
+        searchNode.put("lang", getLang());
+        if (isClassifySubjectivity() && isDiscardNonSubjective())
+            searchNode.put("subjectivity", "Sí (descartar)");
+        else if (isClassifySubjectivity())
+            searchNode.put("subjectivity", "Sí");
+        else
+            searchNode.put("subjectivity", "No");
+        searchNode.put("total_comments", getComments().size());
+        searchNode.put("created", dateFormat.format(getCreated()));
+        if (getUpdated() != null)
+            searchNode.put("updated", dateFormat.format(getUpdated()));
+        else
+            searchNode.putNull("updated");
+        searchNode.put("source_class", getSourceClass());
+        searchNode.put("sentiment_adapter", getSentimentAdapter());
+        searchNode.put("sentiment_model", getSentimentModel());
+        searchNode.put("subjectivity_adapter", getSubjectivityAdapter());
+        searchNode.put("subjectivity_model", getSubjectivityModel());
+
+        return searchNode;
     }
 
-    public String getSourceClass() {
-        return sourceClass;
+    public Long getId() {
+        return id;
     }
 
-    public void setSourceClass(String sourceClass) {
-        this.sourceClass = sourceClass;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public int getLimit() {
-        return limit;
+    public Account getOwner() {
+        return owner;
     }
 
-    public void setLimit(int limit) {
-        this.limit = limit;
+    public void setOwner(Account owner) {
+        this.owner = owner;
     }
 
-    public String getSinceDate() {
-        return sinceDate;
+    public String getSource() {
+        return source;
     }
 
-    public void setSinceDate(String sinceDate) {
-        this.sinceDate = sinceDate;
+    public void setSource(String source) {
+        this.source = source;
     }
 
-    public String getUntilDate() {
-        return untilDate;
+    public String getTerm() {
+        return term;
     }
 
-    public void setUntilDate(String untilDate) {
-        this.untilDate = untilDate;
+    public void setTerm(String term) {
+        this.term = term;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
+    public Date getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(Date updated) {
+        this.updated = updated;
+    }
+
+    public List<CommentWithSentiment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<CommentWithSentiment> comments) {
+        this.comments = comments;
     }
 
     public String getLang() {
@@ -221,52 +294,36 @@ public class Search {
         this.discardNonSubjective = discardNonSubjective;
     }
 
-    public Long getId() {
-        return id;
+    public String getSourceClass() {
+        return sourceClass;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setSourceClass(String sourceClass) {
+        this.sourceClass = sourceClass;
     }
 
-    public String getSource() {
-        return source;
+    public int getLimit() {
+        return limit;
     }
 
-    public void setSource(String source) {
-        this.source = source;
+    public void setLimit(int limit) {
+        this.limit = limit;
     }
 
-    public String getTerm() {
-        return term;
+    public String getSinceDate() {
+        return sinceDate;
     }
 
-    public void setTerm(String term) {
-        this.term = term;
+    public void setSinceDate(String sinceDate) {
+        this.sinceDate = sinceDate;
     }
 
-    public Date getCreated() {
-        return created;
+    public String getUntilDate() {
+        return untilDate;
     }
 
-    public void setCreated(Date created) {
-        this.created = created;
-    }
-
-    public Date getUpdated() {
-        return updated;
-    }
-
-    public void setUpdated(Date updated) {
-        this.updated = updated;
-    }
-
-    public List<CommentWithSentiment> getComments() {
-        return comments;
-    }
-
-    public void setComments(LinkedList<CommentWithSentiment> comments) {
-        this.comments = comments;
+    public void setUntilDate(String untilDate) {
+        this.untilDate = untilDate;
     }
 
     public Map<String, String> getExtraParameters() {

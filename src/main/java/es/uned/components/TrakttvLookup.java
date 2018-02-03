@@ -29,8 +29,9 @@ public class TrakttvLookup {
     @Inject
     private Environment environment;
 
+    private ObjectMapper mapper = new ObjectMapper();
+
     public ObjectNode lookup(String title, String page) {
-        ObjectMapper mapper = new ObjectMapper();
         ObjectNode result = mapper.createObjectNode();
         ArrayNode films = mapper.createArrayNode();
         HttpClient httpClient = HttpClientBuilder.create().build();
@@ -63,8 +64,8 @@ public class TrakttvLookup {
             result.put("total_count", itemCount);
             HttpEntity entity = response.getEntity();
             String jsonResponse = EntityUtils.toString(entity);
-            JsonNode jsonNode = mapper.readTree(jsonResponse);
-            for (JsonNode node: jsonNode) {
+            JsonNode jsonNodes = mapper.readTree(jsonResponse);
+            for (JsonNode node: jsonNodes) {
                 ObjectNode resultNode = mapper.createObjectNode();
                 resultNode.set("title", node.get("movie").get("title"));
                 resultNode.set("year", node.get("movie").get("year"));
@@ -79,6 +80,45 @@ public class TrakttvLookup {
         }
 
         return result;
+    }
+
+    public String imdbToTitle(String imdbID) {
+        String title = null;
+        URI uri = null;
+        try {
+            uri = new URIBuilder()
+                    .setScheme("https")
+                    .setHost("api.trakt.tv")
+                    .setPath("/search/imdb/" + imdbID)
+                    .build();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+
+        HttpGet request = new HttpGet(uri);
+        request.addHeader("Content-Type", "application/json");
+        request.addHeader("trakt-api-version", "2");
+        request.addHeader("trakt-api-key", environment.getProperty("trakt.apiKey"));
+
+        HttpClient httpClient = HttpClientBuilder.create().build();
+
+        try {
+            HttpResponse response = httpClient.execute(request);
+            if (response.getStatusLine().getStatusCode() != 200)
+                throw new RuntimeException("Fallo: HTTP error code: " + response.getStatusLine().getStatusCode());
+            HttpEntity entity = response.getEntity();
+            String jsonResponse = EntityUtils.toString(entity);
+            JsonNode jsonNode = mapper.readTree(jsonResponse);
+            title = jsonNode.get(0).get("movie").get("title").asText();
+            title += " (" + jsonNode.get(0).get("movie").get("year").asText() + ")";
+
+        } catch (ClientProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return title;
     }
 
 }

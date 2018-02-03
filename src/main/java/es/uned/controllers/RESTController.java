@@ -4,11 +4,16 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import es.uned.components.ConfigParser;
 import es.uned.components.TrakttvLookup;
+import es.uned.services.AccountService;
+import es.uned.services.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 import java.util.Optional;
@@ -25,6 +30,12 @@ public class RESTController {
 
     @Autowired
     private TrakttvLookup trakttvLookup;
+
+     @Autowired
+     private SearchService searchService;
+
+     @Autowired
+     private AccountService accountService;
 
     @RequestMapping(value = "/comments-source", method = RequestMethod.GET)
     public ResponseEntity<ArrayNode> sources(@RequestParam("lang") Optional<String> lang) {
@@ -62,4 +73,9 @@ public class RESTController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @RequestMapping(value = "/searches" , method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ObjectNode> searches(Principal principal) {
+        ObjectNode response = searchService.JSONsearches(accountService.findByUserName(principal.getName()));
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }

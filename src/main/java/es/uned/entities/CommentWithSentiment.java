@@ -1,8 +1,12 @@
 package es.uned.entities;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -91,6 +95,24 @@ public class CommentWithSentiment {
         public CommentWithSentiment build() {
             return new CommentWithSentiment(this);
         }
+    }
+
+    public ObjectNode toJSON() {
+        ObjectMapper mapper = new ObjectMapper();
+        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm");
+        ObjectNode commentNode = mapper.createObjectNode();
+
+        commentNode.put("id", getId());
+        commentNode.put("source_url", getSourceURL());
+        commentNode.put("date", dateFormat.format(getDate()));
+        commentNode.put("comment", getComment());
+        commentNode.put("tokenized_comment", getTokenizedComment());
+        commentNode.put("sentiment", getSentiment().toString());
+        commentNode.put("sentiment_score", getSentiment().toString());
+        commentNode.put("subjectivity", getSubjectivity().toString());
+        commentNode.put("subjectivity_score", getSubjectivityScore());
+
+        return commentNode;
     }
 
     public Long getId() {

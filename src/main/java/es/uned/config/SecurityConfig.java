@@ -91,6 +91,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/registro").anonymous()
                 .antMatchers("/login").anonymous()
                 .antMatchers("/models/**").authenticated()
+                .antMatchers("/searches/**").authenticated()
+                .antMatchers("/api/searches/**").authenticated()
                 .and().formLogin()
                     .loginPage("/login")
                     .usernameParameter("username")

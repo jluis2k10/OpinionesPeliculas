@@ -6,9 +6,10 @@ import es.uned.adapters.SubjectivityAdapterFactory;
 import es.uned.adapters.sentiment.SentimentAdapter;
 import es.uned.adapters.sources.SourceAdapter;
 import es.uned.adapters.subjectivity.SubjectivityAdapter;
+import es.uned.components.SearchWrapper;
 import es.uned.entities.Search;
-import es.uned.services.MySearchService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -22,12 +23,13 @@ import javax.servlet.http.HttpServletRequest;
  *
  */
 @Controller
+@Scope("request")
 public class MainController {
 
     @Autowired private SourceAdapterFactory sourceFactory;
     @Autowired private SubjectivityAdapterFactory subjectivityFactory;
     @Autowired private SentimentAdapterFactory sentimentFactory;
-    @Autowired private MySearchService searchService;
+    @Autowired private SearchWrapper searchWrapper;
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public String home(Model model) {
@@ -49,17 +51,11 @@ public class MainController {
 
         SentimentAdapter sentimentAdapter = sentimentFactory.get(search.getSentimentAdapter());
         sentimentAdapter.analyze(search);
-        searchService.save(search);
-        model.addAttribute("comments", search.getComments());
+
+        searchWrapper.setSearch(search);
+
+        model.addAttribute("search", search);
+        //model.addAttribute("comments", search.getComments());
         return "results";
     }
-
-    @RequestMapping(value = "test")
-    public String testClassifier() {
-        //SentimentAdapter sentimentAdapter = sentimentFactory.get("es.uned.adapters.sentiment.LingPipe");
-
-        //sentimentAdapter.createModel();
-        return "home";
-    }
-
 }

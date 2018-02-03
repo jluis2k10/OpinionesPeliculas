@@ -28,8 +28,8 @@ public class MyAccountService implements AccountService {
             account.setPassword(accountRepo.findOne(account.getId()).getPassword());
         else
             account.setPassword(bCryptPasswordEncoder.encode(account.getPassword()));
-        if (account.getAccountRoles().isEmpty())
-            account.getAccountRoles().add(roleRepo.findByRole("USER"));
+        if (account.getRoles().isEmpty())
+            account.getRoles().add(roleRepo.findByRole("USER"));
         accountRepo.save(account);
     }
 
