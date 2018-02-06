@@ -1,3 +1,46 @@
+// Construir Input Select con los clasificadores de polaridad o de subjetividad
+function constructClassifiersSelect() {
+    $.when(getClassifiers())
+        .done(function(_classifiers) {
+            var $adapterSelect = $("#adapterSelect");
+            $adapterSelect.empty();
+            $.each(_classifiers, function(index, classifier) {
+                $adapterSelect.append(new Option(classifier.name, classifier.class));
+            });
+            // Construir el formulario para los parámetros disponibles para la creación del modelo
+            populateClassifierParameters(getSelectedClassifier(_classifiers));
+            addListeners(_classifiers);
+        })
+        .fail(function () {
+            console.error("Error recuperando los clasificadors.");
+        })
+}
+
+// Añadir listeners para diferentes acciones
+function addListeners(classifiers) {
+    // Cambiar el tipo de clasificador
+    $("input[name='classifierType']").change(function() {
+        // Eliminamos listeners previos
+        $("input[name='classifierType']").off();
+        $("select[name='adapterSelect']").off();
+        $(".parameters-container").off();
+
+        constructClassifiersSelect();
+        switchDatasetTags();
+    });
+
+    // Seleccionar el clasificador
+    $("select[name='adapterSelect']").change(function() {
+        populateClassifierParameters(getSelectedClassifier(classifiers));
+    });
+
+    /* Acción al seleccionar una de las opciones de los parámetros para crear un nuevo modelo
+     * Podemos tener "subparámetros" para las opciones de los parámetros. */
+    $(".parameters-container").on('change', 'select, input:checked', function () {
+        attachOptionParameters($(this), getSelectedClassifier(classifiers));
+    });
+}
+
 /* Recuperar clasificadores de polaridad o de subjetividad disponibles */
 function getClassifiers() {
     var url = "/api/subjectivity-adapters?create_params=true";
@@ -40,21 +83,32 @@ function populateClassifierParameters(classifier) {
 
     // Construir los parámetros disponibles para la creación de un nuevo modelo
     $.each(classifier.model_creation_params, function (index, parameter) {
-        var $fieldset = $("<fieldset class='col-xs-12'></fieldset>");
+        var $outerDiv = $('<div class="card mb-4 border-secondary bg-light"></div>');
+        var $bodyDiv = $('<div class="card-body"></div>');
+        var $title = $('<h5 class="card-title mb-4">' + parameter.name + '</h5>');
+        var $rowDiv = $('<div class="row"></div>');
+        var $parameterHTML = makeParameter(parameter, "");
+
+        $parameterHTML.appendTo($rowDiv);
+        $title.appendTo($bodyDiv);
+        $rowDiv.appendTo($bodyDiv);
+        $bodyDiv.appendTo($outerDiv);
+        $outerDiv.appendTo($(".parameters-container"));
+        /*var $fieldset = $("<fieldset class='row'></fieldset>");
         var $legend = $("<legend>" + parameter.name + "</legend>");
         $legend.appendTo($fieldset);
         var $parameterHTML = makeParameter(parameter, "");
         $parameterHTML.appendTo($fieldset);
-        $fieldset.appendTo($(".parameters-container"));
-        var $select = $fieldset.find('select, input:checked');
+        $fieldset.appendTo($(".parameters-container"));*/
+        var $select = $outerDiv.find('select, input:checked');
         attachOptionParameters($select, classifier);
     })
 }
 
 /* Crear formulario con parámetros opcionales del clasificador */
 function attachOptionParameters($select, classifier) {
-    var $fieldset = $select.closest('fieldset');
-    $fieldset.find("div.option-parameter").remove();
+    var $rowDiv = $select.closest('div.row');
+    $rowDiv.find("div.option-parameter").remove();
 
     var adapterParameter = $.grep(classifier.model_creation_params, function(parameter, index) {
         return (parameter.id === $select.attr("id") || parameter.id === $select.attr("name"));
@@ -66,7 +120,7 @@ function attachOptionParameters($select, classifier) {
     if (selectedOption.parameters) {
         $.each(selectedOption.parameters, function(index, parameter) {
             var $parameterHTML = makeParameter(parameter, "option-parameter");
-            $parameterHTML.appendTo($fieldset);
+            $parameterHTML.appendTo($rowDiv);
         });
     }
 }
@@ -91,7 +145,7 @@ function makeParameter(parameter, cssClass) {
 
 /* Crear opción de tipo Select */
 function makeSelectParameter(parameter, cssClass) {
-    var $innerDiv = $("<div></div>").attr("class", "col-xs-3 form-group " + cssClass + "");
+    var $innerDiv = $("<div></div>").attr("class", "col-3 form-group " + cssClass + "");
     var $label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
     var $select = $("<select></select>").attr({
         id: parameter.id,
@@ -111,7 +165,7 @@ function makeSelectParameter(parameter, cssClass) {
 
 /* Crear opción de tipo Campo de Texto */
 function makeTextParameter(parameter, cssClass) {
-    var $innerDiv = $("<div></div>").attr("class", "col-xs-3 form-group " + cssClass + "");
+    var $innerDiv = $("<div></div>").attr("class", "col-3 form-group " + cssClass + "");
     var $label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
     var $input = $("<input />").attr({
         type: "text",
@@ -127,7 +181,7 @@ function makeTextParameter(parameter, cssClass) {
 
 /* Crear opción de tipo numérico entero */
 function makeNumberParameter(parameter, cssClass) {
-    var $innerDiv = $("<div></div>").attr("class", "col-xs-3 form-group " + cssClass + "");
+    var $innerDiv = $("<div></div>").attr("class", "col-3 form-group " + cssClass + "");
     var $label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
     var $input = $("<input />").attr({
         type: 'number',
@@ -150,7 +204,7 @@ function makeNumberParameter(parameter, cssClass) {
 
 /* Crear opción de tipo numérico doble (con decimales) */
 function makeDoubleParameter(parameter, cssClass) {
-    var $innerDiv = $("<div></div>").attr("class", "col-xs-3 form-group " + cssClass + "");
+    var $innerDiv = $("<div></div>").attr("class", "col-3 form-group " + cssClass + "");
     var $label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
     var $input = $("<input />").attr({
         type: 'number',
@@ -173,25 +227,29 @@ function makeDoubleParameter(parameter, cssClass) {
 
 /* Crear opción de tipo doble */
 function makeRadioParameter(parameter, cssClass) {
-    var $innerDiv = $("<div></div>").attr("class", "col-xs-3 form-group " + cssClass + "");
-    var $optionHeaderPar = $("<p></p>");
-    var $optionHeaderTitle = $("<strong></strong>").text(parameter.name);
-    $optionHeaderTitle.appendTo($optionHeaderPar);
-    $optionHeaderPar.appendTo($innerDiv);
+    var $innerDiv = $("<div></div>").attr("class", "col-3 " + cssClass + "");
+    var $optionHeaderTitle = $("<p></p>").text(parameter.name);
+    $optionHeaderTitle.appendTo($innerDiv);
     $.each(parameter.options, function (index, option) {
-        var $radioLabel = $("<label class='radio-inline'></label>");
-        var $radio = $("<input />").attr({
+        var $radioDiv = $("<div></div>").attr("class", "custom-control custom-radio custom-control-inline");
+        var $radioInput = $("<input>").attr({
+            type: "radio",
             id: option.value,
             name: parameter.id,
             value: option.value,
-            type: "radio"
+            class: "custom-control-input"
         });
+        var $radioLabel = $("<label></label>").attr({
+            for: option.value,
+            class: "custom-control-label"
+        })
         if (parameter.default === option.value) {
-            $radio.prop("checked", true);
+            $radioInput.prop("checked", true);
         }
-        $radio.appendTo($radioLabel);
-        $radioLabel.append(" " + option.name + "&nbsp;");
-        $radioLabel.appendTo($innerDiv);
+        $radioLabel.append(option.name);
+        $radioInput.appendTo($radioDiv);
+        $radioLabel.appendTo($radioDiv);
+        $radioDiv.appendTo($innerDiv);
     });
     return $innerDiv;
 }

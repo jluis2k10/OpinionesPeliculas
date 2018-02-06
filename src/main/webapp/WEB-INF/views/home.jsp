@@ -5,157 +5,145 @@
 
 <form:form method="post" modelAttribute="searchForm" action="results">
     <!-- Grupo para Opciones de Fuente de Comentarios -->
-    <div class="row">
-        <fieldset class="col-xs-12">
-            <legend>Opciones de búsqueda</legend>
-            <spring:bind path="term">
-                <div class="col-xs-12 ${status.error ? "has-error" : ""}">
-                    <div class="input-group form-group">
-                        <div class="input-group-btn">
-                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Origen <span class="caret"></span></button>
-                            <ul class="dropdown-menu" id="sources-dropdown"></ul>
+    <div class="card mb-4 border-secondary bg-light">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Opciones de búsqueda</h5>
+            <div class="row">
+                <spring:bind path="term">
+                    <div class="col-12 ${status.error ? "has-error" : ""}">
+                        <div class="input-group form-group">
+                            <div class="input-group-prepend">
+                                <button class="btn btn-outline-primary dropdown-toggle sources-dropdown" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Origen</button>
+                                <div id="sources-dropdown" class="dropdown-menu">
+                                </div>
+                            </div>
+                            <form:input path="term" type="text" cssClass="form-control" placeholder="Término de búsqueda" aria-describedby="errorsTerm"></form:input>
                         </div>
-                        <form:input path="term" type="text" cssClass="form-control" placeholder="Término de búsqueda" aria-describedby="errorsTerm"></form:input>
-                        <div class="input-group-addon source-placeholder"></div>
+                        <form:errors path="term" cssClass="help-block" id="errorsTerm"></form:errors>
                     </div>
-                    <form:errors path="term" cssClass="help-block" id="errorsTerm"></form:errors>
-                </div>
-            </spring:bind>
-            <spring:bind path="limit">
-                <div class="col-xs-3 limit-container" style="display: none;">
-                    <div class="form-group ${status.error ? "has-error" : ""}">
-                        <form:label path="limit">Comentarios a recuperar (máx.)</form:label>
-                        <form:input path="limit" type="number" min="1" cssClass="form-control" id="limit" value="50" aria-describedby="errorsLimit"></form:input>
-                        <form:errors path="limit" cssClass="help-block" id="errorsLimit"></form:errors>
+                </spring:bind>
+                <spring:bind path="limit">
+                    <div class="col-3 limit-container" style="display: none;">
+                        <div class="form-group ${status.error ? "has-error" : ""}">
+                            <form:label path="limit">Comentarios a recuperar (máx.)</form:label>
+                            <form:input path="limit" type="number" min="1" cssClass="form-control" id="limit" value="50" aria-describedby="errorsLimit"></form:input>
+                            <form:errors path="limit" cssClass="help-block" id="errorsLimit"></form:errors>
+                        </div>
                     </div>
-                </div>
-            </spring:bind>
-            <spring:bind path="sinceDate">
-                <div class="col-xs-3 sinceDate-container" style="display: none;">
-                    <div class="form-group ${status.error ? "has-error" : ""}">
-                        <form:label path="sinceDate">Desde</form:label>
-                        <form:input path="sinceDate" type="text" cssClass="form-control" id="sinceDate" placeholder="DD/MM/AAAA" aria-describedby="errorsSinceDate"></form:input>
-                        <form:errors path="sinceDate" cssClass="help-block" id="errorsSinceDate"></form:errors>
+                </spring:bind>
+                <spring:bind path="sinceDate">
+                    <div class="col-3 sinceDate-container" style="display: none;">
+                        <div class="form-group ${status.error ? "has-error" : ""}">
+                            <form:label path="sinceDate">Desde</form:label>
+                            <form:input path="sinceDate" type="text" cssClass="form-control" id="sinceDate" placeholder="DD/MM/AAAA" aria-describedby="errorsSinceDate"></form:input>
+                            <form:errors path="sinceDate" cssClass="help-block" id="errorsSinceDate"></form:errors>
+                        </div>
                     </div>
-                </div>
-            </spring:bind>
-            <spring:bind path="untilDate">
-                <div class="col-xs-3 untilDate-container" style="display: none;">
-                    <div class="form-group ${status.error ? "has-error" : ""}">
-                        <form:label path="untilDate">Hasta</form:label>
-                        <form:input path="untilDate" type="text" cssClass="form-control" id="untilDate" placeholder="DD/MM/AAAA" aria-describedby="errorsUntilDate"></form:input>
-                        <form:errors path="untilDate" cssClass="help-block" id="errorsUntilDate"></form:errors>
+                </spring:bind>
+                <spring:bind path="untilDate">
+                    <div class="col-3 untilDate-container" style="display: none;">
+                        <div class="form-group ${status.error ? "has-error" : ""}">
+                            <form:label path="untilDate">Hasta</form:label>
+                            <form:input path="untilDate" type="text" cssClass="form-control" id="untilDate" placeholder="DD/MM/AAAA" aria-describedby="errorsUntilDate"></form:input>
+                            <form:errors path="untilDate" cssClass="help-block" id="errorsUntilDate"></form:errors>
+                        </div>
                     </div>
-                </div>
-            </spring:bind>
-            <spring:bind path="lang">
-                <div class="col-xs-3 language-container ${status.error ? "has-error" : ""}" style="display: none;">
-                    <div class="form-group">
-                        <form:label path="lang">Idioma</form:label>
-                        <form:select path="lang" cssClass="form-control">
-                            <form:option value="NONE" label="--Selecciona--"></form:option>
-                        </form:select>
+                </spring:bind>
+                <spring:bind path="lang">
+                    <div class="col-3 language-container ${status.error ? "has-error" : ""}" style="display: none;">
+                        <div class="form-group">
+                            <form:label path="lang">Idioma</form:label>
+                            <form:select path="lang" cssClass="form-control">
+                                <form:option value="NONE" label="--Selecciona--"></form:option>
+                            </form:select>
+                        </div>
                     </div>
+                </spring:bind>
+                <div class="col-3 imdbID-container" style="display: none;">
+                    <label for="imdbID">Película</label>
+                    <select class="imdb-select form-control" id="imdbID">
+                        <option value=""></option>
+                    </select>
                 </div>
-            </spring:bind>
-            <div class="col-xs-3 imdbID-container" style="display: none;">
-                <label for="imdbID">Película</label>
-                <select class="imdb-select form-control" id="imdbID">
-                    <option value=""></option>
-                </select>
+                <div class="col-12">
+                    <p class="separator"><span>Pre-procesar resultados</span></p>
+                </div>
+                <spring:bind path="cleanTweet">
+                    <div class="col-3 cleanTweet-container" style="display: none;">
+                        <div class="form-group">
+                            <p><strong>¿Limpiar Tweets?</strong></p>
+                            <label class="radio-inline">
+                                <form:radiobutton path="cleanTweet" id="true" value="true"></form:radiobutton> Sí
+                            </label>
+                            <label class="radio-inline">
+                                <form:radiobutton path="cleanTweet" id="false" value="false" checked="checked"></form:radiobutton> No
+                            </label>
+                        </div>
+                    </div>
+                </spring:bind>
+                <spring:bind path="delStopWords">
+                    <div class="col-3">
+                        <div class="form-group">
+                            <p><strong>¿Eliminar stop-words?</strong></p>
+                            <label class="radio-inline">
+                                <form:radiobutton path="delStopWords" id="true" value="true"></form:radiobutton> Sí
+                            </label>
+                            <label class="radio-inline">
+                                <form:radiobutton path="delStopWords" id="false" value="false" checked="checked"></form:radiobutton> No
+                            </label>
+                        </div>
+                    </div>
+                </spring:bind>
             </div>
-            <div class="col-xs-12">
-                <p class="separator"><span>Pre-procesar resultados</span></p>
-            </div>
-            <spring:bind path="cleanTweet">
-                <div class="col-xs-3 cleanTweet-container" style="display: none;">
-                    <div class="form-group">
-                        <p><strong>¿Limpiar Tweets?</strong></p>
-                        <label class="radio-inline">
-                            <form:radiobutton path="cleanTweet" id="true" value="true"></form:radiobutton> Sí
-                        </label>
-                        <label class="radio-inline">
-                            <form:radiobutton path="cleanTweet" id="false" value="false" checked="checked"></form:radiobutton> No
-                        </label>
-                    </div>
-                </div>
-            </spring:bind>
-            <spring:bind path="delStopWords">
-                <div class="col-xs-3">
-                    <div class="form-group">
-                        <p><strong>¿Eliminar stop-words?</strong></p>
-                        <label class="radio-inline">
-                            <form:radiobutton path="delStopWords" id="true" value="true"></form:radiobutton> Sí
-                        </label>
-                        <label class="radio-inline">
-                            <form:radiobutton path="delStopWords" id="false" value="false" checked="checked"></form:radiobutton> No
-                        </label>
-                    </div>
-                </div>
-            </spring:bind>
-        </fieldset>
+        </div>
     </div>
 
     <!-- Grupo para Análisis de Sentimiento -->
-    <div class="row">
-        <fieldset class="col-xs-12 sentiment-container">
-            <legend>Análisis de Sentimiento</legend>
-            <spring:bind path="sentimentAdapter">
-                <div class="col-xs-6">
+    <div class="card mb-4 border-secondary bg-light">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Análisis de Sentimiento</h5>
+            <div class="row">
+                <spring:bind path="sentimentAdapter">
+                <div class="col-6">
                     <div class="form-group ${status.error ? "has-error" : ""}">
                         <form:label path="sentimentAdapter">Analizador</form:label>
                         <form:select path="sentimentAdapter" cssClass="form-control"></form:select>
                     </div>
                 </div>
             </spring:bind>
-            <spring:bind path="sentimentModel">
-                <div class="col-xs-6 sentimentModel-container" style="display: none;">
+                <spring:bind path="sentimentModel">
+                <div class="col-6 sentimentModel-container" style="display: none;">
                     <div class="form-group ${status.error ? "has-error" : ""}">
                         <form:label path="sentimentModel">Modelo</form:label>
                         <form:select path="sentimentModel" cssClass="form-control"></form:select>
                     </div>
                 </div>
             </spring:bind>
-            <div class="col-xs-12 clearfix"></div>
-        </fieldset>
+            </div>
+            <div class="row sentiment-container"></div>
+        </div>
     </div>
 
     <!-- Grupo para Análisis de Subjetividad -->
-    <div class="row">
-        <fieldset class="col-xs-12 subjectivity-container">
-            <legend>Análisis de Subjetividad</legend>
-            <spring:bind path="classifySubjectivity">
-                <div class="col-xs-12">
-                    <div class="form-group">
-                        <p><strong>¿Analizar subjetividad/objetividad?</strong></p>
-                        <label class="radio-inline">
-                            <form:radiobutton path="classifySubjectivity" id="true" value="true"></form:radiobutton> Sí
-                        </label>
-                        <label class="radio-inline">
-                            <form:radiobutton path="classifySubjectivity" id="false" value="false" checked="checked"></form:radiobutton> No
-                        </label>
-                    </div>
-                </div>
-            </spring:bind>
-            <div class="subjectivity-form-container" style="display: none;">
-                <spring:bind path="subjectivityAdapter">
-                    <div class="col-xs-6">
-                        <div class="form-group ${status.error ? "has-error" : ""}">
-                            <form:label path="subjectivityAdapter">Analizador</form:label>
-                            <form:select path="subjectivityAdapter" cssClass="form-control"></form:select>
-                        </div>
-                    </div>
-                </spring:bind>
-                <spring:bind path="subjectivityModel">
-                    <div class="col-xs-6 subjectivityModel-container" style="display: none;">
-                        <div class="form-group ${status.error ? "has-error" : ""}">
-                            <form:label path="subjectivityModel">Modelo</form:label>
-                            <form:select path="subjectivityModel" cssClass="form-control"></form:select>
+    <div class="card mb-4 border-secondary bg-light">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Análisis de Subjetividad</h5>
+            <div class="row">
+                <spring:bind path="classifySubjectivity">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <p><strong>¿Analizar subjetividad/objetividad?</strong></p>
+                            <label class="radio-inline">
+                                <form:radiobutton path="classifySubjectivity" id="true" value="true"></form:radiobutton> Sí
+                            </label>
+                            <label class="radio-inline">
+                                <form:radiobutton path="classifySubjectivity" id="false" value="false" checked="checked"></form:radiobutton> No
+                            </label>
                         </div>
                     </div>
                 </spring:bind>
                 <spring:bind path="discardNonSubjective">
-                    <div class="col-xs-12">
+                    <div class="subjectivity-item col-6" style="display: none;">
                         <div class="form-group">
                             <p><strong>¿Descartar comentarios no subjetivos?</strong></p>
                             <label class="radio-inline">
@@ -167,14 +155,30 @@
                         </div>
                     </div>
                 </spring:bind>
-                <div class="col-xs-12 clearfix"></div>
+                <spring:bind path="subjectivityAdapter">
+                    <div class="subjectivity-item col-6" style="display: none;">
+                        <div class="form-group ${status.error ? "has-error" : ""}">
+                            <form:label path="subjectivityAdapter">Analizador</form:label>
+                            <form:select path="subjectivityAdapter" cssClass="form-control"></form:select>
+                        </div>
+                    </div>
+                </spring:bind>
+                <spring:bind path="subjectivityModel">
+                    <div class="col-6 subjectivity-item subjectivityModel-container" style="display: none;">
+                        <div class="form-group ${status.error ? "has-error" : ""}">
+                            <form:label path="subjectivityModel">Modelo</form:label>
+                            <form:select path="subjectivityModel" cssClass="form-control"></form:select>
+                        </div>
+                    </div>
+                </spring:bind>
             </div>
-        </fieldset>
+            <div class="row subjectivity-container"></div>
+        </div>
     </div>
 
     <div class="row">
-        <div class="col-xs-12">
-            <button type="submit" class="btn btn-primary">Enviar</button>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary btn-lg btn-block">Enviar</button>
         </div>
     </div>
     <form:hidden path="source" value="" id="source"></form:hidden>
@@ -205,11 +209,13 @@
             populateAdapters("sentiment", sentimentAdapters);
             populateAdapters("subjectivity", subjectivityAdapters);
             /* Añadir eventlistener para la acción al seleccionar una fuente de comentarios */
-            $('.sourceButton').click(function () {
-                $.when(makeSourceOptions($(this).children(":first").get(0), _commentSources))
+            $('.source-button').click(function () {
+                $.when(makeSourceOptions($(this).get(0), _commentSources))
                     .done(function() {
                         populateAdapters("sentiment", sentimentAdapters);
-                        populateAdapters("subjectivity", subjectivityAdapters);
+                        if ($("input[name='classifySubjectivity']").get(0).checked) {
+                            populateAdapters("subjectivity", subjectivityAdapters);
+                        };
                     })
                     .fail(function() {
                         console.error("Error al hacer click en fuente de comentarios");
@@ -223,7 +229,7 @@
     $(document).ready(function() {
         /* Mostrar/ocultar formulario de subjetividad en función de si se debe analizar o no la subjetividad */
         if ($("input[name='classifySubjectivity']").get(0).checked) {
-            $(".subjectivity-form-container").show();
+            $(".subjectivity-item").show();
         }
     });
 
@@ -258,9 +264,11 @@
     $("input[name='classifySubjectivity']").change(function() {
         if (this.checked && this.value === "true") {
             populateAdapters("subjectivity", subjectivityAdapters);
-            $(".subjectivity-form-container").show();
+            $(".subjectivity-item").show();
         } else {
-            $(".subjectivity-form-container").hide();
+            $("#subjectivityAdapter").empty();
+            $("#subjectivityModel").empty();
+            $(".subjectivity-item").hide();
         }
     });
 

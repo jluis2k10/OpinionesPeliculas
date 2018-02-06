@@ -15,37 +15,32 @@
 </head>
 <body>
 <div class="cover"><div id="loader"></div></div>
-<nav class="navbar navbar-default navbar-static-top">
+<nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
     <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="${path}/">Logo</a>
-        </div>
+        <a class="navbar-brand" href="${path}/">Logo</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-        <div class="collapse navbar-collapse" id="navbar-collapse">
-            <ul class="nav navbar-nav">
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav mr-auto">
                 <sec:authorize access="isAuthenticated()">
-                    <li><a href="${path}/models">Mis modelos</a></li>
-                    <li><a href="${path}/models/create">Crear modelo</a></li>
-                    <li><a href="${path}/searches">Mis Búsquedas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="${path}/models">Mis modelos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="${path}/models/create">Crear modelo</a></li>
+                    <li class="nav-item"><a class="nav-link" href="${path}/searches">Mis Búsquedas</a></li>
                 </sec:authorize>
             </ul>
-            <ul class="nav navbar-nav navbar-right">
+            <ul class="navbar-nav ml-auto">
                 <sec:authorize access="isAnonymous()">
-                    <li><a href="${path}/registro">Registro</a></li>
-                    <li><a href="${path}/login">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="${path}/registro">Registro</a></li>
+                    <li class="nav-item"><a class="nav-link" href="${path}/login">Login</a></li>
                 </sec:authorize>
                 <sec:authorize access="isAuthenticated()">
-                    <li><a href="#" onclick="document.getElementById('logout-form').submit()">Logout</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="document.getElementById('logout-form').submit()">Logout</a></li>
                     <form action="${path}/logout" method="POST" id="logout-form" style="display: none;">
                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                     </form>
-                    <li><a>Hola ${user.username}</a></li>
+                    <li class="nav-item"><a class="nav-link" >Hola ${user.username}</a></li>
                 </sec:authorize>
             </ul>
         </div>

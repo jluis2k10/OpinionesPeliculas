@@ -3,31 +3,24 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ include file="_header.jsp"%>
 <div class="row">
-    <div class="col-xs-12">
-        <c:if test="${!empty comments}">
+    <div class="col-12">
+    <c:if test="${!empty comments}">
+        <ul class="list-group mb-3">
             <c:forEach var="comment" items="${comments}" varStatus="status">
-                <div class="panel panel-default">
-                    <div class="panel-body">
-                        ${comment.comment}
+                <li class="list-group-item list-group-item-action flex-column align-items-start">
+                    <div class="vote">
+                        <i class="arrow up" data-feather="arrow-up" data-index="${status.index}"></i>
+                        <i class="arrow down" data-feather="arrow-down" data-index="${status.index}"></i>
                     </div>
-                    <div class="panel-footer">
-                        <button type="button" class="btn btn-default" data-index="${status.index}" onclick="addPosSub(this)">
-                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span><span class="text-ok"> Positivo</span>
-                        </button>
-                        <button type="button" class="btn btn-default" data-index="${status.index}" onclick="addNegObj(this)">
-                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span><span class="text-ko"> Negativo</span>
-                        </button>
-                        <button type="button" class="btn btn-default" data-index="${status.index}" onclick="clearAction(this)">
-                            <span class="glyphicon glyphicon-retweet" aria-hidden="true"></span><span> Limpiar</span>
-                        </button>
-                    </div>
-                </div>
+                    <p>${comment.comment}</p>
+                </li>
             </c:forEach>
-        </c:if>
+        </ul>
+    </c:if>
     </div>
 </div>
 <div class="row">
-    <div class="col-xs-12">
+    <div class="col-12">
         <form:form method="post" modelAttribute="trainForm" enctype="multipart/form-data">
             <form:hidden path="adapterType" id="adapterType"></form:hidden>
             <form:hidden path="sourceClass" id="sourceClass" value="TextDataset"></form:hidden>
@@ -36,12 +29,16 @@
             <form:hidden path="adapterClass"></form:hidden>
             <form:hidden path="psText" id="psText"></form:hidden>
             <form:hidden path="noText" id="noText"></form:hidden>
-            <button type="submit" class="btn btn-primary">Entrenar modelo</button>
+            <button type="submit" class="btn btn-primary btn-lg btn-block">Entrenar</button>
         </form:form>
     </div>
 </div>
 <%@ include file="_js.jsp"%>
 <script>
+    feather.replace({
+        width: 20,
+        height: 20
+    });
     $(document).ready(function() {
         if ($("#adapterType").val() === "SUBJECTIVITY") {
             $(".text-ok").text(" Subjetivo");
@@ -51,63 +48,58 @@
     var positivesOrSubjectives = new Map();
     var negativesOrObjectives = new Map();
 
-    /* Añadir comentario al Map de positivos/subjetivos */
-    function addPosSub(button) {
-        // Cambiar estilo del botón
-        $(button).removeClass("btn-default");
-        $(button).addClass("btn-success");
+    // Listener voto positivo/subjetivo
+    $("svg.arrow").on("click", function (e) {
+        var icon = e.currentTarget;
+        // 2 posibilidades: click para hacer un voto o click para deshacerlo
+        if ($(icon).hasClass("voted")) {
+            unVote(icon);
+        } else {
+            vote(icon);
+        }
+    });
 
-        // Cambiar estilo del botón hermano
-        var siblingButton = $(button).siblings(".btn");
-        $(siblingButton).removeClass("btn-danger");
-        $(siblingButton).addClass("btn-default");
-
-        var comment = $(button).parent().siblings(".panel-body").text().trim();
-        var i = $(button).data("index");
-        negativesOrObjectives.delete(i);        // Eliminar comentario del mapa de negativos/objetivos
-        positivesOrSubjectives.set(i, comment); // Añadir comentario al mapa de positivos/subjetivos
+    // Contabilizar nuevo voto
+    function vote(icon) {
+        var sibling = $(icon).siblings();
+        // Eliminar posible voto previo
+        if ($(sibling).hasClass("voted")) {
+            $(sibling).removeClass("voted text-primary text-danger");
+            if ($(sibling).hasClass("up"))
+                positivesOrSubjectives.delete($(sibling).data("index"));
+            else
+                negativesOrObjectives.delete($(sibling).data("index"));
+        }
+        // Contabilizar voto
+        var comment = $(icon).parent().parent().find("p").html().trim();
+        if ($(icon).hasClass("up")) {
+            $(icon).addClass("voted text-primary");
+            positivesOrSubjectives.set($(icon).data("index"), comment)
+        } else {
+            $(icon).addClass("voted text-danger");
+            negativesOrObjectives.set($(icon).data("index"), comment);
+        }
     }
 
-    /* Añadir comentario al Map de negativos/objetivos */
-    function addNegObj(button) {
-        // Cambiar estilo del botón
-        $(button).removeClass("btn-default");
-        $(button).addClass("btn-danger");
-
-        // Cambiar estilo del botón hermano
-        var siblingButton = $(button).siblings(".btn");
-        $(siblingButton).removeClass("btn-success");
-        $(siblingButton).addClass("btn-default");
-
-        var comment = $(button).parent().siblings(".panel-body").text().trim();
-        var i = $(button).data("index");
-        positivesOrSubjectives.delete(i);      // Eliminar comentario del mapa de positivos/subjetivos
-        negativesOrObjectives.set(i, comment); // Añadir comentario al mapa de negativos/objetivos
-    }
-
-    /* Eliminar comentario del Map en el que esté */
-    function clearAction(button) {
-        var siblingButton = $(button).siblings(".btn");
-        $(siblingButton).removeClass("btn-success");
-        $(siblingButton).removeClass("btn-danger");
-        $(siblingButton).addClass("btn-default");
-        var i = $(button).data("index");
-        positivesOrSubjectives.delete(i);
-        negativesOrObjectives.delete(i);
+    // Deshacer voto
+    function unVote(icon) {
+        $(icon).removeClass("voted text-primary text-danger");
+        if ($(icon).hasClass("up"))
+            positivesOrSubjectives.delete($(icon).data("index"));
+        else
+            negativesOrObjectives.delete($(icon).data("index"));
     }
 
     /* Acción al enviar el formulario.
        Añadimos los Mapas a un campo de texto oculto del formulario antes de enviarlo. */
     $("#trainForm").submit(function(e) {
         e.preventDefault();
-        for (var positiveOrSubjective of positivesOrSubjectives) {
-            var value = $("#psText").val() + positiveOrSubjective[1] + "\n";
-            $("#psText").val(value);
-        }
-        for (var negativeOrSubjective of negativesOrObjectives) {
-            var value = $("#noText").val() + negativeOrSubjective[1] + "\n";
-            $("#noText").val(value);
-        }
+        positivesOrSubjectives.forEach(function (comment) {
+            $("#psText").val( $("#psText").val() + comment + "\n" );
+        });
+        negativesOrObjectives.forEach(function (comment) {
+            $("#noText").val( $("#noText").val() + comment + "\n" );
+        });
         $(this).unbind("submit").submit();
     })
 </script>

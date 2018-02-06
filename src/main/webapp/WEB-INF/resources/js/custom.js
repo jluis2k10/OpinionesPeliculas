@@ -1,10 +1,9 @@
 /* Crear enlaces para el botón con las fuentes de comentarios disponibles */
 function makeSourcesButton(sources) {
     $.each(sources, function (index, source) {
-        $("#sources-dropdown").append("<li class='sourceButton'><a href='#'" +
-            "data-name='"+source.name+"'>" + source.name + "</a></li>");
+        $(" #sources-dropdown").append('<a href="#" class="dropdown-item source-button" data-name="' + source.name + '">' + source.name + '</a>');
     });
-    var first_link = $("#sources-dropdown li:first-child a");
+    var first_link = $("#sources-dropdown a:first-child");
     makeSourceOptions(first_link.get(0), sources);
 }
 
@@ -76,7 +75,7 @@ function genExtraSources(sources) {
 /* Averiguar qué fuente de comentarios es la seleccionada y dar la orden de construir
  * las opciones asociadas a dicha fuente */
 function makeSourceOptions(e, sources) {
-    $(".source-placeholder").html(e.dataset.name);
+    $(".sources-dropdown").html(e.dataset.name);
     $("#source").val(e.dataset.name);
     $.each(sources, function (i, source) {
         if (source.name === e.dataset.name) {
@@ -196,7 +195,7 @@ function populateModels(adapterType, adapter) {
 /* Dar la orden de construir cada una de las opciones disponibles para un adaptador */
 function makeAdapterOptions(adapterType, adapter) {
     if (adapterType === "subjectivity") {
-        $container = $(".subjectivity-form-container");
+        $container = $(".subjectivity-container");
         $(".subjectivity-option").remove(); // Borramos todas las opciones anteriores que puedan existir
     } else {
         $container = $(".sentiment-container");
@@ -287,9 +286,17 @@ function createIMDBSelect(path) {
     });
 }
 
+/* Crear div para el contenedor de opciones */
+function makeOptionDiv(adapterType) {
+    if (adapterType == "subjectivity")
+        return $("<div class='col-3 subjectivity-option subjectivity-item'></div>");
+    else
+        return $("<div class='col-3 sentiment-option'></div>");
+}
+
 /* Crear opciones tipo Radio */
 function makeRadioOptions(container, parameter, adapterType, adapterID) {
-    var optionDiv = $("<div class='col-xs-3 " + adapterType + "-option'></div>");
+    var optionDiv = makeOptionDiv(adapterType);
     var innerDiv = $("<div class='form-group'></div>");
     innerDiv.appendTo(optionDiv);
     var optionHeaderPar = $("<p></p>");
@@ -316,8 +323,7 @@ function makeRadioOptions(container, parameter, adapterType, adapterID) {
 
 /* Crear opciones tipo select */
 function makeSelectOptions(container, parameter, adapterType, adapterID) {
-    var optionDiv = $("<div class='col-xs-3 " + adapterType + "-option'></div>");
-
+    var optionDiv = makeOptionDiv(adapterType);
     var innerDiv = $("<div class='form-group'></div>");
     innerDiv.appendTo(optionDiv);
 
@@ -341,7 +347,7 @@ function makeSelectOptions(container, parameter, adapterType, adapterID) {
 
 /* Crear input numérico */
 function makeNumberOptions(container, parameter, adapterType, adapterID) {
-    var optionDiv = $("<div class='col-xs-3 " + adapterType + "-option'></div>");
+    var optionDiv = makeOptionDiv(adapterType);
     var innerDiv = $("<div class='form-group'></div>");
     innerDiv.appendTo(optionDiv);
 
@@ -369,7 +375,7 @@ function makeNumberOptions(container, parameter, adapterType, adapterID) {
 
 /* Crear input de texto */
 function makeTextOptions(container, parameter, adapterType, adapterID) {
-    var optionDiv = $("<div class='col-xs-3 " + adapterType + "-option'></div>");
+    var optionDiv = makeOptionDiv(adapterType);
     var innerDiv = $("<div class='form-group'></div>");
     innerDiv.appendTo(optionDiv);
 
@@ -390,7 +396,7 @@ function makeTextOptions(container, parameter, adapterType, adapterID) {
 
 function alertMsg(alertType, msg) {
     $alertDiv = $("<div>");
-    $alertDiv.addClass("alert fade in alert-dismissible");
+    $alertDiv.addClass("alert alert-dismissible fade show");
     $alertDiv.addClass("alert-" + alertType);
     $alertDiv.attr("role", "alert");
 
@@ -398,7 +404,6 @@ function alertMsg(alertType, msg) {
     $closeButton.addClass("close");
     $closeButton.attr({
         "aria-label": "Cerrar",
-        "type": "button",
         "data-dismiss": "alert"
     });
     $closeButton.append("<span aria-hidden='true'>&times;</span>");

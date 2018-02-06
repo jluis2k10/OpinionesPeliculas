@@ -3,13 +3,13 @@
 <%@ include file="_header.jsp"%>
 <h2>Mis búsquedas</h2>
 <sec:authorize access="hasRole('ADMIN')">
-    <ul class="nav nav-tabs">
-        <li class="active"><a data-toggle="tab" href="#mysearches">Mis búsquedas</a></li>
-        <li><a data-toggle="tab" href="#userssearches">Búsquedas de usuarios</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#mysearches">Mis búsquedas</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#userssearches">Búsquedas de usuarios</a></li>
     </ul>
-    <div class="tab-content">
-        <div id="mysearches" class="tab-pane fade in active">
-            <table id="my-searches" class="table table-striped table-bordered data-table" width="100%" cellpadding="0">
+    <div class="tab-content mt-3">
+        <div id="mysearches" class="tab-pane fade show active" role="tabpanel">
+            <table id="my-searches" class="table table-striped table-sm table-bordered data-table" width="100%" cellpadding="0">
                 <thead>
                 <tr>
                     <th></th>
@@ -18,14 +18,14 @@
                     <th>Fuente</th>
                     <th>Idioma</th>
                     <th>Fecha</th>
-                    <th>Coment.</th>
-                    <th>Op.</th>
+                    <th>#</th>
+                    <th width="96">Op.</th>
                 </tr>
                 </thead>
             </table>
         </div>
-        <div id="userssearches" class="tab-pane fade">
-            <table id="users-searches" class="table table-striped table-bordered data-table" width="100%" cellpadding="0">
+        <div id="userssearches" class="tab-pane fade" role="tabpanel">
+            <table id="users-searches" class="table table-striped table-sm table-bordered data-table" width="100%" cellpadding="0">
                 <thead>
                 <tr>
                     <th></th>
@@ -34,9 +34,9 @@
                     <th>Fuente</th>
                     <th>Idioma</th>
                     <th>Fecha</th>
-                    <th>Coment.</th>
+                    <th>#</th>
                     <th>Usuario</th>
-                    <th>Op.</th>
+                    <th width="60">Op.</th>
                 </tr>
                 </thead>
             </table>
@@ -45,29 +45,20 @@
 </sec:authorize>
 <sec:authorize access="!hasRole('ADMIN')">
     <div class="row">
-        <c:choose>
-            <c:when test="${mySearches.size() > 0}">
-                <table id="my-searches" class="table table-striped table-bordered data-table" width="100%" cellpadding="0">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>ID</th>
-                            <th>Término</th>
-                            <th>Fuente</th>
-                            <th>Idioma</th>
-                            <th>Fecha</th>
-                            <th>Coment.</th>
-                            <th>Op.</th>
-                        </tr>
-                    </thead>
-                </table>
-            </c:when>
-            <c:otherwise>
-                <div class="col-xs-12">
-                    <h3>No tienes búsquedas guardadas.</h3>
-                </div>
-            </c:otherwise>
-        </c:choose>
+        <table id="my-searches" class="table table-striped tabñe-sm table-bordered data-table" width="100%" cellpadding="0">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>ID</th>
+                    <th>Término</th>
+                    <th>Fuente</th>
+                    <th>Idioma</th>
+                    <th>Fecha</th>
+                    <th>#</th>
+                    <th width="96">Op.</th>
+                </tr>
+            </thead>
+        </table>
     </div>
 </sec:authorize>
 <!-- Modal confirmación borrado -->
@@ -75,13 +66,15 @@
     <div class="modal-dialog" role="alertdialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="confirmLabel">Advertencia</h4>
+                <h5 class="modal-title" id="confirmLabel">Advertencia</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
             <div class="modal-body">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-danger delete-confirm">Borrar</button>
             </div>
         </div>
@@ -90,9 +83,9 @@
 
 <%@ include file="_js.jsp"%>
 
-<link rel="stylesheet" href="${path}/css/dataTables.bootstrap.min.css" />
-<script type="text/javascript" src="${path}/js/jquery.dataTables.js"></script>
-<script type="text/javascript" src="${path}/js/dataTables.bootstrap.min.js"></script>
+<link rel="stylesheet" href="${path}/css/dataTables.bootstrap4.min.css" />
+<script type="text/javascript" src="${path}/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="${path}/js/dataTables.bootstrap4.min.js"></script>
 <script type="text/javascript" src="${path}/js/custom.js"></script>
 
 <script>
@@ -126,7 +119,7 @@
                     data: null,
                     defaultContent: "",
                     "render": function () {
-                        return '<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>';
+                        return '<span class="open-details"><i data-feather="plus-circle"></i></span>';
                     }
                 },
                 {data: "id"},
@@ -160,7 +153,7 @@
                     data: null,
                     defaultContent: "",
                     "render": function () {
-                        return '<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>';
+                        return '<span class="open-details"><i data-feather="plus-circle"></i></span>';
                     }
                 },
                 {data: "id"},
@@ -182,10 +175,24 @@
             "order": [[1, 'asc']]
         });
 
+        // Dibujar Feather icons al renderizar tabla
+        tableMySearches.on('draw', function () {
+            feather.replace({
+                width: 20,
+                height: 20
+            });
+        });
+        tableUsersSearches.on('draw', function () {
+            feather.replace({
+                width: 20,
+                height: 20
+            });
+        });
+
         // Listener para abrir/cerrar detalles en la tabla
         $(".data-table tbody").on("click", "td.details-control", function () {
             var tr = $(this).closest("tr");
-            var span = tr.find("span.glyphicon");
+            var iconSpan = tr.find('span.open-details');
 
             var datatableRow = tableMySearches.row(tr);
             if (tr.closest("table").get(0).id === "users-searches")
@@ -194,14 +201,15 @@
             if (datatableRow.child.isShown()) {
                 datatableRow.child.hide();
                 tr.removeClass("shown");
-                span.first().removeClass("glyphicon-minus-sign");
-                span.first().addClass("glyphicon-plus-sign");
+                iconSpan.empty();
+                iconSpan.append('<i data-feather="plus-circle"></i>');
+                feather.replace({width: 20, height:20});
             } else {
                 datatableRow.child(render_details(datatableRow.data())).show();
                 tr.addClass("shown");
-                span.first().removeClass("glyphicon-plus-sign");
-                span.first().addClass("glyphicon-minus-sign");
-
+                iconSpan.empty();
+                iconSpan.append('<i data-feather="minus-circle"></i>');
+                feather.replace({width: 20, height:20});
             }
         });
 
@@ -251,10 +259,13 @@
             $selectedRow.removeClass("selected");
         });
 
+        // Feather icons
+        feather.replace();
+
     });
 
     function render_details(data) {
-        return '<table class="table table-responsive" cellpadding="4" cellspacing="0" border="0" style="padding-left: 50px;">' +
+        return '<table class="table table-sm table-bordered" cellpadding="4" cellspacing="0" border="0" style="padding-left: 50px;">' +
                 '<tr>' +
                     '<td width="300">Creado</td>' +
                     '<td>' + data.created + '</td>' +
@@ -293,17 +304,17 @@
     function render_search_options(searchID, mysearch) {
         var updateButton = "";
         if (mysearch) {
-            updateButton = '<a href="/searches/update/' + searchID + '" class="btn btn-default btn-xs" type="button" title="Actualizar">' +
-                                    '<span class="glyphicon glyphicon-repeat"></span>' +
+            updateButton = '<a href="/searches/update/' + searchID + '" class="btn btn-secondary btn-sm" type="button" title="Actualizar">' +
+                                    '<i data-feather="edit"></i>' +
                                '</a>';
         }
-        return '<div class="btn-group btn-group-xs" role="group">' +
+        return '<div class="btn-group btn-group-sm" role="group">' +
                     updateButton +
-                    '<a href="/searches/' + searchID + '" class="btn btn-default btn-xs" type="button" title="Ver resultados">' +
-                        '<span class="glyphicon glyphicon-search"></span>' +
+                    '<a href="/searches/' + searchID + '" class="btn btn-secondary btn-sm" type="button" title="Ver resultados">' +
+                        '<i data-feather="info"></i>' +
                     '</a>' +
-                    '<button class="btn btn-danger btn-xs delete-search" type="button" title="Eliminar">' +
-                        '<span class="glyphicon glyphicon-trash"></span>' +
+                    '<button class="btn btn-danger btn-sm delete-search" type="button" title="Eliminar">' +
+                        '<i data-feather="trash-2"></i>' +
                     '</button>' +
                '</div>';
     }
