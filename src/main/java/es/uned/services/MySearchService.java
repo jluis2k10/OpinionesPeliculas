@@ -66,7 +66,7 @@ public class MySearchService implements SearchService {
     private ArrayNode constructSearchesArrayNode(Set<Search> searches) {
         ArrayNode searchesArrayNode = mapper.createArrayNode();
         searches.forEach(search -> {
-            searchesArrayNode.add(search.toJSON());
+            searchesArrayNode.add(search.toJSON(false));
         });
         return searchesArrayNode;
     }

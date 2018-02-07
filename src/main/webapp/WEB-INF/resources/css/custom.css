@@ -96,6 +96,12 @@ p.separator {
     cursor: pointer;
 }
 
+select.pages-size {
+    width: 75px;
+    display: inline-block;
+    margin: 0 5px;
+}
+
 /* Loader */
 .cover {
     height: 100vh;

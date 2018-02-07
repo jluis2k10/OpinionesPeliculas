@@ -106,12 +106,15 @@ public class CommentWithSentiment {
         commentNode.put("source_url", getSourceURL());
         commentNode.put("date", dateFormat.format(getDate()));
         commentNode.put("comment", getComment());
-        commentNode.put("tokenized_comment", getTokenizedComment());
-        commentNode.put("sentiment", getSentiment().toString());
-        commentNode.put("sentiment_score", getSentiment().toString());
-        commentNode.put("subjectivity", getSubjectivity().toString());
-        commentNode.put("subjectivity_score", getSubjectivityScore());
-
+        commentNode.put("sentiment", getSentiment().getSentiment());
+        commentNode.put("sentiment_score", getSentimentScore());
+        if (getSubjectivity() != null) {
+            commentNode.put("subjectivity", getSubjectivity().getSubjectivity());
+            commentNode.put("subjectivity_score", getSubjectivityScore());
+        } else {
+            commentNode.putNull("subjectivity");
+            commentNode.putNull("subjectivity_score");
+        }
         return commentNode;
     }
 

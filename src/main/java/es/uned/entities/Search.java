@@ -1,6 +1,7 @@
 package es.uned.entities;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -124,13 +125,16 @@ public class Search {
         });
     }
 
-    public ObjectNode toJSON() {
+    public ObjectNode toJSON(boolean withComments) {
         ObjectMapper mapper = new ObjectMapper();
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
         ObjectNode searchNode = mapper.createObjectNode();
 
         searchNode.put("id", getId());
-        searchNode.put("owner", getOwner().getUserName());
+        if (getOwner() != null)
+            searchNode.put("owner", getOwner().getUserName());
+        else
+            searchNode.putNull("owner");
         if (getTerm().startsWith("tt"))
             searchNode.put("term", getTitle());
         else
@@ -144,6 +148,13 @@ public class Search {
         else
             searchNode.put("subjectivity", "No");
         searchNode.put("total_comments", getComments().size());
+        if (withComments) {
+            ArrayNode commentsArrayNode = mapper.createArrayNode();
+            getComments().forEach(comment -> {
+                commentsArrayNode.add(comment.toJSON());
+            });
+            searchNode.set("comments", commentsArrayNode);
+        }
         searchNode.put("created", dateFormat.format(getCreated()));
         if (getUpdated() != null)
             searchNode.put("updated", dateFormat.format(getUpdated()));
