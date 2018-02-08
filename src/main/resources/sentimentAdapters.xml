@@ -17,6 +17,10 @@
         <parameter name="Texto" type="text" id="textID" default="Texto por defecto">
             <description>Descriptción texto</description>
         </parameter>
+        <parameter name="Radio" type="radio" id="radioID" default="No">
+            <option name="Sí" value="Si" />
+            <option name="No" value="No" />
+        </parameter>
         <model_creation_parameters>
             <parameter name="Numerical Scaler" type="select" id="NumericalScaler" default="Ninguno">
                 <option name="Ninguno" value="Ninguno" />

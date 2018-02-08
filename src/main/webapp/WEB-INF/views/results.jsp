@@ -42,11 +42,11 @@
 </div>
 <%@ include file="_js.jsp"%>
 <script type="text/javascript" src="${path}/js/pagination.js"></script>
+<script type="text/javascript" src="${path}/js/readmore.js"></script>
 <script type="text/javascript" src="${path}/js/custom.js"></script>
 <script>
     $(document).ready(function() {
         myPagination(5);
-
         /* Recuperar token csrf para incluirlo como cabecera en cada envío ajax */
         var token = $("meta[name='_csrf']").attr("content");
         var header = $("meta[name='_csrf_header']").attr("content");
@@ -71,7 +71,6 @@
 
     // Listener para selección de comentarios por página
     $("#page-size").change(function () {
-        $("#comments-list").empty();
         $("#comments-pagination").pagination('destroy');
         myPagination(this.value);
     });
@@ -84,10 +83,7 @@
             pageSize: size,
             callback: function (comments, pagination) {
                 formatComments(comments, $("#comments-list"));
-                feather.replace({
-                    height: 16,
-                    width: 16
-                });
+                generateReadMore();
             },
             ulClassName: "pagination justify-content-end"
         });
@@ -106,7 +102,7 @@
             $dateContent.appendTo($headerDiv);
             $headerDiv.appendTo($listItem);
 
-            var $mainContent = $('<p></p>').addClass('card-text mb-2').html(comment.comment);
+            var $mainContent = $('<p></p>').addClass('card-text mb-2 readmore').html(comment.comment);
             $mainContent.appendTo($listItem);
 
             var sentiment = "Positivo"
@@ -139,6 +135,29 @@
             }
 
             $listItem.appendTo($container);
+        });
+
+        feather.replace({
+            height: 16,
+            width: 16
+        });
+    }
+
+    function generateReadMore() {
+        $("p.readmore").readmore({
+            speed: 75,
+            moreLink: '<a href="#" class="readmore" title="Leer más"><i data-feather="plus-circle"></i></a>"',
+            lessLink: '<a href="#" class="readmore" title="Leer menos"><i data-feather="minus-circle"></i></a>"',
+            afterToggle: function (trigger, element, expanded) {
+                feather.replace({
+                    height: 24,
+                    width: 24
+                });
+            }
+        });
+        feather.replace({
+            height: 24,
+            width: 24
         });
     }
 

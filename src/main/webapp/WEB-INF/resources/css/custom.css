@@ -12,21 +12,6 @@ body {
     padding-top: 20px;
 }
 
-p.separator {
-    position: relative;
-    overflow: hidden;
-}
-
-p.separator span {
-    display: inline-block;
-    vertical-align: baseline;
-    zoom: 1;
-    *display: inline;
-    *vertical-align: inherit;
-    position: relative;
-    padding: 0 15px;
-}
-
 .signin {
     width: 100%;
     max-width: 330px;
@@ -100,6 +85,15 @@ select.pages-size {
     width: 75px;
     display: inline-block;
     margin: 0 5px;
+}
+
+p.readmore {
+    max-height: 3em; /* 2 líneas (2 * 1.5) */
+}
+
+a.readmore {
+    display: inline-block;
+    float: right;
 }
 
 /* Loader */

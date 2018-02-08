@@ -297,27 +297,29 @@ function makeOptionDiv(adapterType) {
 /* Crear opciones tipo Radio */
 function makeRadioOptions(container, parameter, adapterType, adapterID) {
     var optionDiv = makeOptionDiv(adapterType);
-    var innerDiv = $("<div class='form-group'></div>");
-    innerDiv.appendTo(optionDiv);
-    var optionHeaderPar = $("<p></p>");
-    var optionHeaderTitle = $("<strong></strong>").text(parameter.name);
-    optionHeaderTitle.appendTo(optionHeaderPar);
-    optionHeaderPar.appendTo(innerDiv);
+    var optionHeader = $("<p></p>").text(parameter.name);
+    optionHeader.appendTo(optionDiv);
 
     $.each(parameter.options, function (index, option) {
-        var optionLabel = $("<label class='radio-inline'></label>");
+        var innerDiv = $("<div></div>").addClass("custom-control custom-radio custom-control-inline");
         var input = $("<input />").attr({
-            id: adapterID + "-" + option.value,
-            name: adapterID + "-" +parameter.id,
+            id: parameter.id + "-" + option.value,
+            name: adapterID + "-" + parameter.id,
             value: option.value,
-            type: "radio"
+            type: "radio",
+            class: "custom-control-input"
         });
-        if (index === 0)
+        var label = $("<label></label>").attr({
+            for: parameter.id + "-" + option.value,
+            class: "custom-control-label"
+        }).text(option.name);
+        if (parameter.default === option.value)
             input.attr("checked", "checked");
-        input.appendTo(optionLabel);
-        optionLabel.append(" " + option.name + "&nbsp;");
-        optionLabel.appendTo(innerDiv);
+        input.appendTo(innerDiv);
+        label.appendTo(innerDiv);
+        innerDiv.appendTo(optionDiv);
     });
+
     optionDiv.appendTo(container);
 }
 

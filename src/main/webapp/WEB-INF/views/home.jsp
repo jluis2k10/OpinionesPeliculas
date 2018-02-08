@@ -65,32 +65,29 @@
                         <option value=""></option>
                     </select>
                 </div>
-                <div class="col-12">
-                    <p class="separator"><span>Pre-procesar resultados</span></p>
-                </div>
                 <spring:bind path="cleanTweet">
                     <div class="col-3 cleanTweet-container" style="display: none;">
-                        <div class="form-group">
-                            <p><strong>¿Limpiar Tweets?</strong></p>
-                            <label class="radio-inline">
-                                <form:radiobutton path="cleanTweet" id="true" value="true"></form:radiobutton> Sí
-                            </label>
-                            <label class="radio-inline">
-                                <form:radiobutton path="cleanTweet" id="false" value="false" checked="checked"></form:radiobutton> No
-                            </label>
+                        <p>¿Limpiar Tweets?</p>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <form:radiobutton path="cleanTweet" id="cleanTweetTrue" value="true" cssClass="custom-control-input" />
+                            <form:label path="cleanTweet" for="cleanTweetTrue" cssClass="custom-control-label">Sí</form:label>
+                        </div>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <form:radiobutton path="cleanTweet" id="cleanTweetFalse" value="false" cssClass="custom-control-input" />
+                            <form:label path="cleanTweet" for="cleanTweetFalse" cssClass="custom-control-label">No</form:label>
                         </div>
                     </div>
                 </spring:bind>
                 <spring:bind path="delStopWords">
                     <div class="col-3">
-                        <div class="form-group">
-                            <p><strong>¿Eliminar stop-words?</strong></p>
-                            <label class="radio-inline">
-                                <form:radiobutton path="delStopWords" id="true" value="true"></form:radiobutton> Sí
-                            </label>
-                            <label class="radio-inline">
-                                <form:radiobutton path="delStopWords" id="false" value="false" checked="checked"></form:radiobutton> No
-                            </label>
+                        <p>¿Eliminar <em>stop-words</em>?</p>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <form:radiobutton path="delStopWords" id="delStopWordsTrue" value="true" cssClass="custom-control-input" />
+                            <form:label path="delStopWords" for="delStopWordsTrue" cssClass="custom-control-label">Sí</form:label>
+                        </div>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <form:radiobutton path="delStopWords" id="delStopWordsFalse" value="false" checked="checked" cssClass="custom-control-input" />
+                            <form:label path="delStopWords" for="delStopWordsFalse" cssClass="custom-control-label">No</form:label>
                         </div>
                     </div>
                 </spring:bind>
@@ -131,27 +128,27 @@
             <div class="row">
                 <spring:bind path="classifySubjectivity">
                     <div class="col-6">
-                        <div class="form-group">
-                            <p><strong>¿Analizar subjetividad/objetividad?</strong></p>
-                            <label class="radio-inline">
-                                <form:radiobutton path="classifySubjectivity" id="true" value="true"></form:radiobutton> Sí
-                            </label>
-                            <label class="radio-inline">
-                                <form:radiobutton path="classifySubjectivity" id="false" value="false" checked="checked"></form:radiobutton> No
-                            </label>
+                        <p>¿Analizar subjetividad/objetividad?</p>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <form:radiobutton path="classifySubjectivity" id="subjectivityTrue" value="true" cssClass="custom-control-input" />
+                            <form:label path="classifySubjectivity" for="subjectivityTrue" cssClass="custom-control-label">Sí</form:label>
+                        </div>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <form:radiobutton path="classifySubjectivity" id="subjectivityFalse" value="false" checked="checked" cssClass="custom-control-input" />
+                            <form:label path="classifySubjectivity" for="subjectivityFalse" cssClass="custom-control-label">No</form:label>
                         </div>
                     </div>
                 </spring:bind>
                 <spring:bind path="discardNonSubjective">
                     <div class="subjectivity-item col-6" style="display: none;">
-                        <div class="form-group">
-                            <p><strong>¿Descartar comentarios no subjetivos?</strong></p>
-                            <label class="radio-inline">
-                                <form:radiobutton path="discardNonSubjective" id="true" value="true" checked="checked"></form:radiobutton> Sí
-                            </label>
-                            <label class="radio-inline">
-                                <form:radiobutton path="discardNonSubjective" id="false" value="false"></form:radiobutton> No
-                            </label>
+                        <p>¿Descartar comentarios no subjetivos?</p>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <form:radiobutton path="discardNonSubjective" id="discardTrue" value="true" cssClass="custom-control-input" />
+                            <form:label path="discardNonSubjective" for="discardTrue" cssClass="custom-control-label">Sí</form:label>
+                        </div>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <form:radiobutton path="discardNonSubjective" id="discardFalse" value="false" checked="checked" cssClass="custom-control-input" />
+                            <form:label path="discardNonSubjective" for="discardFalse" cssClass="custom-control-label">No</form:label>
                         </div>
                     </div>
                 </spring:bind>
