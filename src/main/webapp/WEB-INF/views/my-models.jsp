@@ -2,241 +2,247 @@
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <%@ include file="_header.jsp"%>
 <h2>Mis modelos de análisis</h2>
-<ul class="nav nav-tabs" role="tablist">
-    <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#usentiment">Sentimiento</a></li>
-    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#usubjectivity">Subjetividad</a></li>
-    <sec:authorize access="hasRole('ADMIN')">
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#adminsentiment">Todos Sentimiento</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#adminsubjectivity">Todos Subjetividad</a></li>
-    </sec:authorize>
-</ul>
-<div class="tab-content mt-3">
-    <div id="usentiment" class="tab-pane fade show active">
-        <c:choose>
-            <c:when test="${not empty sentimentModels}">
-                <table id="userSentimentModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Idioma</th>
-                        <th>Clase del Adaptador</th>
-                        <th>Opciones</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <c:forEach var="model" items="${sentimentModels}">
-                        <tr>
-                            <td>${model.id}</td>
-                            <td>${model.name}</td>
-                            <td>${model.language}</td>
-                            <td>${model.adapterClass}</td>
-                            <td>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <c:if test="${model.trainable}">
-                                        <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
-                                            <i data-feather="settings"></i>
-                                        </a>
-                                    </c:if>
-                                    <c:choose>
-                                        <c:when test="${model.open}">
-                                            <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
-                                                <i data-feather="eye"></i>
-                                            </button>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
-                                                <i data-feather="eye-off"></i>
-                                            </button>
-                                        </c:otherwise>
-                                    </c:choose>
-                                    </button>
-                                    <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
-                                        <i data-feather="trash-2"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </c:forEach>
-                    </tbody>
-                </table>
-            </c:when>
-            <c:otherwise>
-                <h3>Sin modelos para análisis de sentimiento</h3>
-            </c:otherwise>
-        </c:choose>
+<div class="card">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#usentiment">Sentimiento</a></li>
+            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#usubjectivity">Subjetividad</a></li>
+            <sec:authorize access="hasRole('ADMIN')">
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#adminsentiment">Todos Sentimiento</a></li>
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#adminsubjectivity">Todos Subjetividad</a></li>
+            </sec:authorize>
+        </ul>
     </div>
-    <div id="usubjectivity" class="tab-pane fade">
-        <c:choose>
-            <c:when test="${not empty subjectivityModels}">
-                <table id="userSubjectivityModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Idioma</th>
-                        <th>Clase del Adaptador</th>
-                        <th>Opciones</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <c:forEach var="model" items="${subjectivityModels}">
-                        <tr>
-                            <td>${model.id}</td>
-                            <td>${model.name}</td>
-                            <td>${model.language}</td>
-                            <td>${model.adapterClass}</td>
-                            <td>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <c:if test="${model.trainable}">
-                                        <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
-                                            <i data-feather="settings"></i>
-                                        </a>
-                                    </c:if>
-                                    <c:choose>
-                                        <c:when test="${model.open}">
-                                            <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
-                                                <i data-feather="eye"></i>
+    <div class="card-body">
+        <div class="tab-content">
+            <div id="usentiment" class="tab-pane fade show active">
+                <c:choose>
+                    <c:when test="${not empty sentimentModels}">
+                        <table id="userSentimentModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Idioma</th>
+                                <th>Clase del Adaptador</th>
+                                <th>Opciones</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <c:forEach var="model" items="${sentimentModels}">
+                                <tr>
+                                    <td>${model.id}</td>
+                                    <td>${model.name}</td>
+                                    <td>${model.language}</td>
+                                    <td>${model.adapterClass}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <c:if test="${model.trainable}">
+                                                <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
+                                                    <i data-feather="settings"></i>
+                                                </a>
+                                            </c:if>
+                                            <c:choose>
+                                                <c:when test="${model.open}">
+                                                    <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
+                                                        <i data-feather="eye"></i>
+                                                    </button>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
+                                                        <i data-feather="eye-off"></i>
+                                                    </button>
+                                                </c:otherwise>
+                                            </c:choose>
                                             </button>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
-                                                <i data-feather="eye-off"></i>
+                                            <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
+                                                <i data-feather="trash-2"></i>
                                             </button>
-                                        </c:otherwise>
-                                    </c:choose>
-                                    </button>
-                                    <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
-                                        <i data-feather="trash-2"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </c:forEach>
-                    </tbody>
-                </table>
-            </c:when>
-            <c:otherwise>
-                <h3>Sin modelos para análisis de subjetividad</h3>
-            </c:otherwise>
-        </c:choose>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                            </tbody>
+                        </table>
+                    </c:when>
+                    <c:otherwise>
+                        <h3>Sin modelos para análisis de sentimiento</h3>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+            <div id="usubjectivity" class="tab-pane fade">
+                <c:choose>
+                    <c:when test="${not empty subjectivityModels}">
+                        <table id="userSubjectivityModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Idioma</th>
+                                <th>Clase del Adaptador</th>
+                                <th>Opciones</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <c:forEach var="model" items="${subjectivityModels}">
+                                <tr>
+                                    <td>${model.id}</td>
+                                    <td>${model.name}</td>
+                                    <td>${model.language}</td>
+                                    <td>${model.adapterClass}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <c:if test="${model.trainable}">
+                                                <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
+                                                    <i data-feather="settings"></i>
+                                                </a>
+                                            </c:if>
+                                            <c:choose>
+                                                <c:when test="${model.open}">
+                                                    <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
+                                                        <i data-feather="eye"></i>
+                                                    </button>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
+                                                        <i data-feather="eye-off"></i>
+                                                    </button>
+                                                </c:otherwise>
+                                            </c:choose>
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
+                                                <i data-feather="trash-2"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                            </tbody>
+                        </table>
+                    </c:when>
+                    <c:otherwise>
+                        <h3>Sin modelos para análisis de subjetividad</h3>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+            <sec:authorize access="hasRole('ADMIN')">
+                <div id="adminsentiment" class="tab-pane fade">
+                    <c:choose>
+                        <c:when test="${not empty allSentimentModels}">
+                            <table id="allSentimentModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Idioma</th>
+                                    <th>Clase del Adaptador</th>
+                                    <th>Usuario</th>
+                                    <th>Opciones</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <c:forEach var="model" items="${allSentimentModels}">
+                                    <tr>
+                                        <td>${model.id}</td>
+                                        <td>${model.name}</td>
+                                        <td>${model.language}</td>
+                                        <td>${model.adapterClass}</td>
+                                        <td>${model.owner.userName}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <c:if test="${model.trainable}">
+                                                    <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
+                                                        <i data-feather="settings"></i>
+                                                    </a>
+                                                </c:if>
+                                                <c:choose>
+                                                    <c:when test="${model.open}">
+                                                        <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
+                                                            <i data-feather="eye"></i>
+                                                        </button>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
+                                                            <i data-feather="eye-off"></i>
+                                                        </button>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
+                                                    <i data-feather="trash-2"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                                </tbody>
+                            </table>
+                        </c:when>
+                        <c:otherwise>
+                            <h3>Sin modelos para análisis de sentimiento</h3>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+                <div id="adminsubjectivity" class="tab-pane fade">
+                    <c:choose>
+                        <c:when test="${not empty allSubjectivityModels}">
+                            <table id="allSubjectivityModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Idioma</th>
+                                    <th>Clase del Adaptador</th>
+                                    <th>Usuario</th>
+                                    <th>Opciones</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <c:forEach var="model" items="${allSubjectivityModels}">
+                                    <tr>
+                                        <td>${model.id}</td>
+                                        <td>${model.name}</td>
+                                        <td>${model.language}</td>
+                                        <td>${model.adapterClass}</td>
+                                        <td>${model.owner.userName}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <c:if test="${model.trainable}">
+                                                    <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
+                                                        <i data-feather="settings"></i>
+                                                    </a>
+                                                </c:if>
+                                                <c:choose>
+                                                    <c:when test="${model.open}">
+                                                        <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
+                                                            <i data-feather="eye"></i>
+                                                        </button>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
+                                                            <i data-feather="eye-off"></i>
+                                                        </button>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
+                                                    <i data-feather="trash-2"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                                </tbody>
+                            </table>
+                        </c:when>
+                        <c:otherwise>
+                            <h3>Sin modelos para análisis de subjetividad</h3>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </sec:authorize>
+        </div>
     </div>
-    <sec:authorize access="hasRole('ADMIN')">
-        <div id="adminsentiment" class="tab-pane fade">
-            <c:choose>
-                <c:when test="${not empty allSentimentModels}">
-                    <table id="allSentimentModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Idioma</th>
-                            <th>Clase del Adaptador</th>
-                            <th>Usuario</th>
-                            <th>Opciones</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <c:forEach var="model" items="${allSentimentModels}">
-                            <tr>
-                                <td>${model.id}</td>
-                                <td>${model.name}</td>
-                                <td>${model.language}</td>
-                                <td>${model.adapterClass}</td>
-                                <td>${model.owner.userName}</td>
-                                <td>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <c:if test="${model.trainable}">
-                                            <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
-                                                <i data-feather="settings"></i>
-                                            </a>
-                                        </c:if>
-                                        <c:choose>
-                                            <c:when test="${model.open}">
-                                                <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
-                                                    <i data-feather="eye"></i>
-                                                </button>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
-                                                    <i data-feather="eye-off"></i>
-                                                </button>
-                                            </c:otherwise>
-                                        </c:choose>
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
-                                            <i data-feather="trash-2"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </c:forEach>
-                        </tbody>
-                    </table>
-                </c:when>
-                <c:otherwise>
-                    <h3>Sin modelos para análisis de sentimiento</h3>
-                </c:otherwise>
-            </c:choose>
-        </div>
-        <div id="adminsubjectivity" class="tab-pane fade">
-            <c:choose>
-                <c:when test="${not empty allSubjectivityModels}">
-                    <table id="allSubjectivityModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Idioma</th>
-                            <th>Clase del Adaptador</th>
-                            <th>Usuario</th>
-                            <th>Opciones</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <c:forEach var="model" items="${allSubjectivityModels}">
-                            <tr>
-                                <td>${model.id}</td>
-                                <td>${model.name}</td>
-                                <td>${model.language}</td>
-                                <td>${model.adapterClass}</td>
-                                <td>${model.owner.userName}</td>
-                                <td>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <c:if test="${model.trainable}">
-                                            <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
-                                                <i data-feather="settings"></i>
-                                            </a>
-                                        </c:if>
-                                        <c:choose>
-                                            <c:when test="${model.open}">
-                                                <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
-                                                    <i data-feather="eye"></i>
-                                                </button>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
-                                                    <i data-feather="eye-off"></i>
-                                                </button>
-                                            </c:otherwise>
-                                        </c:choose>
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
-                                            <i data-feather="trash-2"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </c:forEach>
-                        </tbody>
-                    </table>
-                </c:when>
-                <c:otherwise>
-                    <h3>Sin modelos para análisis de subjetividad</h3>
-                </c:otherwise>
-            </c:choose>
-        </div>
-    </sec:authorize>
 </div>
 <!-- Modal confirmación borrado -->
 <div id="modal-confirm" class="modal fade" tabindex="-1" role="dialog">

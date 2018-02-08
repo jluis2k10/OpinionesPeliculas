@@ -3,45 +3,51 @@
 <%@ include file="_header.jsp"%>
 <h2>Mis búsquedas</h2>
 <sec:authorize access="hasRole('ADMIN')">
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#mysearches">Mis búsquedas</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#userssearches">Búsquedas de usuarios</a></li>
-    </ul>
-    <div class="tab-content mt-3">
-        <div id="mysearches" class="tab-pane fade show active" role="tabpanel">
-            <table id="my-searches" class="table table-striped table-sm table-bordered data-table" width="100%" cellpadding="0">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>ID</th>
-                    <th>Término</th>
-                    <th>Fuente</th>
-                    <th>Idioma</th>
-                    <th>Fecha</th>
-                    <th>#</th>
-                    <th width="96">Op.</th>
-                </tr>
-                </thead>
-            </table>
-        </div>
-        <div id="userssearches" class="tab-pane fade" role="tabpanel">
-            <table id="users-searches" class="table table-striped table-sm table-bordered data-table" width="100%" cellpadding="0">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>ID</th>
-                    <th>Término</th>
-                    <th>Fuente</th>
-                    <th>Idioma</th>
-                    <th>Fecha</th>
-                    <th>#</th>
-                    <th>Usuario</th>
-                    <th width="60">Op.</th>
-                </tr>
-                </thead>
-            </table>
+<div class="card">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#mysearches">Mis búsquedas</a></li>
+            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#userssearches">Búsquedas de usuarios</a></li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content">
+            <div id="mysearches" class="tab-pane fade show active" role="tabpanel">
+                <table id="my-searches" class="table table-striped table-sm table-bordered data-table" width="100%" cellpadding="0">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>ID</th>
+                        <th>Término</th>
+                        <th>Fuente</th>
+                        <th>Idioma</th>
+                        <th>Fecha</th>
+                        <th>#</th>
+                        <th width="96">Op.</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+            <div id="userssearches" class="tab-pane fade" role="tabpanel">
+                <table id="users-searches" class="table table-striped table-sm table-bordered data-table" width="100%" cellpadding="0">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>ID</th>
+                        <th>Término</th>
+                        <th>Fuente</th>
+                        <th>Idioma</th>
+                        <th>Fecha</th>
+                        <th>#</th>
+                        <th>Usuario</th>
+                        <th width="60">Op.</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
     </div>
+</div>
 </sec:authorize>
 <sec:authorize access="!hasRole('ADMIN')">
     <div class="row">
