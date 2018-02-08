@@ -106,8 +106,13 @@ public class CommentWithSentiment {
         commentNode.put("source_url", getSourceURL());
         commentNode.put("date", dateFormat.format(getDate()));
         commentNode.put("comment", getComment());
-        commentNode.put("sentiment", getSentiment().getSentiment());
-        commentNode.put("sentiment_score", getSentimentScore());
+        if (getSentiment() != null) {
+            commentNode.put("sentiment", getSentiment().getSentiment());
+            commentNode.put("sentiment_score", getSentimentScore());
+        } else {
+            commentNode.putNull("sentiment");
+            commentNode.putNull("sentiment_score");
+        }
         if (getSubjectivity() != null) {
             commentNode.put("subjectivity", getSubjectivity().getSubjectivity());
             commentNode.put("subjectivity_score", getSubjectivityScore());

@@ -58,12 +58,12 @@
                         </div>
                     </div>
                 </spring:bind>
-            </div>
-            <div class="col-3 imdbID-container" style="display: none;">
-                <label for="imdbID">Película</label>
-                <select class="imdb-select form-control" id="imdbID">
-                    <option value=""></option>
-                </select>
+                <div class="col-3 imdbID-container" style="display: none;">
+                    <label for="imdbID">Película</label>
+                    <select class="imdb-select form-control" id="imdbID">
+                        <option value=""></option>
+                    </select>
+                </div>
             </div>
         </div>
     </div>

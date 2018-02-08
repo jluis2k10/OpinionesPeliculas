@@ -1,24 +1,42 @@
+<%@ page import="es.uned.entities.CommentWithSentiment" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.stream.Collectors" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ include file="_header.jsp"%>
+<%
+    List<CommentWithSentiment> myComments = (List<CommentWithSentiment>) request.getAttribute("comments");
+    List<String> commentsJSON = new ArrayList<>();
+    for(CommentWithSentiment comment : myComments) {
+        commentsJSON.add(comment.toJSON().toString());
+    }
+%>
+<c:if test="${!empty comments}">
 <div class="row">
-    <div class="col-12">
-    <c:if test="${!empty comments}">
-        <ul class="list-group mb-3">
-            <c:forEach var="comment" items="${comments}" varStatus="status">
-                <li class="list-group-item list-group-item-action flex-column align-items-start">
-                    <div class="vote">
-                        <i class="arrow up" data-feather="arrow-up" data-index="${status.index}"></i>
-                        <i class="arrow down" data-feather="arrow-down" data-index="${status.index}"></i>
-                    </div>
-                    <p>${comment.comment}</p>
-                </li>
-            </c:forEach>
-        </ul>
-    </c:if>
+    <div id="comments" class="col-12">
+        <ul id="comments-list" class="list-group mb-3"></ul>
+        <div class="row">
+            <div class="col-12 col-md-6">
+                <label>
+                    Mostrar
+                    <select class="form-control form-control-sm pages-size" id="page-size">
+                        <option>5</option>
+                        <option>10</option>
+                        <option>25</option>
+                        <option>50</option>
+                        <option>100</option>
+                    </select>
+                    comentarios
+                </label>
+            </div>
+            <div id="comments-pagination" class="col-12 col-md-6"></div>
+        </div>
     </div>
 </div>
+</c:if>
+
 <div class="row">
     <div class="col-12">
         <form:form method="post" modelAttribute="trainForm" enctype="multipart/form-data">
@@ -34,29 +52,97 @@
     </div>
 </div>
 <%@ include file="_js.jsp"%>
+<script type="text/javascript" src="${path}/js/pagination.js"></script>
+<script type="text/javascript" src="${path}/js/readmore.js"></script>
 <script>
-    feather.replace({
-        width: 20,
-        height: 20
-    });
-    $(document).ready(function() {
-        if ($("#adapterType").val() === "SUBJECTIVITY") {
-            $(".text-ok").text(" Subjetivo");
-            $(".text-ko").text(" Objetivo");
-        }
-    });
     var positivesOrSubjectives = new Map();
     var negativesOrObjectives = new Map();
 
-    // Listener voto positivo/subjetivo
-    $("svg.arrow").on("click", function (e) {
-        var icon = e.currentTarget;
-        // 2 posibilidades: click para hacer un voto o click para deshacerlo
-        if ($(icon).hasClass("voted")) {
-            unVote(icon);
-        } else {
-            vote(icon);
-        }
+    $(document).ready(function () {
+        myPagination(5);
+    });
+
+    function myPagination(size) {
+        $("#comments-pagination").pagination({
+            dataSource: <%=commentsJSON%>,
+            locator: 'comments',
+            pageSize: size,
+            callback: function (comments, pagination) {
+                formatComments(comments, $("#comments-list"), pagination);
+                generateReadMore();
+                $("li.list-group-item").addClass("d-flex"); // Hack! si agrego la clase antes de generar los "read more" se renderiza mal
+                addVoteListeners();
+            },
+            ulClassName: "pagination justify-content-end"
+        });
+    };
+
+    function formatComments(comments, container, pagination) {
+        container.empty();
+        var index = 0 + pagination.pageSize * (pagination.pageNumber - 1);
+        comments.forEach(function (comment) {
+            var $listItem = $('<li></li>').addClass('list-group-item list-group-item-action flex-row align-items-start');
+
+            var $voteDiv = $('<div></div>').addClass('vote');
+            if (positivesOrSubjectives.has(index))
+                $('<i class="arrow up voted text-primary" data-feather="arrow-up" data-index="' + index + '"></i>').appendTo($voteDiv);
+            else
+                $('<i class="arrow up" data-feather="arrow-up" data-index="' + index + '"></i>').appendTo($voteDiv);
+            if (negativesOrObjectives.has(index))
+                $('<i class="arrow down voted text-danger" data-feather="arrow-down" data-index="' + index + '"></i>').appendTo($voteDiv);
+            else
+                $('<i class="arrow down" data-feather="arrow-down" data-index="' + index + '"></i>').appendTo($voteDiv);
+            $voteDiv.appendTo($listItem);
+
+            var $mainContent = $('<p></p>').addClass('card-text readmore train').html(comment.comment);
+            $mainContent.appendTo($listItem)
+
+            $listItem.appendTo(container);
+            index++;
+        });
+        feather.replace({
+            width: 20,
+            height: 20
+        });
+    }
+
+    function generateReadMore() {
+        $("p.readmore").readmore({
+            speed: 75,
+            moreLink: '<a href="#" class="readmore train" title="Leer más"><i data-feather="plus-circle"></i></a>"',
+            lessLink: '<a href="#" class="readmore train" title="Leer menos"><i data-feather="minus-circle"></i></a>"',
+            afterToggle: function (trigger, element, expanded) {
+                feather.replace({
+                    height: 24,
+                    width: 24
+                });
+            }
+        });
+        feather.replace({
+            height: 24,
+            width: 24
+        });
+    }
+
+    // Listener voto positivo/subjetivo (click en las flechas)
+    function addVoteListeners() {
+        $("svg.arrow").on("click", function (e) {
+            var icon = e.currentTarget;
+            // 2 posibilidades: click para hacer un voto o click para deshacerlo
+            if ($(icon).hasClass("voted")) {
+                unVote(icon);
+            } else {
+                vote(icon);
+            }
+            console.log(positivesOrSubjectives);
+            console.log(negativesOrObjectives);
+        });
+    }
+
+    // Listener para selección de comentarios por página
+    $("#page-size").change(function () {
+        $("#comments-pagination").pagination('destroy');
+        myPagination(this.value);
     });
 
     // Contabilizar nuevo voto
