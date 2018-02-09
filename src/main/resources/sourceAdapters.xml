@@ -7,6 +7,9 @@
             <lang desc="Español">es</lang>
             <lang desc="Inglés">en</lang>
         </languages>
+        <parameter name="De usuario" type="Text" id="usuarioID" default="@usuario">
+            <description>Descripción del parámetro</description>
+        </parameter>
     </adapter>
 
     <adapter name="Frase" limit="false" sinceDate="false" untilDate="false" languages="true" imdbID="false" cleanTweet="false">

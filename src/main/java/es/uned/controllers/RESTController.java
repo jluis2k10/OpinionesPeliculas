@@ -44,7 +44,6 @@ public class RESTController {
             response = configParser.getAllSources(lang.get());
         else
             response = configParser.getAllSources(null);
-        //ArrayNode response = configParser.getSources(selectedLang);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

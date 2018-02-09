@@ -64,6 +64,7 @@ public class ConfigParser {
             adapterNode.set("languages", this.constructLanguagesList(e.getElementsByTagName("languages").item(0).getChildNodes()));
             adapterNode.put("imdbIDEnabled", e.getAttribute("imdbID").equals("true"));
             adapterNode.put("cleanTweet", e.getAttribute("cleanTweet").equals("true"));
+            adapterNode.set("extra_parameters", this.getAdapterParameters(e, false));
             if (selectedLang != null && this.hasSelectedLanguage(e, selectedLang))
                 results.add(adapterNode);
             else if (selectedLang == null)
@@ -223,7 +224,7 @@ public class ConfigParser {
      * @param parameter
      * @return
      */
-    private ObjectNode constructParameter (Element parameter) {
+    private ObjectNode constructParameter(Element parameter) {
         ObjectNode parameterNode = mapper.createObjectNode();
 
         parameterNode.put("name", parameter.getAttribute("name"));

@@ -89,7 +89,7 @@ public class Search {
     @Transient
     private final String PARAMS_KEYS = "(?:source|term|created|updated|sourceClass|limit|sinceDate|untilDate|lang|" +
             "cleanTweet|delStopWords|sentimentAdapter|sentimentModel|classifySubjectivity|subjectivityAdapter|" +
-            "subjectivityModel|discardNonSubjective)";
+            "subjectivityModel|discardNonSubjective|owner|_csrf)";
 
     public Search() {}
 

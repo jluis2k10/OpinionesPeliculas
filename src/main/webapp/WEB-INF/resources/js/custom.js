@@ -75,6 +75,7 @@ function genExtraSources(sources) {
 /* Averiguar qué fuente de comentarios es la seleccionada y dar la orden de construir
  * las opciones asociadas a dicha fuente */
 function makeSourceOptions(e, sources) {
+    $(".source-option").remove(); // Eliminar opciones extra previas si existen
     $(".sources-dropdown").html(e.dataset.name);
     $("#source").val(e.dataset.name);
     $.each(sources, function (i, source) {
@@ -130,6 +131,29 @@ function constructSourceOptions(source) {
         if (val === $current_lang)
             $("#lang").val(val);
     });
+
+    // Construir parámetros extra
+    if (source.extra_parameters.length > 0) {
+        $container = $(".sources-container");
+        $.each(source.extra_parameters, function (index, parameter) {
+            switch (parameter.type.toLowerCase()) {
+                case 'radio':
+                    makeRadioOptions($container, parameter, "source", "");
+                    break;
+                case 'select':
+                    makeSelectOptions($container, parameter, "source", "");
+                    break;
+                case 'number':
+                    makeNumberOptions($container, parameter, "source", "");
+                    break;
+                case 'text':
+                    makeTextOptions($container, parameter, "source", "");
+                    break;
+                default:
+                    break;
+            }
+        });
+    }
 
     // Para la página de entrenamiento de modelos tenemos dos botones más
     if (source.adapterClass === "FileDataset") {
@@ -205,7 +229,7 @@ function makeAdapterOptions(adapterType, adapter) {
         return;
     if (typeof adapter.parameters != "undefined" && adapter.parameters.length > 0) {
         $.each(adapter.parameters, function (index, parameter) {
-            switch (parameter.type) {
+            switch (parameter.type.toLowerCase()) {
                 case 'radio':
                     makeRadioOptions($container, parameter, adapterType, adapter.ID);
                     break;
@@ -290,8 +314,10 @@ function createIMDBSelect(path) {
 function makeOptionDiv(adapterType) {
     if (adapterType == "subjectivity")
         return $("<div class='col-3 subjectivity-option subjectivity-item'></div>");
-    else
+    else if (adapterType == "sentiment")
         return $("<div class='col-3 sentiment-option'></div>");
+    else
+        return $("<div class='col-3 source-option'></div>");
 }
 
 /* Crear opciones tipo Radio */
@@ -303,14 +329,14 @@ function makeRadioOptions(container, parameter, adapterType, adapterID) {
     $.each(parameter.options, function (index, option) {
         var innerDiv = $("<div></div>").addClass("custom-control custom-radio custom-control-inline");
         var input = $("<input />").attr({
-            id: parameter.id + "-" + option.value,
-            name: adapterID + "-" + parameter.id,
+            id: parameter.id + option.value,
+            name: adapterID + parameter.id,
             value: option.value,
             type: "radio",
             class: "custom-control-input"
         });
         var label = $("<label></label>").attr({
-            for: parameter.id + "-" + option.value,
+            for: parameter.id + option.value,
             class: "custom-control-label"
         }).text(option.name);
         if (parameter.default === option.value)
@@ -329,13 +355,13 @@ function makeSelectOptions(container, parameter, adapterType, adapterID) {
     var innerDiv = $("<div class='form-group'></div>");
     innerDiv.appendTo(optionDiv);
 
-    var label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
+    var label = $("<label></label>").attr("for", adapterID + parameter.id).text(parameter.name);
     label.appendTo(innerDiv);
 
     var select = $("<select></select>").attr({
-        id: adapterID + "-" + parameter.id,
+        id: adapterID + parameter.id,
         class: "form-control",
-        name: adapterID + "-" + parameter.id
+        name: adapterID + parameter.id
     });
     select.appendTo(innerDiv);
 
@@ -353,14 +379,14 @@ function makeNumberOptions(container, parameter, adapterType, adapterID) {
     var innerDiv = $("<div class='form-group'></div>");
     innerDiv.appendTo(optionDiv);
 
-    var label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
+    var label = $("<label></label>").attr("for", adapterID + parameter.id).text(parameter.name);
     label.appendTo(innerDiv);
 
     var input = $("<input />").attr({
         type: 'number',
-        id: adapterID + "-" + parameter.id,
+        id: adapterID + parameter.id,
         class: 'form-control',
-        name: adapterID + "-" + parameter.id,
+        name: adapterID + parameter.id,
         value: parameter.default
     });
     input.appendTo(innerDiv);
@@ -381,18 +407,17 @@ function makeTextOptions(container, parameter, adapterType, adapterID) {
     var innerDiv = $("<div class='form-group'></div>");
     innerDiv.appendTo(optionDiv);
 
-    var label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
+    var label = $("<label></label>").attr("for", adapterID + parameter.id).text(parameter.name);
     label.appendTo(innerDiv);
 
     var input = $("<input />").attr({
         type: 'text',
-        id: adapterID + "-" + parameter.id,
+        id: adapterID + parameter.id,
         class: 'form-control',
-        name: adapterID + "-" + parameter.id,
+        name: adapterID + parameter.id,
         value: parameter.default
     });
     input.appendTo(innerDiv);
-
     optionDiv.appendTo(container);
 }
 

@@ -55,7 +55,6 @@ public class MainController {
         searchWrapper.setSearch(search);
 
         model.addAttribute("search", search);
-        //model.addAttribute("comments", search.getComments());
         return "results";
     }
 }

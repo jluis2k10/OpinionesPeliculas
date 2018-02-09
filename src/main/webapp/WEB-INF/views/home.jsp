@@ -8,12 +8,12 @@
     <div class="card mb-4 border-secondary bg-light">
         <div class="card-body">
             <h5 class="card-title mb-4">Opciones de búsqueda</h5>
-            <div class="row">
+            <div class="row sources-container">
                 <spring:bind path="term">
                     <div class="col-12 ${status.error ? "has-error" : ""}">
                         <div class="input-group form-group">
                             <div class="input-group-prepend">
-                                <button class="btn btn-outline-primary dropdown-toggle sources-dropdown" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Origen</button>
+                                <button class="btn btn-primary dropdown-toggle sources-dropdown" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Origen</button>
                                 <div id="sources-dropdown" class="dropdown-menu">
                                 </div>
                             </div>

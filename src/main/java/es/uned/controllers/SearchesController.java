@@ -35,6 +35,16 @@ public class SearchesController {
         return "my-searches";
     }
 
+    @RequestMapping(value = "/{searchID}", method = RequestMethod.GET)
+    public String mySearches(@PathVariable("searchID") Long id, Principal principal, Model model) {
+        Account account = accountService.findByUserName(principal.getName());
+        Search search = searchService.findOne(id);
+        if (search == null || (search.getOwner() != account && !account.isAdmin()))
+            return "redirect:/denied";
+        model.addAttribute("search", search);
+        return "results";
+    }
+
     @RequestMapping(value = "/update/{searchID}", method = RequestMethod.GET)
     public String updateSearch(@PathVariable("searchID") Long id, Principal principal, Model model) {
         Account account = accountService.findByUserName(principal.getName());
