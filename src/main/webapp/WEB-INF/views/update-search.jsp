@@ -187,7 +187,6 @@
 
     $.when(getCommentSources('${search.lang}', '${search.sourceClass}'))
         .done(function (commentSource) {
-            console.log(commentSource[0]);
             if (commentSource[0].limitEnabled)
                 $(".limit-container").show();
             if (commentSource[0].sinceDateEnabled)

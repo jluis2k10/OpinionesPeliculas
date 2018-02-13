@@ -132,7 +132,6 @@
                     defaultContent: "",
                     orderable: false,
                     "render": function(search) {
-                        console.log(search);
                         return render_search_options(search.id, search.updateable);
                     }
                 }
