@@ -1,3 +1,10 @@
+/* Recuperar token csrf para incluirlo como cabecera en cada envío ajax */
+var token = $("meta[name='_csrf']").attr("content");
+var header = $("meta[name='_csrf_header']").attr("content");
+$(document).ajaxSend(function (e, xhr, options) {
+    xhr.setRequestHeader(header, token);
+});
+
 /* Crear enlaces para el botón con las fuentes de comentarios disponibles */
 function makeSourcesButton(sources) {
     $.each(sources, function (index, source) {
@@ -8,14 +15,16 @@ function makeSourcesButton(sources) {
 }
 
 /* Recuperar las fuentes de comentarios disponibles */
-function getCommentSources(lang) {
-    var url = "/api/comments-source";
-    if (lang != undefined)
-        url += "?lang=" + lang;
+function getCommentSources(lang, adapter) {
     return Promise.resolve($.ajax({
-        type: "GET",
-        contentType: "application/json",
-        url: url,
+        type: "POST",
+        data: JSON.stringify({
+            lang: (typeof lang !== 'undefined' ? lang : null),
+            adapter: (typeof adapter !== 'undefined' ? adapter : null)
+        }),
+        dataType: "json",
+        contentType: "application/json; charset=UTF-8",
+        url: window.location.protocol + "//" + window.location.host + "/api/comments-source",
         timeout: 5000
     }));
 }
@@ -88,6 +97,7 @@ function makeSourceOptions(e, sources) {
 /* Construir opciones disponibles para una fuente de comentarios */
 function constructSourceOptions(source) {
     $("#sourceClass").val(source.adapterClass);
+    $("#updateable").val(source.updateable);
     if (source.imdbIDEnabled) {
         $("#term").attr("readonly", "readonly");
         $(".imdbID-container").show();
@@ -198,17 +208,17 @@ function populateAdapters(adapterType, adapters) {
 /* Mostrar/ocultar select con los modelos del analizador de sentimiento */
 function populateModels(adapterType, adapter) {
     if (adapterType === "subjectivity") {
-        $select = $("#subjectivityModel");
+        $select = $("select[name='subjectivityModel.id']");
         $container = $(".subjectivityModel-container");
     } else {
         $container = $(".sentimentModel-container");
-        $select = $("#sentimentModel");
+        $select = $("select[name='sentimentModel.id']");
     }
     $select.empty(); // Primero borramos las opciones anteriores (se suponen de otro adaptador)
     if (typeof adapter !== "undefined" && adapter.models_enabled && hasModelForSelectedLanguage(adapter)) {
         $.each(adapter.models, function (index, model) {
             if (model.lang === $("#lang option:selected").val())
-                $select.append(new Option(model.name, model.location));
+                $select.append(new Option(model.name, model.id));
         });
         $container.show();
     } else {

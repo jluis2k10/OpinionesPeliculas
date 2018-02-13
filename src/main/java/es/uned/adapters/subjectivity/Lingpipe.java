@@ -46,7 +46,7 @@ public class Lingpipe extends CommonLingpipe implements SubjectivityAdapter {
 
     @Override
     public void analyze(Search search) {
-        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR + "/"  + search.getSubjectivityModel() + "/classifier.model");
+        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR + "/"  + search.getSubjectivityModel().getLocation() + "/classifier.model");
         File modelFile = null;
 
         BaseClassifier<String> bClassifier = null;

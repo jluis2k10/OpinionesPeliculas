@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <adapters>
 
-    <adapter name="Twitter" limit="true" siceDate="false" untilDate="true" languages="true" imdbID="false" cleanTweet="true">
+    <adapter name="Twitter" limit="true" siceDate="false" untilDate="true" languages="true" imdbID="false" cleanTweet="true" updateable="true">
         <class>es.uned.adapters.sources.TwitterSearch</class>
         <languages>
             <lang desc="Español">es</lang>
@@ -12,7 +12,7 @@
         </parameter>
     </adapter>
 
-    <adapter name="Frase" limit="false" sinceDate="false" untilDate="false" languages="true" imdbID="false" cleanTweet="false">
+    <adapter name="Frase" limit="false" sinceDate="false" untilDate="false" languages="true" imdbID="false" cleanTweet="false" updateable="false">
         <class>es.uned.adapters.sources.SentenceSearch</class>
         <languages>
             <lang desc="Español">es</lang>
@@ -20,7 +20,7 @@
         </languages>
     </adapter>
 
-    <adapter name="IMDB" limit="true" sinceDate="false" untilDate="false" languages="true" imdbID="true" cleanTweet="false">
+    <adapter name="IMDB" limit="true" sinceDate="false" untilDate="false" languages="true" imdbID="true" cleanTweet="false" updateable="true">
         <class>es.uned.adapters.sources.IMDBSearch</class>
         <languages>
             <lang desc="Español">es</lang>
@@ -28,7 +28,7 @@
         </languages>
     </adapter>
 
-    <adapter name="Trakt" limit="true" sinceDate="false" untilDate="false" languages="false" imdbID="true" cleanTweet="false">
+    <adapter name="Trakt" limit="true" sinceDate="false" untilDate="false" languages="false" imdbID="true" cleanTweet="false" updateable="true">
         <class>es.uned.adapters.sources.TraktSearch</class>
         <languages>
             <lang desc="Inglés">en</lang>

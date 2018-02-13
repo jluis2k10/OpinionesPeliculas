@@ -8,6 +8,7 @@ import es.uned.adapters.sources.SourceAdapter;
 import es.uned.adapters.subjectivity.SubjectivityAdapter;
 import es.uned.components.SearchWrapper;
 import es.uned.entities.Search;
+import es.uned.services.AdapterModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
@@ -31,6 +32,8 @@ public class MainController {
     @Autowired private SentimentAdapterFactory sentimentFactory;
     @Autowired private SearchWrapper searchWrapper;
 
+    @Autowired private AdapterModelService adapterModelService;
+
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public String home(Model model) {
         model.addAttribute("searchForm", new Search());
@@ -40,7 +43,11 @@ public class MainController {
     @RequestMapping(value = "/results", method = RequestMethod.POST)
     public String home(Model model, @ModelAttribute("searchForm") Search search,
                        BindingResult searchFormErrors, HttpServletRequest request) {
-        search.makeExtraParams(request.getParameterMap());;
+        search.makeExtraParams(request.getParameterMap());
+        // TODO: hay que comprobar antes que el formulario contiene un id o un id válido
+        search.setSentimentModel(adapterModelService.findOne(search.getSentimentModel().getId()));
+        if (search.isClassifySubjectivity())
+            search.setSubjectivityModel(adapterModelService.findOne(search.getSubjectivityModel().getId()));
         SourceAdapter sourceAdapter = sourceFactory.get(search.getSourceClass());
         sourceAdapter.doSearch(search);
 

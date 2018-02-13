@@ -44,7 +44,7 @@ public class LingPipe extends CommonLingpipe implements SentimentAdapter {
 
     @Override
     public void analyze(Search search) {
-        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR + "/"  + search.getSentimentModel() + "/classifier.model");
+        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR + "/"  + search.getSentimentModel().getLocation() + "/classifier.model");
         File modelFile = null;
         BaseClassifier<String> classifier = null;
         try {

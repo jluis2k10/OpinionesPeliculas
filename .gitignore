@@ -45,3 +45,11 @@ out
 gen
 
 /src/main/resources/application.properties
+/src/main/resources/datasets/
+libs/
+src/main/TODOS.txt
+src/main/resources/datasets/
+src/main/resources/models/sentiment/datumbox/SentimentAnalysis/TextClassifier/ml/
+src/main/webapp/WEB-INF/resources/img/
+/.gitignore
+!/.gitignore

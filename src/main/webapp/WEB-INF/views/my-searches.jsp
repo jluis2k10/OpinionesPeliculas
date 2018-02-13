@@ -96,13 +96,6 @@
 
 <script>
     $(document).ready(function() {
-        /* Recuperar token csrf para incluirlo como cabecera en cada envío ajax */
-        var token = $("meta[name='_csrf']").attr("content");
-        var header = $("meta[name='_csrf_header']").attr("content");
-        $(document).ajaxSend(function(e, xhr, options) {
-            xhr.setRequestHeader(header, token);
-        });
-
         // Inicialización de modal con mensaje de confirmación de borrado
         $("#modal-confirm").modal({
             keyboard: true,
@@ -139,7 +132,8 @@
                     defaultContent: "",
                     orderable: false,
                     "render": function(search) {
-                        return render_search_options(search.id, true);
+                        console.log(search);
+                        return render_search_options(search.id, search.updateable);
                     }
                 }
             ],

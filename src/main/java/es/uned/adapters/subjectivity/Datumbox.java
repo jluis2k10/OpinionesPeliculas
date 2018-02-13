@@ -43,7 +43,7 @@ public class Datumbox extends CommonDatumbox implements SubjectivityAdapter {
         Configuration configuration = defineConfiguration();
 
         // Cargar modelo desde archivo serializado
-        TextClassifier subjectivityClassifier = MLBuilder.load(TextClassifier.class, search.getSubjectivityModel(), configuration);
+        TextClassifier subjectivityClassifier = MLBuilder.load(TextClassifier.class, search.getSubjectivityModel().getLocation(), configuration);
 
         // Crear tokenizer
         Tokenizer tokenizer = tokenizerBuilder.searchTerm(search.getTerm())

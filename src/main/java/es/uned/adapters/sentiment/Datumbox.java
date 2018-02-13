@@ -40,7 +40,7 @@ public class Datumbox extends CommonDatumbox implements SentimentAdapter {
         Configuration configuration = defineConfiguration();
 
         // Cargar modelo desde archivo serializado
-        TextClassifier sentimentClassifier = MLBuilder.load(TextClassifier.class, search.getSentimentModel(), configuration);
+        TextClassifier sentimentClassifier = MLBuilder.load(TextClassifier.class, search.getSentimentModel().getLocation(), configuration);
 
         // Crear tokenizer
         Tokenizer tokenizer = tokenizerBuilder.searchTerm(search.getTerm())

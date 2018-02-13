@@ -108,11 +108,11 @@
                     </div>
                 </div>
             </spring:bind>
-                <spring:bind path="sentimentModel">
+                <spring:bind path="sentimentModel.id">
                 <div class="col-6 sentimentModel-container" style="display: none;">
                     <div class="form-group ${status.error ? "has-error" : ""}">
-                        <form:label path="sentimentModel">Modelo</form:label>
-                        <form:select path="sentimentModel" cssClass="form-control"></form:select>
+                        <form:label path="sentimentModel.id">Modelo</form:label>
+                        <form:select path="sentimentModel.id" cssClass="form-control"></form:select>
                     </div>
                 </div>
             </spring:bind>
@@ -160,11 +160,11 @@
                         </div>
                     </div>
                 </spring:bind>
-                <spring:bind path="subjectivityModel">
+                <spring:bind path="subjectivityModel.id">
                     <div class="col-6 subjectivity-item subjectivityModel-container" style="display: none;">
                         <div class="form-group ${status.error ? "has-error" : ""}">
-                            <form:label path="subjectivityModel">Modelo</form:label>
-                            <form:select path="subjectivityModel" cssClass="form-control"></form:select>
+                            <form:label path="subjectivityModel.id">Modelo</form:label>
+                            <form:select path="subjectivityModel.id" cssClass="form-control"></form:select>
                         </div>
                     </div>
                 </spring:bind>
@@ -181,6 +181,7 @@
     <form:hidden path="source" value="" id="source"></form:hidden>
     <form:hidden path="sourceClass" value="" id="sourceClass"></form:hidden>
     <form:hidden path="created" value="" id="created"></form:hidden>
+    <form:hidden path="updateable" value="" id="updateable"></form:hidden>
 </form:form>
 <%@ include file="_js.jsp"%>
 <link rel="stylesheet" href="${path}/css/bootstrap-datetimepicker.min.css" />
@@ -197,6 +198,31 @@
 <script>
     var sentimentAdapters = null;
     var subjectivityAdapters = null;
+
+    $(document).ready(function() {
+        /* Mostrar/ocultar formulario de subjetividad en función de si se debe analizar o no la subjetividad */
+        if ($("input[name='classifySubjectivity']").get(0).checked) {
+            $(".subjectivity-item").show();
+        }
+        // Select para elegir película y encontrar su identificador en IMDB
+        createIMDBSelect("${path}");
+        // Al seleccionar la película pasamos el imdbID al input de la búsqueda
+        $('.imdb-select').on('select2:selecting', function(e) {
+            $('#term').val(e.params.args.data.id);
+        });
+
+        /* Inicializar selectores de fecha */
+        $(function () {
+            $('#sinceDate').datetimepicker({
+                format: 'DD/MM/YYYY',
+                locale: 'es'
+            });
+            $('#untilDate').datetimepicker({
+                format: 'DD/MM/YYYY',
+                locale: 'es'
+            });
+        });
+    });
 
     $.when(getCommentSources(), getSentimentAdapters(), getSubjectivityAdapters())
         .done(function(_commentSources, _sentimentAdapters, _subjectivityAdapters) {
@@ -222,32 +248,6 @@
         .fail(function() {
             console.error("Error");
         });
-
-    $(document).ready(function() {
-        /* Mostrar/ocultar formulario de subjetividad en función de si se debe analizar o no la subjetividad */
-        if ($("input[name='classifySubjectivity']").get(0).checked) {
-            $(".subjectivity-item").show();
-        }
-    });
-
-    // Select para elegir película y encontrar su identificador en IMDB
-    createIMDBSelect("${path}");
-    // Al seleccionar la película pasamos el imdbID al input de la búsqueda
-    $('.imdb-select').on('select2:selecting', function(e) {
-        $('#term').val(e.params.args.data.id);
-    });
-
-    /* Inicializar selectores de fecha */
-    $(function () {
-        $('#sinceDate').datetimepicker({
-            format: 'DD/MM/YYYY',
-            locale: 'es'
-        });
-        $('#untilDate').datetimepicker({
-            format: 'DD/MM/YYYY',
-            locale: 'es'
-        });
-    });
 
     /* Acción al seleccionar el idioma */
     $("#lang").change(function() {

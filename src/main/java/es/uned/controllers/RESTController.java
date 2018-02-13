@@ -10,12 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -31,20 +29,17 @@ public class RESTController {
     @Autowired
     private TrakttvLookup trakttvLookup;
 
-     @Autowired
-     private SearchService searchService;
+    @Autowired
+    private SearchService searchService;
 
-     @Autowired
-     private AccountService accountService;
+    @Autowired
+    private AccountService accountService;
 
-    @RequestMapping(value = "/comments-source", method = RequestMethod.GET)
-    public ResponseEntity<ArrayNode> sources(@RequestParam("lang") Optional<String> lang) {
-        ArrayNode response = null;
-        if (lang.isPresent())
-            response = configParser.getAllSources(lang.get());
-        else
-            response = configParser.getAllSources(null);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+    @RequestMapping(value = "/comments-source", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<ArrayNode> sources(@RequestBody Map postData) {
+        String lang = (postData.get("lang") != null ? postData.get("lang").toString() : null);
+        String adapter = (postData.get("adapter") != null ? postData.get("adapter").toString() : null);
+        return ResponseEntity.status(HttpStatus.OK).body(configParser.getAllSources(lang, adapter ));
     }
 
     @RequestMapping(value = "/sentiment-adapters", method = RequestMethod.GET)

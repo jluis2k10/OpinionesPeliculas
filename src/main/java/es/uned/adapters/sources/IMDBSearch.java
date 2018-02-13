@@ -22,7 +22,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -38,7 +42,19 @@ public class IMDBSearch implements SourceAdapter {
 
     @Override
     public void doSearch(Search search) {
-        LinkedList<CommentWithSentiment> comments = new LinkedList<>();
+        getComments(search, new LinkedHashMap<>());
+    }
+
+    @Override
+    public int updateSearch(Search search) {
+        int sizeBefore = search.getComments().size();
+        Map<Integer, CommentWithSentiment> oldComments = search.getComments().stream()
+                .collect(Collectors.toMap(c -> c.getSourceURL().hashCode(), Function.identity(), (oldVal, newVal) -> oldVal, LinkedHashMap::new));
+        getComments(search, oldComments);
+        return search.getComments().size() - sizeBefore;
+    }
+
+    private void getComments(Search search, Map<Integer, CommentWithSentiment> comments) {
         HttpClient httpClient = HttpClientBuilder.create().build();
         URI uri = null;
 
@@ -79,7 +95,7 @@ public class IMDBSearch implements SourceAdapter {
                         .date(dateFormatter.parse(userComment.get("date").asText()))
                         .comment(userComment.get("text").asText())
                         .build();
-                comments.add(comment);
+                comments.putIfAbsent(comment.getComment().hashCode(), comment);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -87,6 +103,6 @@ public class IMDBSearch implements SourceAdapter {
             e.printStackTrace();
         }
         search.setTitle(trakttvLookup.imdbToTitle(search.getTerm()));
-        search.setComments(comments);
+        search.setComments(new LinkedList<>(comments.values()));
     }
 }

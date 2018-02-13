@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -29,8 +29,19 @@ public class TwitterSearch implements SourceAdapter {
 
     @Override
     public void doSearch(Search search) {
-        // Hashmap para evitar meter comentarios duplicados
-        HashMap<Integer,CommentWithSentiment> comments = new HashMap<>();
+        getComments(search, new LinkedHashMap<>());
+    }
+
+    @Override
+    public int updateSearch(Search search) {
+        int sizeBefore = search.getComments().size();
+        Map<Integer, CommentWithSentiment> oldComments = search.getComments().stream()
+                .collect(Collectors.toMap(c -> c.getSourceURL().hashCode(), Function.identity(), (oldVal, newVal) -> oldVal, LinkedHashMap::new));
+        getComments(search, oldComments);
+        return search.getComments().size() - sizeBefore;
+    }
+
+    private void getComments(Search search, Map<Integer, CommentWithSentiment> comments) {
         Twitter twitter = new TwitterTemplate(
                 environment.getProperty("twitter.consumerKey"),
                 environment.getProperty("twitter.consumerSecret")
@@ -67,7 +78,7 @@ public class TwitterSearch implements SourceAdapter {
                             .date(tweet.getCreatedAt())
                             .comment(tweet.getText())
                             .build();
-                    comments.put(comment.getComment().hashCode(), comment);
+                    comments.putIfAbsent(comment.getComment().hashCode(), comment);
                 }
             }
 

@@ -26,4 +26,9 @@ public class SentenceSearch implements SourceAdapter {
         search.setComments(comments);
     }
 
+    @Override
+    public int updateSearch(Search search) {
+        return 0;
+    }
+
 }

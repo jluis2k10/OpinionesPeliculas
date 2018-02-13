@@ -46,7 +46,7 @@ public class ConfigParser {
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    public ArrayNode getAllSources(String selectedLang) {
+    public ArrayNode getAllSources(String selectedLang, String adapterClass) {
         ArrayNode results = mapper.createArrayNode();
         NodeList adapters = this.readXML(SOURCE_XML);
         for (int i = 0; i < adapters.getLength(); i++) {
@@ -54,6 +54,8 @@ public class ConfigParser {
             if (adapter.getNodeType() != Node.ELEMENT_NODE)
                 continue;
             Element e = (Element) adapter;
+            if (adapterClass != null && !adapterClass.equals(e.getElementsByTagName("class").item(0).getTextContent()))
+                continue;
             ObjectNode adapterNode = mapper.createObjectNode();
             adapterNode.put("name", e.getAttribute("name"));
             adapterNode.put("adapterClass", e.getElementsByTagName("class").item(0).getTextContent());
@@ -64,6 +66,7 @@ public class ConfigParser {
             adapterNode.set("languages", this.constructLanguagesList(e.getElementsByTagName("languages").item(0).getChildNodes()));
             adapterNode.put("imdbIDEnabled", e.getAttribute("imdbID").equals("true"));
             adapterNode.put("cleanTweet", e.getAttribute("cleanTweet").equals("true"));
+            adapterNode.put("updateable", e.getAttribute("updateable").equals("true"));
             adapterNode.set("extra_parameters", this.getAdapterParameters(e, false));
             if (selectedLang != null && this.hasSelectedLanguage(e, selectedLang))
                 results.add(adapterNode);
@@ -152,8 +155,7 @@ public class ConfigParser {
             adapterNode.put("class", element.getAttribute("class"));
             adapterNode.put("lang", element.getAttribute("lang"));
             adapterNode.put("models_enabled", element.getAttribute("models").equals("true"));
-            if (!creation_params)
-                adapterNode.set("models", this.getAdapterModels(element.getAttribute("class"), account));
+            adapterNode.set("models", this.getAdapterModels(element.getAttribute("class"), account));
             adapterNode.put("model_creation", element.getAttribute("model_creation").equals("true"));
             adapterNode.put("description", element.getElementsByTagName("description").item(0).getTextContent());
             if (!creation_params)
@@ -184,39 +186,6 @@ public class ConfigParser {
             results.add(constructParameter((Element) parameter));
         }
         return results;
-    }
-
-    /**
-     * Construir los parámetros disponibles para el adaptador.
-     * Existen parámetros para opciones que determinan el funcionamiento del clasificador a la hora de clasificar
-     * un comentario, y parámetros para opciones que se utilizan cuando se pretende crear un modelo para el clasificador
-     * @param adapterNode
-     * @param element
-     */
-    private void constructAdapterParameters(ObjectNode adapterNode, Element element) {
-        ArrayNode adapterParametersArray = mapper.createArrayNode();
-        ArrayNode modelCreationParametersArray = mapper.createArrayNode();
-
-        NodeList allParameters = element.getElementsByTagName("parameter");
-        // Ahora hay tres posibles casos:
-        //   1. Que sea un parámetro opcional del adaptador
-        //   2. Que sea un parámetro para construir modelos del adaptador
-        //   3. Que sea un parámetro dentro de una de las opciones de los parámetros utilizados
-        //      para construir modelos del adaptador
-        for (int i = 0; i < allParameters.getLength(); i++) {
-            Element parameter = (Element) allParameters.item(i);
-            if (parameter.getParentNode().getNodeName().equals("adapter")) {
-                adapterParametersArray.add(constructParameter(parameter));
-            } else if (parameter.getParentNode().getNodeName().equals("model_creation_parameters")) {
-                modelCreationParametersArray.add(constructParameter(parameter));
-            }
-            // Ignoramos el caso 3. Ya se añade un parámetro de ese tipo mediante el método
-            // constructParameterOptions() de forma recursiva.
-        }
-        if (adapterParametersArray.size() > 0)
-            adapterNode.set("parameters", adapterParametersArray);
-        if (modelCreationParametersArray.size() > 0)
-            adapterNode.set("model_creation_parameters", modelCreationParametersArray);
     }
 
     /**
@@ -280,6 +249,7 @@ public class ConfigParser {
         Set<AdapterModels> models = adapterModelService.findByAdapterClass(adapterClass, account);
         for(AdapterModels model: models) {
             ObjectNode modelNode = mapper.createObjectNode();
+            modelNode.put("id", model.getId());
             modelNode.put("name", model.getName());
             modelNode.put("location", model.getLocation());
             modelNode.put("lang", model.getLanguage());

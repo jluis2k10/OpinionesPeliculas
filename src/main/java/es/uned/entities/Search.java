@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -58,18 +59,22 @@ public class Search {
     private boolean delStopWords;
     @Column(name = "sentiment_adapter", nullable = false)
     private String sentimentAdapter;
-    @Column(name = "sentiment_model", nullable = false)
-    private String sentimentModel;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sentiment_model")
+    private AdapterModels sentimentModel;
     @Column(name = "classify_subjectivity")
     private boolean classifySubjectivity;
     @Column(name = "subjectivity_adapter")
     private String subjectivityAdapter;
-    @Column(name = "subjectivity_model")
-    private String subjectivityModel;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subjectivity_model")
+    private AdapterModels subjectivityModel;
     @Column(name = "discard_non_subjective")
     private boolean discardNonSubjective;
     @Column(name = "source_class", nullable = false)
     private String sourceClass;
+    @Column(name = "updateable", nullable = false)
+    private boolean updateable;
 
     @Transient
     private int limit;
@@ -81,7 +86,7 @@ public class Search {
     @ElementCollection
     @MapKeyColumn(name = "parameter")
     @Column(name = "value")
-    Map<String, String> extraParameters = new HashMap<>();
+    private Map<String, String> extraParameters = new HashMap<>();
 
     /*
     Campos que no deben tenerse en cuenta para crear los parámetros extra @see #makeExtraParams
@@ -89,7 +94,7 @@ public class Search {
     @Transient
     private final String PARAMS_KEYS = "(?:source|term|created|updated|sourceClass|limit|sinceDate|untilDate|lang|" +
             "cleanTweet|delStopWords|sentimentAdapter|sentimentModel|classifySubjectivity|subjectivityAdapter|" +
-            "subjectivityModel|discardNonSubjective|owner|_csrf)";
+            "subjectivityModel|discardNonSubjective|owner|_csrf|sentimentModel\\.id|subjectivityModel\\.id)";
 
     public Search() {}
 
@@ -125,6 +130,27 @@ public class Search {
         });
     }
 
+    public HashMap<String, String> getSourceExtraParams() {
+        Map<String, String> params = extraParameters.entrySet().stream()
+                .filter(param -> ( !param.getKey().startsWith("S") && !param.getKey().startsWith("P") ))
+                .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+        return new HashMap<>(params);
+    }
+
+    public HashMap<String, String> getSentimentExtraParams() {
+        Map<String, String> params = extraParameters.entrySet().stream()
+                .filter(param -> param.getKey().startsWith("P"))
+                .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+        return new HashMap<>(params);
+    }
+
+    public HashMap<String, String> getSubjectivityExtraParams() {
+        Map<String, String> params = extraParameters.entrySet().stream()
+                .filter(param -> param.getKey().startsWith("S"))
+                .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+        return new HashMap<>(params);
+    }
+
     public ObjectNode toJSON(boolean withComments) {
         ObjectMapper mapper = new ObjectMapper();
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
@@ -156,15 +182,25 @@ public class Search {
             searchNode.set("comments", commentsArrayNode);
         }
         searchNode.put("created", dateFormat.format(getCreated()));
+        searchNode.put("updateable", isUpdateable());
         if (getUpdated() != null)
             searchNode.put("updated", dateFormat.format(getUpdated()));
         else
             searchNode.putNull("updated");
         searchNode.put("source_class", getSourceClass());
         searchNode.put("sentiment_adapter", getSentimentAdapter());
-        searchNode.put("sentiment_model", getSentimentModel());
-        searchNode.put("subjectivity_adapter", getSubjectivityAdapter());
-        searchNode.put("subjectivity_model", getSubjectivityModel());
+        if (getSentimentModel() != null)
+            searchNode.put("sentiment_model", getSentimentModel().getName());
+        else
+            searchNode.putNull("sentiment_model");
+        if (getSubjectivityAdapter() != null)
+            searchNode.put("subjectivity_adapter", getSubjectivityAdapter());
+        else
+            searchNode.putNull("subjectivity_adapter");
+        if (getSubjectivityModel() != null)
+            searchNode.put("subjectivity_model", getSubjectivityModel().getName());
+        else
+            searchNode.putNull("subjectivity_model");
 
         return searchNode;
     }
@@ -265,11 +301,11 @@ public class Search {
         this.sentimentAdapter = sentimentAdapter;
     }
 
-    public String getSentimentModel() {
+    public AdapterModels getSentimentModel() {
         return sentimentModel;
     }
 
-    public void setSentimentModel(String sentimentModel) {
+    public void setSentimentModel(AdapterModels sentimentModel) {
         this.sentimentModel = sentimentModel;
     }
 
@@ -289,11 +325,11 @@ public class Search {
         this.subjectivityAdapter = subjectivityAdapter;
     }
 
-    public String getSubjectivityModel() {
+    public AdapterModels getSubjectivityModel() {
         return subjectivityModel;
     }
 
-    public void setSubjectivityModel(String subjectivityModel) {
+    public void setSubjectivityModel(AdapterModels subjectivityModel) {
         this.subjectivityModel = subjectivityModel;
     }
 
@@ -335,6 +371,14 @@ public class Search {
 
     public void setUntilDate(String untilDate) {
         this.untilDate = untilDate;
+    }
+
+    public boolean isUpdateable() {
+        return updateable;
+    }
+
+    public void setUpdateable(boolean updateable) {
+        this.updateable = updateable;
     }
 
     public Map<String, String> getExtraParameters() {

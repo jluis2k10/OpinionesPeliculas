@@ -1,5 +1,11 @@
 package es.uned.controllers;
 
+import es.uned.adapters.SentimentAdapterFactory;
+import es.uned.adapters.SourceAdapterFactory;
+import es.uned.adapters.SubjectivityAdapterFactory;
+import es.uned.adapters.sentiment.SentimentAdapter;
+import es.uned.adapters.sources.SourceAdapter;
+import es.uned.adapters.subjectivity.SubjectivityAdapter;
 import es.uned.components.SearchWrapper;
 import es.uned.entities.Account;
 import es.uned.entities.Search;
@@ -11,10 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
@@ -25,6 +28,10 @@ import java.security.Principal;
 @RequestMapping(value = "/searches")
 @Scope("request")
 public class SearchesController {
+
+    @Autowired private SourceAdapterFactory sourceFactory;
+    @Autowired private SubjectivityAdapterFactory subjectivityFactory;
+    @Autowired private SentimentAdapterFactory sentimentFactory;
 
     @Autowired private SearchService searchService;
     @Autowired private AccountService accountService;
@@ -49,9 +56,42 @@ public class SearchesController {
     public String updateSearch(@PathVariable("searchID") Long id, Principal principal, Model model) {
         Account account = accountService.findByUserName(principal.getName());
         Search search = searchService.findOne(id);
-        if (search.getOwner() != account)
+        if (search == null || search.getOwner() != account)
             return "redirect:/denied";
+        model.addAttribute("search", search);
         return "update-search";
+    }
+
+    // https://stackoverflow.com/questions/22281543/posting-a-complete-model-object-to-the-controller-when-only-few-attributes-are-u
+    @RequestMapping(value = "/update/{searchID}", method = RequestMethod.POST)
+    public String updateSearch(@ModelAttribute("search") Search search, Principal principal, Model model) {
+        Search dbSearch = searchService.findOne(search.getId());
+        Account account = accountService.findByUserName(principal.getName());
+        if (dbSearch == null || dbSearch.getOwner() != account)
+            return "redirect:/denied";
+
+        // Actualizar búsqueda con nuevos parámetros
+        dbSearch.setLimit(search.getLimit());
+        dbSearch.setSinceDate(search.getSinceDate());
+        dbSearch.setUntilDate(search.getUntilDate());
+
+        // Recuperar nuevos comentarios
+        SourceAdapter sourceAdapter = sourceFactory.get(dbSearch.getSourceClass());
+        int newComments = sourceAdapter.updateSearch(dbSearch);
+
+        // Analizar subjetividad
+        if (dbSearch.isClassifySubjectivity()) {
+            SubjectivityAdapter subjectivityAdapter = subjectivityFactory.get(dbSearch.getSubjectivityAdapter());
+            subjectivityAdapter.analyze(dbSearch);
+        }
+        // Analizar sentimiento
+        SentimentAdapter sentimentAdapter = sentimentFactory.get(dbSearch.getSentimentAdapter());
+        sentimentAdapter.analyze(dbSearch);
+
+        searchWrapper.setSearch(dbSearch);
+        model.addAttribute("newComments", newComments);
+        model.addAttribute("search", dbSearch);
+        return "results";
     }
 
     @RequestMapping(value = "/save", method = RequestMethod.POST)

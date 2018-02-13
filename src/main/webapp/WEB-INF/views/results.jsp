@@ -5,6 +5,17 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ include file="_header.jsp"%>
+
+<!-- Nuevos comentarios tras actualización -->
+<c:if test="${newComments != null}">
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        Añadidos <strong>${newComments}</strong> nuevos comentarios a la búsqueda.
+        <button type="button" class="close" data-dismiss="alert" aria-label="Cerrar">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+</c:if>
+
 <!-- Guardar búsqueda -->
 <sec:authorize access="isAuthenticated()">
     <div class="row">
@@ -47,12 +58,6 @@
 <script>
     $(document).ready(function() {
         myPagination(5);
-        /* Recuperar token csrf para incluirlo como cabecera en cada envío ajax */
-        var token = $("meta[name='_csrf']").attr("content");
-        var header = $("meta[name='_csrf_header']").attr("content");
-        $(document).ajaxSend(function (e, xhr, options) {
-            xhr.setRequestHeader(header, token);
-        });
     });
 
     $(".save-search").click(function (e) {
@@ -102,7 +107,8 @@
             $dateContent.appendTo($headerDiv);
             $headerDiv.appendTo($listItem);
 
-            var $mainContent = $('<p></p>').addClass('card-text mb-2 readmore').html(comment.comment);
+            var formComment = comment.comment.replace(/(\r\n|\n|\r)/g, "<br />");
+            var $mainContent = $('<p></p>').addClass('card-text mb-2 readmore').html(formComment);
             $mainContent.appendTo($listItem);
 
             var sentiment = "Positivo"
