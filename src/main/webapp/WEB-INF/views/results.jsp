@@ -6,6 +6,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ include file="_header.jsp"%>
 
+<h2 class="mb-2">Resultados del análisis</h2>
+
 <!-- Nuevos comentarios tras actualización -->
 <c:if test="${newComments != null}">
     <div class="alert alert-info alert-dismissible fade show" role="alert">
@@ -15,6 +17,13 @@
         </button>
     </div>
 </c:if>
+
+<!-- Gráficos -->
+<div class="row mb-4">
+    <canvas id="pieChart" class="col-12 col-md-6" width="320" height="160"></canvas>
+    <canvas id="barChart" class="col-12 col-md-6" width="320" height="160"></canvas>
+    <canvas id="timeChart" class="col-12"></canvas>
+</div>
 
 <!-- Guardar búsqueda -->
 <sec:authorize access="isAuthenticated()">
@@ -54,6 +63,8 @@
 <%@ include file="_js.jsp"%>
 <script type="text/javascript" src="${path}/js/pagination.js"></script>
 <script type="text/javascript" src="${path}/js/readmore.js"></script>
+<script type="text/javascript" src="${path}/js/moment-with-locales.min.js"></script>
+<script type="text/javascript" src="${path}/js/Chart.min.js"></script>
 <script type="text/javascript" src="${path}/js/custom.js"></script>
 <script>
     $(document).ready(function() {
@@ -175,5 +186,11 @@
             timeout: 5000
         }));
     }
+
+    // Gráfico tarta
+    var search = <%=searchJSON.toString()%>;
+    var pieChart = renderPie(search, $("#pieChart"));
+    var barChart = renderBar(search, $("#barChart"));
+    var timeChart = renderTime(search, $("#timeChart"));
 </script>
 <%@ include file="_footer.jsp"%>

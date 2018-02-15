@@ -14,7 +14,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "Comments")
-public class CommentWithSentiment {
+public class CommentWithSentiment implements Comparable<CommentWithSentiment> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -121,6 +121,11 @@ public class CommentWithSentiment {
             commentNode.putNull("subjectivity_score");
         }
         return commentNode;
+    }
+
+    @Override
+    public int compareTo(CommentWithSentiment c) {
+        return getDate().compareTo(c.getDate());
     }
 
     public Long getId() {

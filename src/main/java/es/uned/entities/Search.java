@@ -175,6 +175,7 @@ public class Search {
             searchNode.put("subjectivity", "No");
         searchNode.put("total_comments", getComments().size());
         if (withComments) {
+            Collections.sort(getComments());
             ArrayNode commentsArrayNode = mapper.createArrayNode();
             getComments().forEach(comment -> {
                 commentsArrayNode.add(comment.toJSON());
