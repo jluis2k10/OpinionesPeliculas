@@ -24,6 +24,7 @@ public class SentenceSearch implements SourceAdapter {
                 .build();
         comments.add(comment);
         search.setComments(comments);
+        search.setUpdateable(false); // Las frases no se pueden actualizar (añadir más frases)
     }
 
     @Override

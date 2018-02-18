@@ -19,10 +19,46 @@
 </c:if>
 
 <!-- Gráficos -->
-<div class="row mb-4">
-    <canvas id="pieChart" class="col-12 col-md-6" width="320" height="160"></canvas>
-    <canvas id="barChart" class="col-12 col-md-6" width="320" height="160"></canvas>
-    <canvas id="timeChart" class="col-12"></canvas>
+<div class="card">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#general">Vista General</a></li>
+            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#evolution">Evolución temporal</a></li>
+            <c:if test="${search.classifySubjectivity}">
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#scatter">Gráfico de Dispersión</a></li>
+            </c:if>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content">
+            <div id="general" class="tab-pane fade show active" role="tabpanel">
+                <canvas id="pieChart" class="col-12 col-md-6 float-left"></canvas>
+                <canvas id="barChart" class="col-12 col-md-6"></canvas>
+            </div>
+            <div id="evolution" class="tab-pane fade" role="tabpanel">
+                <canvas id="timeChart" class="col-12"></canvas>
+                <div class="col-12 d-flex justify-content-center">
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" id="dayScale" name="selectScale" class="custom-control-input" checked="checked" value="day">
+                        <label class="custom-control-label" for="dayScale">Día</label>
+                    </div>
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" id="weekScale" name="selectScale" class="custom-control-input" value="isoWeek">
+                        <label class="custom-control-label" for="weekScale">Semana</label>
+                    </div>
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" id="monthScale" name="selectScale" class="custom-control-input" value="month">
+                        <label class="custom-control-label" for="monthScale">Mes</label>
+                    </div>
+                </div>
+            </div>
+            <c:if test="${search.classifySubjectivity}">
+                <div id="scatter" class="tab-pane fade" role="tabpanel">
+                    <canvas id="scatterChart" class="col-12"></canvas>
+                </div>
+            </c:if>
+        </div>
+    </div>
 </div>
 
 <!-- Guardar búsqueda -->
@@ -67,6 +103,8 @@
 <script type="text/javascript" src="${path}/js/Chart.min.js"></script>
 <script type="text/javascript" src="${path}/js/custom.js"></script>
 <script>
+    moment.locale('es');
+
     $(document).ready(function() {
         myPagination(5);
     });
@@ -191,6 +229,15 @@
     var search = <%=searchJSON.toString()%>;
     var pieChart = renderPie(search, $("#pieChart"));
     var barChart = renderBar(search, $("#barChart"));
-    var timeChart = renderTime(search, $("#timeChart"));
+    var timeChart = renderTime(search, $("#timeChart"), 'day');
+    if (search.subjectivity !== "No")
+        var scatterChart = renderScatter(search, $("#scatterChart"));
+
+    // Listener para el cambio de escala
+    $("input[name=selectScale]").change(function (e) {
+        timeChart.destroy();
+        timeChart = renderTime(search, $("#timeChart"), $(this).val());
+    });
+
 </script>
 <%@ include file="_footer.jsp"%>

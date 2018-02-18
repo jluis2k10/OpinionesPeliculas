@@ -132,7 +132,7 @@
                     defaultContent: "",
                     orderable: false,
                     "render": function(search) {
-                        return render_search_options(search.id, search.updateable);
+                        return render_search_options(search, search.updateable);
                     }
                 }
             ],
@@ -167,7 +167,7 @@
                     defaultContent: "",
                     orderable: false,
                     "render": function(search) {
-                        return render_search_options(search.id, false);
+                        return render_search_options(search, false);
                     }
                 }
             ],
@@ -300,16 +300,16 @@
                '</table>';
     }
 
-    function render_search_options(searchID, mysearch) {
+    function render_search_options(search, mySearches) {
         var updateButton = "";
-        if (mysearch) {
-            updateButton = '<a href="/searches/update/' + searchID + '" class="btn btn-secondary btn-sm" type="button" title="Actualizar">' +
+        if (mySearches && search.updateable) {
+            updateButton = '<a href="/searches/update/' + search.id + '" class="btn btn-secondary btn-sm" type="button" title="Actualizar">' +
                                     '<i data-feather="edit"></i>' +
                                '</a>';
         }
         return '<div class="btn-group btn-group-sm" role="group">' +
                     updateButton +
-                    '<a href="/searches/' + searchID + '" class="btn btn-secondary btn-sm" type="button" title="Ver resultados">' +
+                    '<a href="/searches/' + search.id + '" class="btn btn-secondary btn-sm" type="button" title="Ver resultados">' +
                         '<i data-feather="info"></i>' +
                     '</a>' +
                     '<button class="btn btn-danger btn-sm delete-search" type="button" title="Eliminar">' +

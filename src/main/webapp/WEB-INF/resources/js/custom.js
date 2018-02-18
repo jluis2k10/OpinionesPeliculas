@@ -542,13 +542,13 @@ function renderBar(search, container) {
         return new Chart(container, {
             type: 'horizontalBar',
             data: {
-                labels: ["Positivo", "Negativo", "Neutral"],
+                labels: ["Positivos", "Negativos", "Neutrales"],
                 datasets: [
                     {
                         data: sentimentArray,
-                        label: "Polaridad",
-                        backgroundColor: ["rgba(40,167,69,0.5)", "rgba(220,53,69,0.5)", "rgba(108,117,125,0.5)"],
-                        borderColor: ["#28a745", "#dc3545", "#6c757d"],
+                        label: "Comentarios",
+                        backgroundColor: ["rgba(40,167,69,0.5)", "rgba(220,53,69,0.5)", "rgba(255,193,7,0.5)"],
+                        borderColor: ["#28a745", "#dc3545", "#ffc107"],
                         borderWidth: 1
                     }
                 ]
@@ -556,13 +556,11 @@ function renderBar(search, container) {
             options: {
                 responsive: true,
                 scales: {
-                    xAxes: [
-                        {
-                            ticks: {
-                                beginAtZero: true
-                            }
+                    xAxes: [{
+                        ticks: {
+                            beginAtZero: true
                         }
-                    ]
+                    }]
                 }
             }
         });
@@ -572,20 +570,19 @@ function renderBar(search, container) {
             type: "horizontalBar",
             data: {
                 labels: ["Positivos", "Negativos", "Neutrales"],
-                labels: ["Positivos", "Negativos", "Neutrales"],
                 datasets: [
                     {
                         data: [extSentimentArray[0], extSentimentArray[2], extSentimentArray[4]],
-                        label: "Subjetivos",
-                        backgroundColor: ["rgba(40,167,69,0.7)", "rgba(220,53,69,0.7)", "rgba(108,117,125,0.7)"],
-                        borderColor: ["#28a745", "#dc3545", "#6c757d"],
+                        label: "Comentarios Subjetivos",
+                        backgroundColor: ["rgba(40,167,69,0.7)", "rgba(220,53,69,0.7)", "rgba(255,193,7,0.7)"],
+                        borderColor: ["#28a745", "#dc3545", "#ffc107"],
                         borderWidth: 1
                     },
                     {
                         data: [extSentimentArray[1], extSentimentArray[3], extSentimentArray[5]],
-                        label: "Objetivos",
-                        backgroundColor: ["rgba(40,167,69,0.4)", "rgba(220,53,69,0.4)", "rgba(108,117,125,0.4)"],
-                        borderColor: ["#28a745", "#dc3545", "#6c757d"],
+                        label: "Comentarios Objetivos",
+                        backgroundColor: ["rgba(40,167,69,0.4)", "rgba(220,53,69,0.4)", "rgba(255,193,7,0.4)"],
+                        borderColor: ["#28a745", "#dc3545", "#ffc107"],
                         borderWidth: 1
                     }
                 ]
@@ -602,19 +599,51 @@ function renderBar(search, container) {
                     yAxes: [{
                         stacked: true
                     }]
+                },
+                tooltips: {
+                    callbacks: {
+                        title: function(items, data) {
+                            var title = '';
+                            if (items.length > 0) {
+                                if (items[0].yLabel) {
+                                    title = items[0].yLabel;
+                                } else if (data.labels.length > 0 && items[0].index < data.labels.length) {
+                                    title = data.labels[items[0].index];
+                                }
+                            }
+
+                            // Calcular totales
+                            var total = 0;
+                            $.each(items, function (index, item) {
+                                total += item.xLabel;
+                            });
+
+                            return title + ": " + total;
+                        }
+                    }
                 }
             }
         });
     }
 }
 
-function renderTime(search, container) {
-    var timeData = timeDataset(search.comments);
+function renderTime(search, container, scale) {
+    var evolDataset = evolutionDataset(search.comments, scale);
+
     var labels = [];
-    for (var i = 0; i < timeData.length; i++) {
-        labels[i] = moment(timeData[i].t);
+    for (var i = 0; i < evolDataset.percentage.length; i++) {
+        labels[i] = moment(evolDataset.percentage[i].t);
     }
-    console.log(labels);
+
+    var max = Math.max.apply(null, evolDataset.positives.map(function (data) {
+        return data.y;
+    }));
+    var min = Math.min.apply(null, evolDataset.negatives.map(function (data) {
+        return data.y;
+    }));
+    var gMax = Math.max(max, - min);
+
+    var chartScale = (scale === "isoWeek" ? "week" : scale);
 
     return new Chart(container, {
         type: 'bar',
@@ -622,66 +651,262 @@ function renderTime(search, container) {
             labels: labels,
             datasets: [{
                 type: 'line',
-                label: 'Evolución temporal',
+                label: 'Ratio de Positivos',
                 pointRadius: 2,
                 fill: false,
                 lineTension: 0,
-                borderWidth: 2,
-                data: timeData
+                borderWidth: 1,
+                backgroundColor: "#007bff",
+                borderColor: "#007bff",
+                data: evolDataset.percentage,
+                yAxisID: 'percentage'
+            }, {
+                type: 'bar',
+                label: 'Positivos',
+                data: evolDataset.positives,
+                yAxisID: 'partials',
+                backgroundColor: "rgba(40,167,69,0.4)",
+                borderColor: "#28a745",
+                borderWidth: 1
+            }, {
+                type: 'bar',
+                label: 'Negativos',
+                data: evolDataset.negatives,
+                yAxisID: 'partials',
+                backgroundColor: "rgba(220,53,69,0.4)",
+                borderColor: "#dc3545",
+                borderWidth: 1
             }]
         },
         options: {
             scales: {
                 xAxes: [{
                     type: 'time',
+                    time: {
+                        unit: chartScale,
+                        isoWeekday: true,
+                        displayFormats: {
+                            day: 'D-MM-YY',
+                            week: 'W (MMM YY)'
+                        }
+                    },
                     distribution: 'series',
                     ticks: {
                         source: 'labels'
-                    }
+                    },
+                    stacked: true
                 }],
                 yAxes: [{
+                    id: 'percentage',
+                    position: 'left',
                     scaleLabel: {
                         display: true,
-                        labelString: 'Closing price ($)'
+                        labelString: '<<-- Negativo / Positivo -->>'
+                    },
+                    ticks: {
+                        min: -100,
+                        max: 100,
+                        callback: function(label, index, labels) {
+                            return label +'%';
+                        }
+                    }
+                }, {
+                    id: 'partials',
+                    position: 'right',
+                    display: false,
+                    ticks: {
+                        min: -gMax,
+                        max: gMax
                     }
                 }]
+            },
+            tooltips: {
+                callbacks: {
+                    title: function(items, data) {
+                        var moment = data.labels[items[0].index];
+                        if (scale === "day")
+                            return moment.format("D [de] MMMM [de] Y");
+                        else if (scale === "isoWeek")
+                            return moment.format("[Semana] W [de] Y [(]MMMM[)]");
+                        else
+                            return moment.format("MMMM [de] Y");
+                    },
+                    label: function(item, data) {
+                        var label = data.datasets[item.datasetIndex].label || '';
+
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (label === "Negativos: ")
+                            label += -item.yLabel;
+                        else
+                            label += item.yLabel;
+
+                        return label;
+                    }
+                }
             }
         }
 
     });
 }
 
-function timeDataset(comments) {
-    var dataset = [];
+function renderScatter(search, container) {
+    var scatterDataset = generateScatterDataset(search.comments);
+    return new Chart(container, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Positivos',
+                data: scatterDataset.positives,
+                backgroundColor: "rgba(40,167,69,0.4)",
+                borderColor: "#28a745",
+                borderWidth: 1
+            }, {
+                label: 'Negativos',
+                data: scatterDataset.negatives,
+                backgroundColor: "rgba(220,53,69,0.4)",
+                borderColor: "#dc3545",
+                borderWidth: 1
+            }, {
+                label: 'Neutrales',
+                data: scatterDataset.neutrals,
+                backgroundColor: "rgba(255,193,7,0.4)",
+                borderColor: "#ffc107",
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                xAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Subjetividad (grado de confianza)'
+                    },
+                    ticks: {
+                        callback: function(label, index, labels) {
+                            return label +'%';
+                        }
+                    }
+                }],
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Positividad (grado de confianza)'
+                    },
+                    ticks: {
+                        callback: function(label, index, labels) {
+                            return label +'%';
+                        }
+                    }
+                }]
+            }
+        }
+    });
+}
+
+function generateScatterDataset(comments) {
+    var dataset = new Object();
+    dataset.positives = [], dataset.negatives = [], dataset.neutrals = [];
+
     $.each(comments, function (index, comment) {
-        var date = moment(comment.date, "DD/MM/YYYY");
-        var value = 0;
+        if (comment.subjectivity === "Subjective") {
+            var point = {
+                x: Math.round(comment.subjectivity_score * 10000) / 100,
+                y: Math.round(comment.scores.positivity * 10000) / 100
+            }
+        }
+        else if (comment.subjectivity === "Objective") {
+            var point = {
+                x: Math.round((1 - comment.subjectivity_score) * 10000) / 100,
+                y: Math.round(comment.scores.positivity * 10000) / 100
+            }
+        }
         if (comment.sentiment === "Positive")
-            value++;
+            dataset.positives.push(point);
         else if (comment.sentiment === "Negative")
-            value--;
-        if (index === 0) {
-            dataset.push({
+            dataset.negatives.push(point);
+        else if (comment.sentiment === "Neutral")
+            dataset.neutrals.push(point);
+    });
+
+    return dataset;
+}
+
+function evolutionDataset(comments, scale) {
+    var dataset = new Object();
+    dataset.percentage = [], dataset.positives = [], dataset.negatives = [];
+    var positives = 0, negatives = 0, percentage = 0;
+
+    $.each(comments, function (total, comment) {
+        var date = moment(comment.date, "DD/MM/YYYY");
+        date.startOf(scale);
+
+        if (comment.sentiment === "Positive") {
+            positives++;
+            addPartial(1, dataset.positives, date);
+            addPartial(0, dataset.negatives, date);
+        }
+        else if (comment.sentiment === "Negative") {
+            negatives--;
+            addPartial(0, dataset.positives, date);
+            addPartial(-1, dataset.negatives, date);
+        }
+        else {
+            addPartial(0, dataset.positives, date);
+            addPartial(0, dataset.negatives, date);
+        }
+
+        if (positives >= negatives) {
+            percentage = Math.round(((positives / (total + 1)) * 100) * 10) / 10;
+        }
+        else {
+            percentage = 0 - Math.round(((negatives / (total + 1)) * 100) * 10) / 10;
+        }
+
+        if (total === 0) {
+            // Primer comentario, primer día
+            dataset.percentage.push({
                 t: date.valueOf(),
-                y: value
+                y: percentage
             });
         }
         else {
-            if (date.valueOf() === dataset[dataset.length - 1].t) {
+            if (date.valueOf() === dataset.percentage[dataset.percentage.length - 1].t) {
                 // Estamos en el mismo día que el comentario anterior
-                dataset[dataset.length - 1].y += value;
+                dataset.percentage[dataset.percentage.length - 1].y = percentage;
             }
             else {
                 // Estamos en un día posterior
-                dataset.push({
+                dataset.percentage.push({
                     t: date.valueOf(),
-                    y: value
+                    y: percentage
                 });
             }
         }
     });
-    console.log(dataset);
     return dataset;
+}
+
+function addPartial(partial, partialDataset, date) {
+    if (partialDataset.length > 0) {
+        if (partialDataset[partialDataset.length - 1].t === date.valueOf())
+            // Comentario para mismo día
+            partialDataset[partialDataset.length - 1].y += partial;
+        else
+            // Comentario para día posterior
+            partialDataset.push({
+                t: date.valueOf(),
+                y: partial
+            });
+    }
+    else {
+        // Primer comentario a contabilizar
+        partialDataset.push({
+            t: date.valueOf(),
+            y: partial
+        });
+    }
 }
 
 function pieDatasets(sentimentArray, extSentimentArray) {
@@ -689,13 +914,13 @@ function pieDatasets(sentimentArray, extSentimentArray) {
     dataset[0] = {
         data: sentimentArray,
         labels: ["Positivo", "Negativo", "Neutral"],
-        backgroundColor: ["#28a745", "#dc3545", "#6c757d"]
+        backgroundColor: ["#28a745", "#dc3545", "#ffc107"]
     };
     if (typeof extSentimentArray != 'undefined') {
         dataset[1] = {
             data: extSentimentArray,
             labels: ["Subjetivo", "Objetivo", "Subjetivo", "Objetivo", "Subjetivo", "Objetivo"],
-            backgroundColor: ["#28a745", "#28a745", "#dc3545", "#dc3545", "#6c757d", "#6c757d"]
+            backgroundColor: ["#28a745", "#28a745", "#dc3545", "#dc3545", "#ffc107", "#ffc107"]
         }
     }
     return dataset;

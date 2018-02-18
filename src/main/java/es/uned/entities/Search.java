@@ -74,7 +74,7 @@ public class Search {
     @Column(name = "source_class", nullable = false)
     private String sourceClass;
     @Column(name = "updateable", nullable = false)
-    private boolean updateable;
+    private boolean updateable = true;
 
     @Transient
     private int limit;

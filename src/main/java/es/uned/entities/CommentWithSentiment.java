@@ -56,6 +56,15 @@ public class CommentWithSentiment implements Comparable<CommentWithSentiment> {
     @Column(name = "subjectivity_score", columnDefinition = "double")
     private double subjectivityScore;
 
+    @Column(name = "pos_score", columnDefinition = "double")
+    private double positivityScore;
+
+    @Column(name = "neg_score", columnDefinition = "double")
+    private double negativityScore;
+
+    @Column(name = "neu_score", columnDefinition = "double")
+    private double neutralityScore;
+
     private CommentWithSentiment() {}
 
     private CommentWithSentiment(Builder builder) {
@@ -120,6 +129,13 @@ public class CommentWithSentiment implements Comparable<CommentWithSentiment> {
             commentNode.putNull("subjectivity");
             commentNode.putNull("subjectivity_score");
         }
+
+        ObjectNode scores = mapper.createObjectNode();
+        scores.put("positivity", getPositivityScore());
+        scores.put("negativity", getNegativityScore());
+        scores.put("neutrality", getNeutralityScore());
+        commentNode.set("scores", scores);
+
         return commentNode;
     }
 
@@ -214,5 +230,29 @@ public class CommentWithSentiment implements Comparable<CommentWithSentiment> {
 
     public void setSubjectivityScore(double subjectivityScore) {
         this.subjectivityScore = subjectivityScore;
+    }
+
+    public double getPositivityScore() {
+        return positivityScore;
+    }
+
+    public void setPositivityScore(double positivityScore) {
+        this.positivityScore = positivityScore;
+    }
+
+    public double getNegativityScore() {
+        return negativityScore;
+    }
+
+    public void setNegativityScore(double negativityScore) {
+        this.negativityScore = negativityScore;
+    }
+
+    public double getNeutralityScore() {
+        return neutralityScore;
+    }
+
+    public void setNeutralityScore(double neutralityScore) {
+        this.neutralityScore = neutralityScore;
     }
 }

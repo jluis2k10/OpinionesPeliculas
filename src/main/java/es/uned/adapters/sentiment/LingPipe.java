@@ -80,6 +80,8 @@ public class LingPipe extends CommonLingpipe implements SentimentAdapter {
                     break;
             }
             comment.setSentimentScore(((JointClassification) classification).conditionalProbability(classification.bestCategory()));
+            comment.setPositivityScore(((JointClassification) classification).conditionalProbability("pos"));
+            comment.setNegativityScore(((JointClassification) classification).conditionalProbability("neg"));
         });
 
     }
