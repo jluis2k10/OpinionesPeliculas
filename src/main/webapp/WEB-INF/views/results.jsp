@@ -220,7 +220,7 @@
         return Promise.resolve($.ajax({
             type: "POST",
             contentType: "application/json; charset=utf-8",
-            url: "/searches/save",
+            url: ctx + "/searches/save",
             timeout: 5000
         }));
     }

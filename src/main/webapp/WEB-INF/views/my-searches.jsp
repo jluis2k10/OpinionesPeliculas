@@ -108,7 +108,7 @@
         var tableMySearches = $("#my-searches").DataTable({
             language: tableLocale,
             ajax: {
-                url: "api/searches",
+                url: ctx + "/api/searches",
                 dataSrc: "searches"
             },
             columns: [
@@ -142,7 +142,7 @@
         var tableUsersSearches = $("#users-searches").DataTable({
             language: tableLocale,
             ajax: {
-                url: "api/searches",
+                url: ctx + "/api/searches",
                 dataSrc: "users_searches"
             },
             columns: [
@@ -303,13 +303,13 @@
     function render_search_options(search, mySearches) {
         var updateButton = "";
         if (mySearches && search.updateable) {
-            updateButton = '<a href="/searches/update/' + search.id + '" class="btn btn-secondary btn-sm" type="button" title="Actualizar">' +
+            updateButton = '<a href="${path}/searches/update/' + search.id + '" class="btn btn-secondary btn-sm" type="button" title="Actualizar">' +
                                     '<i data-feather="edit"></i>' +
                                '</a>';
         }
         return '<div class="btn-group btn-group-sm" role="group">' +
                     updateButton +
-                    '<a href="/searches/' + search.id + '" class="btn btn-secondary btn-sm" type="button" title="Ver resultados">' +
+                    '<a href="${path}/searches/' + search.id + '" class="btn btn-secondary btn-sm" type="button" title="Ver resultados">' +
                         '<i data-feather="info"></i>' +
                     '</a>' +
                     '<button class="btn btn-danger btn-sm delete-search" type="button" title="Eliminar">' +
@@ -324,7 +324,7 @@
             type: "POST",
             contentType: "application/json; charset=utf-8",
             dataType: "json",
-            url: "/searches/delete",
+            url: ctx + "/searches/delete",
             data: JSON.stringify(id),
             timeout: 5000
         }));

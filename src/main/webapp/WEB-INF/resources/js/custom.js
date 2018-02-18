@@ -1,3 +1,4 @@
+var ctx = $("meta[name='_context']").attr("content");
 /* Recuperar token csrf para incluirlo como cabecera en cada envío ajax */
 var token = $("meta[name='_csrf']").attr("content");
 var header = $("meta[name='_csrf_header']").attr("content");
@@ -24,7 +25,7 @@ function getCommentSources(lang, adapter) {
         }),
         dataType: "json",
         contentType: "application/json; charset=UTF-8",
-        url: window.location.protocol + "//" + window.location.host + "/api/comments-source",
+        url: ctx + "/api/comments-source",
         timeout: 5000
     }));
 }
@@ -34,7 +35,7 @@ function getSentimentAdapters() {
     return Promise.resolve($.ajax({
         type: "GET",
         contentType: "application/json",
-        url: "/api/sentiment-adapters",
+        url: ctx + "/api/sentiment-adapters",
         timeout: 5000
     }));
 }
@@ -44,7 +45,7 @@ function getSubjectivityAdapters(){
     return Promise.resolve($.ajax({
         type: "GET",
         contentType: "application/json",
-        url: "/api/subjectivity-adapters",
+        url: ctx + "/api/subjectivity-adapters",
         timeout: 5000
     }));
 }
@@ -275,7 +276,7 @@ function createIMDBSelect(path) {
         placeholder: "Título de película",
         language: "es",
         ajax: {
-            url: "/api/imdb-lookup",
+            url: ctx + "/api/imdb-lookup",
             dataType: 'json',
             delay: 250,
             data: function(params) {

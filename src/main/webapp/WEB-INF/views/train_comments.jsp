@@ -134,8 +134,6 @@
             } else {
                 vote(icon);
             }
-            console.log(positivesOrSubjectives);
-            console.log(negativesOrObjectives);
         });
     }
 

@@ -372,7 +372,7 @@
             type: "POST",
             contentType: "application/json; charset=utf-8",
             dataType: "json",
-            url: "/models/switchModelOpen",
+            url: ctx + "/models/switchModelOpen",
             data: JSON.stringify(id),
             timeout: 5000
         }));
@@ -384,7 +384,7 @@
             type: "POST",
             contentType: "application/json; charset=utf-8",
             dataType: "json",
-            url: "models/deleteModel",
+            url: ctx + "/models/deleteModel",
             data: JSON.stringify(id),
             timeout: 5000
         }));

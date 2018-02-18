@@ -11,6 +11,7 @@
     <%-- Etiquetas con información sobre el token csrf para utilizarlo en ajax POSTs --%>
     <meta name="_csrf" content="${_csrf.token}"/>
     <meta name="_csrf_header" content="${_csrf.headerName}"/>
+    <meta name="_context" content="${pageContext.request.contextPath}"/>
     <title>${title}</title>
 </head>
 <body>

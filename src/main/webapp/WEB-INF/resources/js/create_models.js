@@ -1,3 +1,5 @@
+var ctx = $("meta[name='_context']").attr("content");
+
 // Construir Input Select con los clasificadores de polaridad o de subjetividad
 function constructClassifiersSelect() {
     $.when(getClassifiers())
@@ -49,7 +51,7 @@ function getClassifiers() {
     return Promise.resolve($.ajax({
         type: "GET",
         contentType: "application/json",
-        url: url,
+        url: ctx + url,
         timeout: 5000
     }));
 }
