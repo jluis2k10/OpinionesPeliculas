@@ -93,7 +93,7 @@ public class DBConfig {
 
         /* Si el valor es true, Hibernate vuelca en la consola todas las SQL que
          genera */
-        jpaProperties.put("hibernate.show_sql", "true");
+        jpaProperties.put("hibernate.show_sql", "false");
 
         /* Si el valor es true, Hibernate dará formato al SQL que vuelca en la consola */
         jpaProperties.put("hibernate.format_sql", "true");
