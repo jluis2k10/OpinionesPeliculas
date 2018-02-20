@@ -71,12 +71,12 @@ p.separator {
     padding-left: 20px;
 }
 
-.vote {
+div.votes {
     width: 24px;
     margin-right: 15px;
 }
 
-.arrow {
+a.vote {
     cursor: pointer;
 }
 
@@ -89,18 +89,8 @@ select.pages-size {
 p.readmore {
     max-height: 3em; /* 2 líneas (2 * 1.5) */
 }
-
-a.readmore {
-    display: inline-block;
+a.readmore.results {
     float: right;
-}
-
-a.train {
-    margin: 1em 0;
-}
-
-p.train {
-    padding-right: 1em;
 }
 
 /* Loader */

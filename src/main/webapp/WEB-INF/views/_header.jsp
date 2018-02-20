@@ -5,7 +5,7 @@
 <sec:authentication var="user" property="principal" />
 <!DOCTYPE html>
 <head>
-    <link type="text/css" rel="stylesheet" href="${path}/css/bootstrap.min.css"  media="screen,projection"/>
+    <link type="text/css" rel="stylesheet" href="/webjars/bootstrap/4.0.0/css/bootstrap.min.css"  media="screen,projection"/>
     <link type="text/css" rel="stylesheet" href="${path}/css/custom.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <%-- Etiquetas con información sobre el token csrf para utilizarlo en ajax POSTs --%>

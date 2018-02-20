@@ -81,52 +81,38 @@
         container.empty();
         var index = 0 + pagination.pageSize * (pagination.pageNumber - 1);
         comments.forEach(function (comment) {
-            var $listItem = $('<li></li>').addClass('list-group-item list-group-item-action flex-row align-items-start');
+            var $listItem = $('<li></li>').addClass('list-group-item flex-row align-items-start');
 
-            var $voteDiv = $('<div></div>').addClass('vote');
+            var $voteDiv = $('<div></div>').addClass('votes');
             if (positivesOrSubjectives.has(index))
-                $('<i class="arrow up voted text-primary" data-feather="arrow-up" data-index="' + index + '"></i>').appendTo($voteDiv);
+                $('<a class="vote up voted text-primary" data-index="' + index + '"><i class="fas fa-arrow-up"></i></a>').appendTo($voteDiv);
             else
-                $('<i class="arrow up" data-feather="arrow-up" data-index="' + index + '"></i>').appendTo($voteDiv);
+                $('<a class="vote up" data-index="' + index + '"><i class="fas fa-arrow-up"></i></a>').appendTo($voteDiv);
             if (negativesOrObjectives.has(index))
-                $('<i class="arrow down voted text-danger" data-feather="arrow-down" data-index="' + index + '"></i>').appendTo($voteDiv);
+                $('<a class="vote down voted text-danger " data-index="' + index + '"><i class="fas fa-arrow-down"></i></a>').appendTo($voteDiv);
             else
-                $('<i class="arrow down" data-feather="arrow-down" data-index="' + index + '"></i>').appendTo($voteDiv);
+                $('<a class="vote down" data-index="' + index + '"><i class="fas fa-arrow-down"></i></a>').appendTo($voteDiv);
             $voteDiv.appendTo($listItem);
 
-            var $mainContent = $('<p></p>').addClass('card-text readmore train').html(comment.comment);
+            var $mainContent = $('<p></p>').addClass('card-text readmore train').html(comment.comment.replace(/(\r\n|\n|\r)/g, "<br />"));
             $mainContent.appendTo($listItem)
 
             $listItem.appendTo(container);
             index++;
-        });
-        feather.replace({
-            width: 20,
-            height: 20
         });
     }
 
     function generateReadMore() {
         $("p.readmore").readmore({
             speed: 75,
-            moreLink: '<a href="#" class="readmore train" title="Leer más"><i data-feather="plus-circle"></i></a>"',
-            lessLink: '<a href="#" class="readmore train" title="Leer menos"><i data-feather="minus-circle"></i></a>"',
-            afterToggle: function (trigger, element, expanded) {
-                feather.replace({
-                    height: 24,
-                    width: 24
-                });
-            }
-        });
-        feather.replace({
-            height: 24,
-            width: 24
+            moreLink: '<a href="#" class="readmore ml-auto align-self-baseline" title="Leer más"><i class="far fa-plus-square fa-lg"></i></a>"',
+            lessLink: '<a href="#" class="readmore ml-auto align-self-baseline" title="Leer menos"><i class="far fa-minus-square fa-lg"></i></a>"',
         });
     }
 
     // Listener voto positivo/subjetivo (click en las flechas)
     function addVoteListeners() {
-        $("svg.arrow").on("click", function (e) {
+        $("a.vote").on("click", function (e) {
             var icon = e.currentTarget;
             // 2 posibilidades: click para hacer un voto o click para deshacerlo
             if ($(icon).hasClass("voted")) {
@@ -134,6 +120,8 @@
             } else {
                 vote(icon);
             }
+            console.log(positivesOrSubjectives);
+            console.log(negativesOrObjectives);
         });
     }
 
@@ -145,7 +133,7 @@
 
     // Contabilizar nuevo voto
     function vote(icon) {
-        var sibling = $(icon).siblings();
+        var sibling = $(icon).siblings().get(0);
         // Eliminar posible voto previo
         if ($(sibling).hasClass("voted")) {
             $(sibling).removeClass("voted text-primary text-danger");

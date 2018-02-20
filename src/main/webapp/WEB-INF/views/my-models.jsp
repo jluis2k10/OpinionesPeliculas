@@ -39,24 +39,24 @@
                                         <div class="btn-group btn-group-sm" role="group">
                                             <c:if test="${model.trainable}">
                                                 <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
-                                                    <i data-feather="settings"></i>
+                                                    <i class="fas fa-sliders-h"></i>
                                                 </a>
                                             </c:if>
                                             <c:choose>
                                                 <c:when test="${model.open}">
                                                     <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
-                                                        <i data-feather="eye"></i>
+                                                        <i class="fas fa-eye"></i>
                                                     </button>
                                                 </c:when>
                                                 <c:otherwise>
                                                     <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
-                                                        <i data-feather="eye-off"></i>
+                                                        <i class="fas fa-eye-slash"></i>
                                                     </button>
                                                 </c:otherwise>
                                             </c:choose>
                                             </button>
                                             <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
-                                                <i data-feather="trash-2"></i>
+                                                <i class="far fa-trash-alt"></i>
                                             </button>
                                         </div>
                                     </td>
@@ -94,24 +94,24 @@
                                         <div class="btn-group btn-group-sm" role="group">
                                             <c:if test="${model.trainable}">
                                                 <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
-                                                    <i data-feather="settings"></i>
+                                                    <i class="fas fa-sliders-h"></i>
                                                 </a>
                                             </c:if>
                                             <c:choose>
                                                 <c:when test="${model.open}">
                                                     <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
-                                                        <i data-feather="eye"></i>
+                                                        <i class="fas fa-eye"></i>
                                                     </button>
                                                 </c:when>
                                                 <c:otherwise>
                                                     <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
-                                                        <i data-feather="eye-off"></i>
+                                                        <i class="fas fa-eye-slash"></i>
                                                     </button>
                                                 </c:otherwise>
                                             </c:choose>
                                             </button>
                                             <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
-                                                <i data-feather="trash-2"></i>
+                                                <i class="far fa-trash-alt"></i>
                                             </button>
                                         </div>
                                     </td>
@@ -152,24 +152,24 @@
                                             <div class="btn-group btn-group-sm" role="group">
                                                 <c:if test="${model.trainable}">
                                                     <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
-                                                        <i data-feather="settings"></i>
+                                                        <i class="fas fa-sliders-h"></i>
                                                     </a>
                                                 </c:if>
                                                 <c:choose>
                                                     <c:when test="${model.open}">
                                                         <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
-                                                            <i data-feather="eye"></i>
+                                                            <i class="fas fa-eye"></i>
                                                         </button>
                                                     </c:when>
                                                     <c:otherwise>
                                                         <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
-                                                            <i data-feather="eye-off"></i>
+                                                            <i class="fas fa-eye-slash"></i>
                                                         </button>
                                                     </c:otherwise>
                                                 </c:choose>
                                                 </button>
                                                 <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
-                                                    <i data-feather="trash-2"></i>
+                                                    <i class="far fa-trash-alt"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -209,24 +209,24 @@
                                             <div class="btn-group btn-group-sm" role="group">
                                                 <c:if test="${model.trainable}">
                                                     <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
-                                                        <i data-feather="settings"></i>
+                                                        <i class="fas fa-sliders-h"></i>
                                                     </a>
                                                 </c:if>
                                                 <c:choose>
                                                     <c:when test="${model.open}">
                                                         <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
-                                                            <i data-feather="eye"></i>
+                                                            <i class="fas fa-eye"></i>
                                                         </button>
                                                     </c:when>
                                                     <c:otherwise>
                                                         <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
-                                                            <i data-feather="eye-off"></i>
+                                                            <i class="fas fa-eye-slash"></i>
                                                         </button>
                                                     </c:otherwise>
                                                 </c:choose>
                                                 </button>
                                                 <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
-                                                    <i data-feather="trash-2"></i>
+                                                    <i class="far fa-trash-alt"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -267,17 +267,12 @@
 
 <%@ include file="_js.jsp"%>
 
-<link rel="stylesheet" href="${path}/css/dataTables.bootstrap4.min.css" />
-<script type="text/javascript" src="${path}/js/jquery.dataTables.min.js"></script>
-<script type="text/javascript" src="${path}/js/dataTables.bootstrap4.min.js"></script>
+<link rel="stylesheet" href="/webjars/datatables/1.10.16/css/dataTables.bootstrap4.min.css" />
+<script type="text/javascript" src="/webjars/datatables/1.10.16/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="/webjars/datatables/1.10.16/js/dataTables.bootstrap4.min.js"></script>
 <script type="text/javascript" src="${path}/js/custom.js"></script>
 
 <script>
-    // Feather icons
-    feather.replace({
-        width: 20,
-        height: 20
-    });
     var table = null;
     $(document).ready(function() {
         /* Recuperar token csrf para incluirlo como cabecera en cada envío ajax */
@@ -315,19 +310,15 @@
                 $button.prop("disabled", false);
             })
             .done(function () {
-                if ($button.find("svg").hasClass("feather-eye")) {
+                if ($button.find("svg").hasClass("fa-eye")) {
                     $button.empty();
-                    $button.html("<i data-feather='eye-off'></i>");
+                    $button.html("<i class='fas fa-eye-slash'></i>");
                     $button.prop("title", "Hacer privado");
                 } else {
                     $button.empty();
-                    $button.html("<i data-feather='eye'></i>");
+                    $button.html("<i class='fas fa-eye'></i>");
                     $button.prop("title", "Hacer público");
                 }
-                feather.replace({
-                    width: 20,
-                    height: 20
-                });
             })
             .fail(function () {
                 $span.removeClass().addClass($spanclass);

@@ -99,8 +99,8 @@
 <%@ include file="_js.jsp"%>
 <script type="text/javascript" src="${path}/js/pagination.js"></script>
 <script type="text/javascript" src="${path}/js/readmore.js"></script>
-<script type="text/javascript" src="${path}/js/moment-with-locales.min.js"></script>
-<script type="text/javascript" src="${path}/js/Chart.min.js"></script>
+<script type="text/javascript" src="/webjars/momentjs/2.20.1/min/moment-with-locales.min.js"></script>
+<script type="text/javascript" src="/webjars/chartjs/2.7.0/Chart.min.js"></script>
 <script type="text/javascript" src="${path}/js/custom.js"></script>
 <script>
     moment.locale('es');
@@ -162,15 +162,15 @@
 
             var sentiment = "Positivo"
             var cssClass = "text-success";
-            var sentimentIcon = "<i data-feather=\"thumbs-up\"></i> ";
+            var sentimentIcon = '<i class="far fa-thumbs-up"></i> ';
             if (comment.sentiment === "Negative") {
                 sentiment = "Negativo";
                 cssClass = "text-danger";
-                sentimentIcon = "<i data-feather=\"thumbs-down\"></i> "
+                sentimentIcon = '<i class="far fa-thumbs-down"></i> '
             } else if (comment.sentiment === "Neutral") {
                 sentiment = "Neutral";
                 cssClass = "";
-                sentimentIcon = "<i data-feather=\"minus\"></i> "
+                sentimentIcon = '<i class="far fa-meh"></i> '
             }
 
             var $sentimentFooter = $('<small></small>').addClass(cssClass).html(
@@ -191,28 +191,13 @@
 
             $listItem.appendTo($container);
         });
-
-        feather.replace({
-            height: 16,
-            width: 16
-        });
     }
 
     function generateReadMore() {
         $("p.readmore").readmore({
             speed: 75,
-            moreLink: '<a href="#" class="readmore" title="Leer más"><i data-feather="plus-circle"></i></a>"',
-            lessLink: '<a href="#" class="readmore" title="Leer menos"><i data-feather="minus-circle"></i></a>"',
-            afterToggle: function (trigger, element, expanded) {
-                feather.replace({
-                    height: 24,
-                    width: 24
-                });
-            }
-        });
-        feather.replace({
-            height: 24,
-            width: 24
+            moreLink: '<a href="#" class="readmore results" title="Leer más"><i class="far fa-plus-square fa-lg"></i></a>"',
+            lessLink: '<a href="#" class="readmore results" title="Leer menos"><i class="far fa-minus-square fa-lg"></i></a>"',
         });
     }
 

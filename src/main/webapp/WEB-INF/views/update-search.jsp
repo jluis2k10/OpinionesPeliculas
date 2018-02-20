@@ -164,9 +164,7 @@
 
 <%@ include file="_js.jsp"%>
 <link rel="stylesheet" href="${path}/css/bootstrap-datetimepicker.min.css" />
-<script type="text/javascript" src="${path}/js/moment-with-locales.min.js"></script>
-<script type="text/javascript" src="${path}/js/transition.js"></script>
-<script type="text/javascript" src="${path}/js/collapse.js"></script>
+<script type="text/javascript" src="/webjars/momentjs/2.20.1/min/moment-with-locales.min.js"></script>
 <script type="text/javascript" src="${path}/js/bootstrap-datetimepicker.min.js"></script>
 <script type="text/javascript" src="${path}/js/custom.js"></script>
 

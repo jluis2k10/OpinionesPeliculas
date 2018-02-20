@@ -35,7 +35,7 @@
                     <div class="col-3 sinceDate-container" style="display: none;">
                         <div class="form-group ${status.error ? "has-error" : ""}">
                             <form:label path="sinceDate">Desde</form:label>
-                            <form:input path="sinceDate" type="text" cssClass="form-control" id="sinceDate" placeholder="DD/MM/AAAA" aria-describedby="errorsSinceDate"></form:input>
+                            <form:input path="sinceDate" type="text" cssClass="form-control datetimepicker-input" id="sinceDate" placeholder="DD/MM/AAAA" aria-describedby="errorsSinceDate" data-toggle="datetimepicker" data-target="#sinceDate"></form:input>
                             <form:errors path="sinceDate" cssClass="help-block" id="errorsSinceDate"></form:errors>
                         </div>
                     </div>
@@ -44,7 +44,7 @@
                     <div class="col-3 untilDate-container" style="display: none;">
                         <div class="form-group ${status.error ? "has-error" : ""}">
                             <form:label path="untilDate">Hasta</form:label>
-                            <form:input path="untilDate" type="text" cssClass="form-control" id="untilDate" placeholder="DD/MM/AAAA" aria-describedby="errorsUntilDate"></form:input>
+                            <form:input path="untilDate" type="text" cssClass="form-control datetimepicker-input" id="untilDate" placeholder="DD/MM/AAAA" aria-describedby="errorsUntilDate" data-toggle="datetimepicker" data-target="#untilDate"></form:input>
                             <form:errors path="untilDate" cssClass="help-block" id="errorsUntilDate"></form:errors>
                         </div>
                     </div>
@@ -184,15 +184,13 @@
     <form:hidden path="updateable" value="" id="updateable"></form:hidden>
 </form:form>
 <%@ include file="_js.jsp"%>
-<link rel="stylesheet" href="${path}/css/bootstrap-datetimepicker.min.css" />
-<link rel="stylesheet" href="${path}/css/select2.min.css" />
+<link rel="stylesheet" href="/webjars/tempusdominus-bootstrap-4/5.0.0-alpha8/build/css/tempusdominus-bootstrap-4.min.css" />
+<link rel="stylesheet" href="/webjars/select2/4.0.3/css/select2.min.css" />
 <link rel="stylesheet" href="${path}/css/select2-bootstrap.min.css" />
-<script type="text/javascript" src="${path}/js/select2.min.js"></script>
-<script type="text/javascript" src="${path}/js/select2.es.js"></script>
-<script type="text/javascript" src="${path}/js/moment-with-locales.min.js"></script>
-<script type="text/javascript" src="${path}/js/transition.js"></script>
-<script type="text/javascript" src="${path}/js/collapse.js"></script>
-<script type="text/javascript" src="${path}/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript" src="/webjars/select2/4.0.3/js/select2.min.js"></script>
+<script type="text/javascript" src="/webjars/select2/4.0.3/js/i18n/es.js"></script>
+<script type="text/javascript" src="/webjars/momentjs/2.20.1/min/moment-with-locales.min.js"></script>
+<script type="text/javascript" src="/webjars/tempusdominus-bootstrap-4/5.0.0-alpha8/build/js/tempusdominus-bootstrap-4.min.js"></script>
 <script type="text/javascript" src="${path}/js/custom.js"></script>
 
 <script>
@@ -214,10 +212,12 @@
         /* Inicializar selectores de fecha */
         $(function () {
             $('#sinceDate').datetimepicker({
+                viewmode: 'months',
                 format: 'DD/MM/YYYY',
                 locale: 'es'
             });
             $('#untilDate').datetimepicker({
+                viewmode: 'months',
                 format: 'DD/MM/YYYY',
                 locale: 'es'
             });

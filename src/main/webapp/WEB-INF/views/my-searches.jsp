@@ -89,9 +89,9 @@
 
 <%@ include file="_js.jsp"%>
 
-<link rel="stylesheet" href="${path}/css/dataTables.bootstrap4.min.css" />
-<script type="text/javascript" src="${path}/js/jquery.dataTables.min.js"></script>
-<script type="text/javascript" src="${path}/js/dataTables.bootstrap4.min.js"></script>
+<link rel="stylesheet" href="/webjars/datatables/1.10.16/css/dataTables.bootstrap4.min.css" />
+<script type="text/javascript" src="/webjars/datatables/1.10.16/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="/webjars/datatables/1.10.16/js/dataTables.bootstrap4.min.js"></script>
 <script type="text/javascript" src="${path}/js/custom.js"></script>
 
 <script>
@@ -118,7 +118,7 @@
                     data: null,
                     defaultContent: "",
                     "render": function () {
-                        return '<span class="open-details"><i data-feather="plus-circle"></i></span>';
+                        return '<span class="open-details"><i class="fas fa-plus-circle"></i></i></span>';
                     }
                 },
                 {data: "id"},
@@ -152,7 +152,7 @@
                     data: null,
                     defaultContent: "",
                     "render": function () {
-                        return '<span class="open-details"><i data-feather="plus-circle"></i></span>';
+                        return '<span class="open-details"><i class="fas fa-plus-circle"></i></i></span>';
                     }
                 },
                 {data: "id"},
@@ -174,20 +174,6 @@
             "order": [[1, 'asc']]
         });
 
-        // Dibujar Feather icons al renderizar tabla
-        tableMySearches.on('draw', function () {
-            feather.replace({
-                width: 20,
-                height: 20
-            });
-        });
-        tableUsersSearches.on('draw', function () {
-            feather.replace({
-                width: 20,
-                height: 20
-            });
-        });
-
         // Listener para abrir/cerrar detalles en la tabla
         $(".data-table tbody").on("click", "td.details-control", function () {
             var tr = $(this).closest("tr");
@@ -201,14 +187,12 @@
                 datatableRow.child.hide();
                 tr.removeClass("shown");
                 iconSpan.empty();
-                iconSpan.append('<i data-feather="plus-circle"></i>');
-                feather.replace({width: 20, height:20});
+                iconSpan.append('<i class="fas fa-plus-circle"></i></i>');
             } else {
                 datatableRow.child(render_details(datatableRow.data())).show();
                 tr.addClass("shown");
                 iconSpan.empty();
-                iconSpan.append('<i data-feather="minus-circle"></i>');
-                feather.replace({width: 20, height:20});
+                iconSpan.append('<i class="fas fa-minus-circle"></i>');
             }
         });
 
@@ -258,9 +242,6 @@
             $selectedRow.removeClass("selected");
         });
 
-        // Feather icons
-        feather.replace();
-
     });
 
     function render_details(data) {
@@ -304,16 +285,16 @@
         var updateButton = "";
         if (mySearches && search.updateable) {
             updateButton = '<a href="${path}/searches/update/' + search.id + '" class="btn btn-secondary btn-sm" type="button" title="Actualizar">' +
-                                    '<i data-feather="edit"></i>' +
+                                    '<i class="far fa-edit"></i>' +
                                '</a>';
         }
         return '<div class="btn-group btn-group-sm" role="group">' +
                     updateButton +
                     '<a href="${path}/searches/' + search.id + '" class="btn btn-secondary btn-sm" type="button" title="Ver resultados">' +
-                        '<i data-feather="info"></i>' +
+                        '<i class="far fa-chart-bar"></i>' +
                     '</a>' +
                     '<button class="btn btn-danger btn-sm delete-search" type="button" title="Eliminar">' +
-                        '<i data-feather="trash-2"></i>' +
+                        '<i class="far fa-trash-alt"></i>' +
                     '</button>' +
                '</div>';
     }
