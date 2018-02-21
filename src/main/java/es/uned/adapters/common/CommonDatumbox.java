@@ -80,7 +80,6 @@ public abstract class CommonDatumbox  {
      * @return Lista de records
      */
     private List<Record> generateRecords(AbstractTextExtractor textExtractor, List<String> positivesOrSubjectives, List<String> negativesOrObjectives) {
-        //
         List<Record> records = new ArrayList<>();
         String POStext = "positive";
         String NOOtext = "negative";
