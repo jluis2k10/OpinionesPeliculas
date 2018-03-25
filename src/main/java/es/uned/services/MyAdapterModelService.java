@@ -1,6 +1,6 @@
 package es.uned.services;
 
-import es.uned.adapters.AdapterType;
+import es.uned.adapters.ClassifierType;
 import es.uned.entities.Account;
 import es.uned.entities.AdapterModels;
 import es.uned.repositories.AdapterModelRepo;
@@ -49,19 +49,15 @@ public class MyAdapterModelService implements AdapterModelService {
     }
 
     @Override
-    public Set<AdapterModels> findUserModels(Account account, AdapterType adapterType) {
+    public Set<AdapterModels> findUserModels(Account account, ClassifierType adapterType) {
         return adapterModelRepo.findByOwnerAndAdapterType(account, adapterType);
     }
 
     @Override
-    public Set<AdapterModels> findFromOthers(Account account, AdapterType adapterType) {
+    public Set<AdapterModels> findFromOthers(Account account, ClassifierType adapterType) {
         return adapterModelRepo.findByOwnerNotAndAdapterType(account, adapterType);
     }
 
-    @Override
-    public Set<AdapterModels> findByType(AdapterType adapterType) {
-        return adapterModelRepo.findByAdapterType(adapterType);
-    }
 
     @Override
     public Set<AdapterModels> findByAdapterClass(String adapterClass, Account account) {
@@ -69,5 +65,10 @@ public class MyAdapterModelService implements AdapterModelService {
             return adapterModelRepo.findAllByAdapterClass(adapterClass);
         else
             return adapterModelRepo.findByAdapterClassAndOwner_OrAdapterClassAndOpenTrue(adapterClass, account, adapterClass);
+    }
+
+    @Override
+    public Set<AdapterModels> findByAdapterClassAndLang(String adapterClass, String lang, Account account) {
+        return adapterModelRepo.findByAdapterClassAndLanguageAndOwner_OrAdapterClassAndLanguageAndOpenTrue(adapterClass, lang, account, adapterClass, lang);
     }
 }

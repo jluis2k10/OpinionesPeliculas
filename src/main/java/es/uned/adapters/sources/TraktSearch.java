@@ -3,8 +3,9 @@ package es.uned.adapters.sources;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.uned.components.TrakttvLookup;
-import es.uned.entities.CommentWithSentiment;
-import es.uned.entities.Search;
+import es.uned.entities.Comment;
+import es.uned.entities.Corpus;
+import es.uned.forms.SourceForm;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -22,9 +23,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -40,31 +40,53 @@ public class TraktSearch implements SourceAdapter {
     @Autowired
     private TrakttvLookup trakttvLookup;
 
+    /* Opciones de búsqueda */
+    private String source;
+    private int limit;
+    private String searchTerm;
+
     @Override
-    public void doSearch(Search search) {
-        getComments(search, new LinkedHashMap<>());
+    public void setOptions(SourceForm sourceForm) {
+        this.source = sourceForm.getSource();
+        this.limit = sourceForm.getLimit();
+        this.searchTerm = sourceForm.getTerm();
     }
 
     @Override
-    public int updateSearch(Search search) {
-        int sizeBefore = search.getComments().size();
-        Map<Integer, CommentWithSentiment> oldComments = search.getComments().stream()
-                .collect(Collectors.toMap(c -> c.getSourceURL().hashCode(), Function.identity(), (oldVal, newVal) -> oldVal, LinkedHashMap::new));
-        getComments(search, oldComments);
-        return search.getComments().size() - sizeBefore;
+    public void generateCorpus(Corpus corpus) {
+        corpus.setLang("en");
+        addComments(corpus);
     }
 
-    private void getComments(Search search, Map<Integer, CommentWithSentiment> comments) {
+    @Override
+    public int updateCorpus(SourceForm sourceForm, Corpus corpus) {
+        setOptions(sourceForm);
+        Map<Integer, Comment> thisSourceComments = corpus.getComments().stream()
+                .filter(comment -> comment.getSource().equals(source))
+                .collect(Collectors.toMap(comment -> comment.getHash(), Function.identity(), (oldVal, newVal) -> oldVal, LinkedHashMap::new));
+
+        int oldSize = corpus.getComments().size();
+        addComments(corpus);
+        corpus.setUpdated(LocalDateTime.now());
+
+        return corpus.getComments().size() - oldSize;
+    }
+
+    private void addComments(Corpus corpus) {
         HttpClient httpClient = HttpClientBuilder.create().build();
         URI uri = null;
+
+        int traktvCommentsSize = Math.toIntExact(corpus.getComments().stream()
+                .filter(comment -> comment.getSource().equals(source))
+                .count());
 
         try {
             uri = new URIBuilder()
                     .setScheme("https")
                     .setHost("api.trakt.tv")
-                    .setPath("/movies/" + search.getTerm() + "/comments/newest")
+                    .setPath("/movies/" + searchTerm + "/comments/newest")
                     .setParameter("page", "1")
-                    .setParameter("limit", Integer.toString(search.getLimit()))
+                    .setParameter("limit", Integer.toString(traktvCommentsSize + limit))
                     .build();
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -86,20 +108,19 @@ public class TraktSearch implements SourceAdapter {
             JsonNode jsonNode = mapper.readTree(json);
             SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
             for (JsonNode traktComment : jsonNode) {
-                CommentWithSentiment comment = new CommentWithSentiment.Builder()
-                        .search(search)
-                        .sourceUrl("https://trakt.tv/comments/" + traktComment.get("id").asText())
+                // Al crear el comentario lo añadimos al corpus automáticamente evitando duplicados
+                Comment comment = new Comment.Builder()
+                        .source(source)
+                        .url("https://trakt.tv/comments/" + traktComment.get("id").asText())
                         .date(dateFormatter.parse(traktComment.get("created_at").asText()))
-                        .comment(traktComment.get("comment").asText())
+                        .content(traktComment.get("comment").asText())
+                        .corpus(corpus)
                         .build();
-                comments.putIfAbsent(comment.getSourceURL().hashCode(), comment);
             }
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        search.setTitle(trakttvLookup.imdbToTitle(search.getTerm()));
-        search.setComments(new LinkedList<>(comments.values()));
     }
 }

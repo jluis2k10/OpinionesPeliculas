@@ -23,6 +23,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.Set;
 
 /**
@@ -41,12 +42,12 @@ public class ConfigParser {
     private AccountService accountService;
 
     private static final String SOURCE_XML = "/sourceAdapters.xml";
-    private static final String SENTIMENT_XML = "/sentimentAdapters.xml";
-    private static final String SUBJECTIVITY_XML = "/subjectivityAdapters.xml";
+    private static final String POLARITY_XML = "/sentimentAdapters.xml";
+    private static final String OPINION_XML = "/subjectivityAdapters.xml";
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    public ArrayNode getAllSources(String selectedLang, String adapterClass) {
+    public ArrayNode getCorporaSources(String selectedLang) {
         ArrayNode results = mapper.createArrayNode();
         NodeList adapters = this.readXML(SOURCE_XML);
         for (int i = 0; i < adapters.getLength(); i++) {
@@ -54,25 +55,19 @@ public class ConfigParser {
             if (adapter.getNodeType() != Node.ELEMENT_NODE)
                 continue;
             Element e = (Element) adapter;
-            if (adapterClass != null && !adapterClass.equals(e.getElementsByTagName("class").item(0).getTextContent()))
-                continue;
             ObjectNode adapterNode = mapper.createObjectNode();
             adapterNode.put("name", e.getAttribute("name"));
             adapterNode.put("adapterClass", e.getElementsByTagName("class").item(0).getTextContent());
-            adapterNode.put("limitEnabled", e.getAttribute("limit").equals("true"));
-            adapterNode.put("sinceDateEnabled", e.getAttribute("sinceDate").equals("true"));
-            adapterNode.put("untilDateEnabled", e.getAttribute("untilDate").equals("true"));
+            adapterNode.put("limit", e.getAttribute("limit").equals("true"));
+            adapterNode.put("sinceDate", e.getAttribute("sinceDate").equals("true"));
+            adapterNode.put("untilDate", e.getAttribute("untilDate").equals("true"));
             adapterNode.put("chooseLanguage", e.getAttribute("languages").equals("true"));
             adapterNode.set("languages", this.constructLanguagesList(e.getElementsByTagName("languages").item(0).getChildNodes()));
             adapterNode.put("imdbIDEnabled", e.getAttribute("imdbID").equals("true"));
-            adapterNode.put("cleanTweet", e.getAttribute("cleanTweet").equals("true"));
-            adapterNode.put("updateable", e.getAttribute("updateable").equals("true"));
-            adapterNode.set("extra_parameters", this.getAdapterParameters(e, false));
-            if (selectedLang != null && this.hasSelectedLanguage(e, selectedLang))
+            adapterNode.put("fileUpload", e.getAttribute("fileUpload").equals("true"));
+            adapterNode.set("options", this.getAdapterParameters(e, false));
+            if ((selectedLang != null && this.hasSelectedLanguage(e, selectedLang)) || selectedLang == null)
                 results.add(adapterNode);
-            else if (selectedLang == null)
-                results.add(adapterNode);
-
         }
         return results;
     }
@@ -121,6 +116,54 @@ public class ConfigParser {
         return languagesON;
     }
 
+    public ArrayNode getClassifiers(String classifierType, Principal principal, String lang, boolean creation) {
+        ArrayNode results = mapper.createArrayNode();
+        NodeList adapters = null;
+        Account account = (principal == null ? null : accountService.findByUserName(principal.getName()));
+
+        if (classifierType.equals("opinion"))
+            adapters = readXML(OPINION_XML);
+        else if (classifierType.equals("polarity"))
+            adapters = readXML(POLARITY_XML);
+
+        for (int i = 0; i < adapters.getLength(); i++) {
+            Node adapter = adapters.item(i);
+            if (adapter.getNodeType() != Node.ELEMENT_NODE)
+                continue;
+
+            Element e = (Element) adapter;
+
+            String[] langs = e.getAttribute("lang").split(",");
+            if (!Arrays.stream(langs).anyMatch(lang::equals)) // Clasificador no es aplicable al idioma indicado
+                continue;
+
+            ObjectNode adapterNode = mapper.createObjectNode();
+            adapterNode.put("name", e.getAttribute("name"));
+            adapterNode.put("type", classifierType);
+            adapterNode.put("class", e.getAttribute("class"));
+            adapterNode.put("lang", lang);
+            adapterNode.put("models_enabled", e.getAttribute("models").equals("true"));
+            if (adapterNode.get("models_enabled").asBoolean())
+                adapterNode.set("models", this.getAdapterModels(e.getAttribute("class"), lang, account));
+            adapterNode.put("model_creation", e.getAttribute("model_creation").equals("true"));
+            adapterNode.put("description", e.getElementsByTagName("description").item(0).getTextContent());
+            if (!creation)
+                adapterNode.set("parameters", this.getAdapterParameters(e, creation));
+            else
+                adapterNode.set("model_creation_params", this.getAdapterParameters(e, creation));
+
+            if (creation && adapterNode.get("models_enabled").asBoolean() && adapterNode.get("model_creation").asBoolean())
+                results.add(adapterNode);
+            else if (!creation && !adapterNode.get("models_enabled").asBoolean())
+                results.add(adapterNode);
+            else if (!creation && adapterNode.get("models_enabled").asBoolean() && adapterNode.get("models").size() > 0)
+                results.add(adapterNode);
+
+        }
+
+        return results;
+    }
+
     /**
      * Adaptadores disponibles.
      * Genera objeto JSON desde el archivo de configuración
@@ -136,10 +179,10 @@ public class ConfigParser {
 
         switch (adapterType) {
             case "sentiment":
-                adapters = readXML(SENTIMENT_XML);
+                adapters = readXML(POLARITY_XML);
                 break;
             case "subjectivity":
-                adapters = readXML(SUBJECTIVITY_XML);
+                adapters = readXML(OPINION_XML);
                 break;
         }
 
@@ -236,6 +279,24 @@ public class ConfigParser {
         }
 
         return optionsArray;
+    }
+
+    private ArrayNode getAdapterModels(String adapterClass, String lang, Account account) {
+        ArrayNode results = mapper.createArrayNode();
+        Set<AdapterModels> models = adapterModelService.findByAdapterClassAndLang(adapterClass, lang, account);
+        for(AdapterModels model: models) {
+            ObjectNode modelNode = mapper.createObjectNode();
+            modelNode.put("id", model.getId());
+            modelNode.put("name", model.getName());
+            modelNode.put("location", model.getLocation());
+            modelNode.put("lang", model.getLanguage());
+            modelNode.put("trainable", model.isTrainable());
+            modelNode.put("owner_id", model.getOwner().getId());
+            modelNode.put("is_open", model.isOpen());
+            modelNode.put("description", model.getDescription());
+            results.add(modelNode);
+        }
+        return results;
     }
 
     /**

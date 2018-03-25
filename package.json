@@ -1,0 +1,9 @@
+{
+  "name": "OpinionesPeliculas",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "gulp": "~4.0.0",
+    "zingchart": "~2.6.3"
+  }
+}

@@ -1,6 +1,6 @@
 package es.uned.entities;
 
-import es.uned.adapters.AdapterType;
+import es.uned.adapters.ClassifierType;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,7 +28,7 @@ public class AdapterModels {
     private String name;
 
     @Column(name = "adapter_type", length = 13)
-    private AdapterType adapterType;
+    private ClassifierType adapterType;
 
     @Column(name = "adapter_class", nullable = false)
     private String adapterClass;
@@ -123,11 +123,11 @@ public class AdapterModels {
         this.name = name;
     }
 
-    public AdapterType getAdapterType() {
+    public ClassifierType getAdapterType() {
         return adapterType;
     }
 
-    public void setAdapterType(AdapterType adapterType) {
+    public void setAdapterType(ClassifierType adapterType) {
         this.adapterType = adapterType;
     }
 

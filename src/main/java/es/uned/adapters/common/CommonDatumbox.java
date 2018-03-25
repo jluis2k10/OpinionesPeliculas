@@ -20,7 +20,7 @@ import com.datumbox.framework.core.machinelearning.preprocessing.MaxAbsScaler;
 import com.datumbox.framework.core.machinelearning.preprocessing.MinMaxScaler;
 import com.datumbox.framework.core.machinelearning.preprocessing.StandardScaler;
 import com.datumbox.framework.storage.inmemory.InMemoryConfiguration;
-import es.uned.adapters.AdapterType;
+import es.uned.adapters.ClassifierType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -40,7 +40,7 @@ public abstract class CommonDatumbox  {
 
     public abstract String get_adapter_path();
 
-    public abstract AdapterType get_adapter_type();
+    public abstract ClassifierType get_adapter_type();
 
     /**
      * Definir configuración del modelo (en memoria, directorio)
@@ -83,7 +83,7 @@ public abstract class CommonDatumbox  {
         List<Record> records = new ArrayList<>();
         String POStext = "positive";
         String NOOtext = "negative";
-        if (get_adapter_type() == AdapterType.SUBJECTIVITY) {
+        if (get_adapter_type() == ClassifierType.OPINION) {
             POStext = "subjective";
             NOOtext = "objective";
         }

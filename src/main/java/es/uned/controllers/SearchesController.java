@@ -6,7 +6,6 @@ import es.uned.adapters.SubjectivityAdapterFactory;
 import es.uned.adapters.sentiment.SentimentAdapter;
 import es.uned.adapters.sources.SourceAdapter;
 import es.uned.adapters.subjectivity.SubjectivityAdapter;
-import es.uned.components.SearchWrapper;
 import es.uned.entities.Account;
 import es.uned.entities.Search;
 import es.uned.services.AccountService;
@@ -35,7 +34,6 @@ public class SearchesController {
 
     @Autowired private SearchService searchService;
     @Autowired private AccountService accountService;
-    @Autowired private SearchWrapper searchWrapper;
 
     @RequestMapping(value = "")
     public String mySearches() {
@@ -77,19 +75,19 @@ public class SearchesController {
 
         // Recuperar nuevos comentarios
         SourceAdapter sourceAdapter = sourceFactory.get(dbSearch.getSourceClass());
-        int newComments = sourceAdapter.updateSearch(dbSearch);
+        // (quitado tras cambio en interface sourceAdapter) int newComments = sourceAdapter.updateSearch(dbSearch);
 
         // Analizar subjetividad
         if (dbSearch.isClassifySubjectivity()) {
             SubjectivityAdapter subjectivityAdapter = subjectivityFactory.get(dbSearch.getSubjectivityAdapter());
-            subjectivityAdapter.analyze(dbSearch);
+            //subjectivityAdapter.analyze(dbSearch);
         }
         // Analizar sentimiento
         SentimentAdapter sentimentAdapter = sentimentFactory.get(dbSearch.getSentimentAdapter());
-        sentimentAdapter.analyze(dbSearch);
+        //sentimentAdapter.analyze(dbSearch);
 
-        searchWrapper.setSearch(dbSearch);
-        model.addAttribute("newComments", newComments);
+        //searchWrapper.setSearch(dbSearch);
+        // (quitado tras cambio en interface sourceAdapter)model.addAttribute("newComments", newComments);
         model.addAttribute("search", dbSearch);
         return "results";
     }
@@ -99,9 +97,9 @@ public class SearchesController {
         if (principal == null)
             return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
         Account account = accountService.findByUserName(principal.getName());
-        Search search = searchWrapper.getSearch();
+        /*Search search = searchWrapper.getSearch();
         search.setOwner(account);
-        searchService.save(search);
+        searchService.save(search);*/
         return new ResponseEntity<>("Ok", HttpStatus.OK);
     }
 

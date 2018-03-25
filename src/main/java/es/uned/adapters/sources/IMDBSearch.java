@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.uned.components.TrakttvLookup;
 import es.uned.entities.CommentWithSentiment;
+import es.uned.entities.Corpus;
 import es.uned.entities.Search;
+import es.uned.forms.SourceForm;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -41,11 +43,26 @@ public class IMDBSearch implements SourceAdapter {
     private TrakttvLookup trakttvLookup;
 
     @Override
+    public void setOptions(SourceForm sourceForm) {
+
+    }
+
+    @Override
+    public void generateCorpus(Corpus corpus) {
+        return;
+    }
+
+    @Override
+    public int updateCorpus(SourceForm sourceForm, Corpus corpus) {
+        return 0;
+    }
+
+
     public void doSearch(Search search) {
         getComments(search, new LinkedHashMap<>());
     }
 
-    @Override
+
     public int updateSearch(Search search) {
         int sizeBefore = search.getComments().size();
         Map<Integer, CommentWithSentiment> oldComments = search.getComments().stream()

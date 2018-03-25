@@ -1,0 +1,1036 @@
+/* Contexto */
+let ctx = $("meta[name='_context']").attr("content");
+
+/* Recuperar token csrf para incluirlo como cabecera en cada envío ajax */
+let token = $("meta[name='_csrf']").attr("content");
+let header = $("meta[name='_csrf_header']").attr("content");
+$(document).ajaxSend(function (e, xhr, options) {
+    xhr.setRequestHeader(header, token);
+});
+
+/* Definimos colores para gráficas */
+window.chartColors = {
+    red: 'rgb(255, 99, 132)',
+    orange: 'rgb(255, 159, 64)',
+    yellow: 'rgb(255, 205, 86)',
+    green: 'rgb(75, 192, 192)',
+    blue: 'rgb(54, 162, 235)',
+    purple: 'rgb(153, 102, 255)',
+    grey: 'rgb(201, 203, 207)'
+};
+
+/**
+ * Muestra el cover/modal de "Cargando" con el mensaje indicado.
+ * @param msg El mensaje a mostrar
+ */
+function showLoading(msg) {
+    $('.loader-content').append('<p class="loader">' + msg  + '</p>');
+    $('p.loader').append('<span class="loader__dot">.</span><span class="loader__dot">.</span><span class="loader__dot">.</span></div>');
+    $('.cover').show();
+}
+
+/**
+ * Recuperar fuentes de comentarios para Corpus
+ * @param lang Idioma de los comentarios
+ * @returns {Promise}
+ */
+function getCorporaSources(lang) {
+    return Promise.resolve($.ajax({
+        type: "POST",
+        data: JSON.stringify({
+            lang: (typeof lang !== 'undefined' ? lang : null)
+        }),
+        dataType: "json",
+        contentType: "application/json; charset=UTF-8",
+        url: ctx + "/api/corpora-sources",
+        timeout: 5000
+    }));
+}
+
+function getOpinionClassifiers(lang) {
+    return Promise.resolve($.ajax({
+        type: "POST",
+        data: JSON.stringify({
+            lang: lang,
+            creation: false
+        }),
+        dataType: "json",
+        contentType: "application/json; charset=UTF-8",
+        url: ctx + "/api/classifiers/opinion",
+        timeout: 5000
+    }));
+}
+
+function getPolarityClassifiers(lang) {
+    return Promise.resolve($.ajax({
+        type: "POST",
+        data: JSON.stringify({
+            lang: lang,
+            creation: false
+        }),
+        dataType: "json",
+        contentType: "application/json; charset=UTF-8",
+        url: ctx + "/api/classifiers/polarity",
+        timeout: 5000
+    }));
+}
+function getCorpusAnalyses() {
+    return Promise.resolve($.ajax({
+        type: "POST",
+        data: "",
+        dataType: "json",
+        contentType: "application/json; charset=UTF-8",
+        url: ctx + "/get-analyses",
+        timeout: 5000
+    }));
+}
+
+function getCorpusCommentHashes() {
+    return Promise.resolve($.ajax({
+        type: "POST",
+        data: "",
+        dataType: "json",
+        contentType: "application/json; charset=UTF-8",
+        url: ctx + "/get-corpus-comment-hashes",
+        timeout: 5000
+    }))
+}
+
+
+/**
+ * Construir el botón con las diferentes fuentes de comentarios para un Corpus.
+ * @param sources Fuentes de comentarios para un Corpus
+ */
+function renderSourcesButton(sources, corpusLang) {
+    $.each(sources, function (index, source) {
+        $(" #sources-dropdown").append('<a href="#" class="dropdown-item source-button" data-name="' + source.name + '">' + source.name + '</a>');
+    });
+    let selectedSource = $.grep(sources, function (source) {
+        return source.name === $("#sources-dropdown a:first-child").get(0).dataset.name;
+    })[0];
+    renderSourceOptions(selectedSource, corpusLang);
+}
+
+/**
+ * Construir el formulario con las opciones disponibles para la fuente de comentarios
+ * seleccionada.
+ * @param e Elemento seleccionado.
+ * @param sources Fuentes de comentarios para un Corpus
+ */
+function renderSourceOptions(source, corpusLang) {
+    $(".option-container").remove();                // Eliminar opciones extra previas si existen
+    $(".sources-dropdown").html(source.name);       // Cambiamos el texto del dropdown
+    $("#source").val(source.name);                  // Añadimos el nombre de la fuente al campo oculto del formulario
+    $("#sourceAdapter").val(source.adapterClass);   // Añadimos la clase del adaptador seleccionado
+
+    if (source.imdbIDEnabled) {
+        $("#term").attr("readonly", "readonly");
+        $(".imdbID-container").show();
+        $("span.select2-container").width("100%");
+    } else {
+        if (!source.fileUpload)
+            $("#term").removeAttr("readonly");
+        $(".imdbID-container").hide();
+    }
+    if (source.fileUpload) {
+        $(".file-container").show();
+        $("#term").attr("readonly", "readonly");
+        $("#term").val("");
+    } else {
+        if (!source.imdbIDEnabled)
+            $("#term").removeAttr("readonly");
+        $(".file-container").hide();
+    }
+    if (source.limit) {
+        $(".limit-container").show();
+    } else {
+        $(".limit-container").hide();
+    }
+    if (source.sinceDate){
+        $(".sinceDate-container").show();
+    } else {
+        $(".sinceDate-container").hide();
+    }
+    if (source.untilDate){
+        $(".untilDate-container").show();
+    } else {
+        $(".untilDate-container").hide();
+    }
+    if (source.chooseLanguage) {
+        $(".language-container").show();
+    } else {
+        $(".language-container").hide();
+    }
+    // Construir select con los idiomas disponibles
+    $current_lang = $("#lang option:selected").val();
+    $("#lang").find('option').remove();
+    $.each(source.languages, function (key, val) {
+        if (corpusLang != null && corpusLang === val)
+            $("#lang").append($("<option></option>")
+                .attr("value", val)
+                .text(key));
+        else if (corpusLang == null)
+            $("#lang").append($("<option></option>")
+                .attr("value", val)
+                .text(key));
+        if (val === $current_lang)
+            $("#lang").val(val);
+    });
+    // Construir parámetros extra
+    if (source.options.length > 0) {
+        $container = $(".sources-container");
+        $.each(source.options, function (index, option) {
+            switch (option.type.toLowerCase()) {
+                case 'radio':
+                    renderRadio($container, option);
+                    break;
+                case 'select':
+                    renderSelect($container, option);
+                    break;
+                case 'number':
+                    renderNumber($container, option);
+                    break;
+                case 'text':
+                    renderText($container, option);
+                    break;
+                default:
+                    break;
+            }
+        });
+    };
+}
+
+function renderClassifierForm(classifiers, index) {
+    let listItem = $('<div>', {
+        class: "list-group-item flex-column align-items-start classifier-item",
+        data: {id: index}
+    }).append(
+        $('<div>', {
+            class: "d-flex justify-content-between"
+        }).append(
+            $('<h5>', {
+                class: "mb-1",
+                html: "Análisis"
+            })
+        ),
+        $('<div>', {
+            class: "row classifier-container"
+        }),
+        $('<button>', {
+            type: "button",
+            class: "btn remove-classifier btn-sm btn-danger mr-2",
+            html: "<i class='fas fa-times mr-1'></i> Eliminar análisis"
+        }),
+        $('<button>', {
+            type: "button",
+            class: "btn add-classifier btn-sm btn-success",
+            html: "<i class='fas fa-plus mr-1'></i> Añadir análisis"
+        })
+    );
+    let innerDiv = $('<div>', {class: 'form-group col-3'});
+    let label = $('<label></label>')
+        .attr('for', "analysis'" + index + "'.adapterClass")
+        .html('Clasificador');
+    let select = $('<select></select>')
+        .addClass('form-control')
+        .attr({
+            id: "analysis'" + index + "'.adapterClass",
+            name: "analysis["+ index + "].adapterClass"
+        });
+    $.each(classifiers, function (i, classifier) {
+        select.append(new Option(classifier.name, classifier.class));
+    });
+    label.appendTo(innerDiv);
+    select.appendTo(innerDiv);
+    innerDiv.appendTo($(listItem).find('.classifier-container'));
+    listItem.appendTo($('.classifiers'));
+
+    let selectedAdapter = $('select[name="analysis['+ index + '].adapterClass"] option:selected');
+    addClassifierSelectListener($('select[name="analysis['+ index + '].adapterClass"]'), classifiers);
+    renderClassifierOptions(selectedAdapter, classifiers);
+}
+
+function renderClassifierOptions(selectedAdpter, classifiers) {
+    let container = selectedAdpter.closest('.classifier-container');
+    let index = $(container).closest('.classifier-item').data("id");
+    let classifier = $.grep(classifiers, function (c) {
+        return c.class === selectedAdpter.val();
+    })[0];
+
+    // El clasificador tiene modelos de lenguaje, mostrar select con ellos
+    if (classifier.models_enabled && classifier.models.length > 0) {
+        let innerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+        let label = $('<label></label>')
+            .attr('for', "analysis'" + index + "'.languageModelLocation")
+            .html('Modelo de Lenguaje');
+        let select = $('<select></select>')
+            .addClass('form-control')
+            .attr({
+                id: "analysis'" + index + "'.languageModelLocation",
+                name: "analysis["+ index + "].languageModelLocation"
+            });
+        $.each(classifier.models, function (i, model) {
+            select.append(new Option(model.name, model.location));
+        });
+        let hiddenModelName = $('<input>', {
+            type: 'hidden',
+            class: 'classifier-option',
+            value: '',
+            id: "analysis'" + index + "'.languageModel",
+            name: "analysis["+ index + "].languageModel"
+        });
+        label.appendTo(innerDiv);
+        select.appendTo(innerDiv);
+        hiddenModelName.appendTo(innerDiv);
+        innerDiv.appendTo(container);
+
+        // Rellenar el hidden select con el primer valor y añadir listener para
+        // capturar cambios
+        $(hiddenModelName).val($(select).find(':selected').text());
+        $(select).change(function () {
+            $(hiddenModelName).val($(this).find(':selected').text());
+        });
+    }
+
+    // Mostrar radio para elegir eliminar/no eliminar Stop Words
+    let innerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+    $('<p>Eliminar <em>Stop-words</em></p>').appendTo(innerDiv);
+    let yesOption = $('<div>', {
+        class: 'custom-control custom-radio custom-control-inline'
+    });
+    yesOption.append(
+        $('<input>', {
+            type: 'radio',
+            class: 'custom-control-input',
+            value: 'true',
+            id: "analysis'" + index + "'Sí.deleteStopWords",
+            name: "analysis['" + index + "'].deleteStopWords"
+        }),
+        $('<label>', {
+            class: 'custom-control-label',
+            for: "analysis'" + index + "'Sí.deleteStopWords",
+            html: 'Sí'
+        })
+    );
+    let noOption = $('<div>', {
+        class: 'custom-control custom-radio custom-control-inline'
+    });
+    noOption.append(
+        $('<input>', {
+            type: 'radio',
+            class: 'custom-control-input',
+            value: 'false',
+            id: "analysis'" + index + "'No.deleteStopWords",
+            name: "analysis['" + index + "'].deleteStopWords",
+            checked: 'checked'
+        }),
+        $('<label>', {
+            class: 'custom-control-label',
+            for: "analysis'" + index + "'No.deleteStopWords",
+            html: 'No'
+        })
+    );
+    yesOption.appendTo(innerDiv);
+    noOption.appendTo(innerDiv);
+    innerDiv.appendTo(container);
+
+    // Mostrar radio para elegir si analizar sólo opiniones o no (en caso de
+    // que el clasificador sea de polaridad
+    if (classifier.type === "polarity") {
+        let opinionsInnerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+        $('<p>Analizar <strong>sólo</strong> opiniones</p>').appendTo(opinionsInnerDiv);
+        let opinionsOnlyYes = $('<div>', {
+            class: 'custom-control custom-radio custom-control-inline'
+        });
+        opinionsOnlyYes.append(
+            $('<input>', {
+                type: 'radio',
+                class: 'custom-control-input',
+                value: 'true',
+                id: "analysis'" + index + "'Sí.ignoreObjectives",
+                name: "analysis['" + index + "'].ignoreObjectives"
+            }),
+            $('<label>', {
+                class: 'custom-control-label',
+                for: "analysis'" + index + "'Sí.ignoreObjectives",
+                html: 'Sí'
+            })
+        );
+        let opinionsOnlyNo = $('<div>', {
+            class: 'custom-control custom-radio custom-control-inline'
+        });
+        opinionsOnlyNo.append(
+            $('<input>', {
+                type: 'radio',
+                class: 'custom-control-input',
+                value: 'false',
+                id: "analysis'" + index + "'No.ignoreObjectives",
+                name: "analysis['" + index + "'].ignoreObjectives",
+                checked: 'checked'
+            }),
+            $('<label>', {
+                class: 'custom-control-label',
+                for: "analysis'" + index + "'No.ignoreObjectives",
+                html: 'No'
+            })
+        );
+        opinionsOnlyYes.appendTo(opinionsInnerDiv);
+        opinionsOnlyNo.appendTo(opinionsInnerDiv);
+        opinionsInnerDiv.appendTo(container);
+    }
+
+    // Mostrar parámetros extra
+    $.each(classifier.parameters, function (i, parameter) {
+        switch(parameter.type.toLowerCase()) {
+            case 'radio':
+                renderClassifierRadio(container, parameter);
+                break;
+            case 'select':
+                renderClassifierSelect(container, parameter);
+                break;
+            case 'number':
+                renderClassifierNumber(container, parameter);
+                break;
+            case 'text':
+                renderClassifierText(container, parameter);
+                break;
+            default:
+                break;
+        }
+    });
+
+    // Añadir hidden input con el nombre del clasificador
+    $('<input>', {
+        class: "classifier-option",
+        type: "hidden",
+        name: "analysis["+ index +"].classifierName",
+        value: classifier.name
+    }).appendTo(container);
+
+    // Añadir hidden input con el tipo de clasificador
+    $('<input>', {
+        class: "classifier-option",
+        type: "hidden",
+        name: "analysis["+ index +"].classifierType",
+        value: classifier.type
+    }).appendTo(container);
+
+    // Añadir hidden input con el idioma del corpus/clasificador
+    $('<input>', {
+        class: "classifier-option",
+        type: "hidden",
+        name: "analysis["+ index +"].language",
+        value: classifier.lang
+    }).appendTo(container);
+}
+
+function addClassifierSelectListener(select, classifiers) {
+    $(select).change(function() {
+        let selected = $(this).find("option:selected");
+        $(selected.closest('.classifier-container')).children('.classifier-option').remove();
+        renderClassifierOptions(selected, classifiers);
+    })
+}
+
+// Paginación de resultados
+function myPagination(size, data, container) {
+    $("#comments-pagination").pagination({
+        dataSource: data,
+        locator: 'comments',
+        pageSize: size,
+        callback: function (comments, pagination) {
+            formatComments(comments, container, pagination);
+            generateReadMore();
+        },
+        ulClassName: "pagination justify-content-end"
+    });
+}
+function formatComments(comments, $container, pagination) {
+    $container.empty();
+    comments.forEach(function (comment, i) {
+        let commentIndex = (pagination.pageNumber - 1) * pagination.pageSize + i + 1;
+        let $listItem = $('<li></li>').addClass('list-group-item flex-column align-items-start');
+
+        // Cabecera del item (fuente y fecha)
+        let $headerDiv = $('<div>', {
+            class: "d-flex justify-content-between"
+        }).appendTo($listItem);
+        let $sourceContent = $('<small>', {
+            class: "mb-2 text-muted",
+            html: "<strong>#" + commentIndex + "</strong> " + comment.source
+        }).appendTo($headerDiv);
+        if (comment.url != null) {
+            $('<a>', {
+                href: comment.url,
+                class: "ml-3",
+                target: "_blank",
+                html: comment.url + '<i class="fas fa-external-link-alt ml-1"></i>'
+            }).appendTo($sourceContent);
+        }
+        $('<small>', {
+            class: "text-muted",
+            html: comment.date
+        }).appendTo($headerDiv);
+
+        // Cuerpo del item (comentario)
+        $('<p>', {
+            class: "card-text mb-2 readmore",
+            html: comment.content.replace(/(\r\n|\n|\r)/g, "<br />")
+        }).appendTo($listItem);
+
+        // Pie del item (medias de los análisis realizados sobre el comentario)
+        let sentiment = "N/A";
+        let cssClass;
+        let sentimentIcon = '<i class="far fa-question-circle"></i> ';
+        let sentimentScore = '';
+        if (comment.polarity === "Positive") {
+            sentiment = "Positivo"
+            cssClass = "text-success";
+            sentimentIcon = '<i class="far fa-thumbs-up"></i> ';
+            sentimentScore = '(' + (parseFloat(comment.polarityScore) * 100).toFixed(2) + '%)';
+        }
+        else if (comment.polarity === "Negative") {
+            sentiment = "Negativo";
+            cssClass = "text-danger";
+            sentimentIcon = '<i class="far fa-thumbs-down"></i> ';
+            sentimentScore = '(' + (parseFloat(comment.polarityScore) * 100).toFixed(2) + '%)';
+        } else if (comment.polarity === "Neutral") {
+            sentiment = "Neutral";
+            cssClass = "";
+            sentimentIcon = '<i class="far fa-meh"></i> ';
+            sentimentScore = '(' + (parseFloat(comment.polarityScore) * 100).toFixed(2) + '%)';
+        }
+        $('<small>', {
+            class: cssClass,
+            html: '<strong>' + sentimentIcon + sentiment + '</strong>' + sentimentScore
+        }).appendTo($listItem);
+
+
+        if (comment.opinion != null && comment.opinion === "Subjective") {
+            $('<small>', {
+                html: ' &ndash; <strong>Subjetivo</strong> ' + '(' + (parseFloat(comment.opinionScore) * 100).toFixed(2) + '%)'
+            }).appendTo($listItem);
+        }
+        else if (comment.opinion != null && comment.opinion === "Objective") {
+            $('<small>', {
+                html: ' &ndash; <strong>Objetivo</strong> ' + '(' + ((1 - parseFloat(comment.opinionScore)) * 100).toFixed(2) + '%)'
+            }).appendTo($listItem);
+        }
+
+        $listItem.appendTo($container);
+    });
+}
+
+function generateReadMore() {
+    $("p.readmore").readmore({
+        speed: 75,
+        moreLink: '<a href="#" class="readmore results" title="Leer más"><i class="far fa-plus-square fa-lg"></i></a>"',
+        lessLink: '<a href="#" class="readmore results" title="Leer menos"><i class="far fa-minus-square fa-lg"></i></a>"',
+    });
+}
+
+/**
+ * Construir Text Input.
+ * option.id será la clave del HashMap en Spring.
+ * @param container Elemento contenedor del input
+ * @param option Valores sobre la opción (clave -> valor)
+ */
+function renderText(container, option) {
+    let optionDiv = $('<div>', {
+        class: "col-3 option-container form-group"
+    }).append(
+        $('<label>', {
+            for: option.id,
+            text: option.name
+        }),
+        $('<input>', {
+            type: 'text',
+            id: "options'"+option.id+"'",
+            class: 'form-control',
+            name: "options['"+option.id+"']",
+            value: option.default
+        })
+    );
+    optionDiv.appendTo(container);
+}
+
+/**
+ * Construir Number Input.
+ * option.id será la clave del HashMap en Spring
+ * @param container Elemento contenedor del input
+ * @param option Valores sobre la opción (clave -> valor)
+ */
+function renderNumber(container, option) {
+    let optionDiv = $('<div>', {
+        class: "col-3 option-container form-group"
+    }).append(
+        $('<label>', {
+            for: option.id,
+            text: option.name
+        })
+    );
+
+    let input = $('<input>', {
+        type: 'number',
+        id: "options'"+option.id+"'",
+        class: 'form-control',
+        name: "options['"+option.id+"']",
+        value: option.default
+    });
+    input.appendTo(optionDiv);
+
+    $.each(option.options, function(index, option) {
+        if (option.name === "min")
+            input.attr("min", option.value);
+        else if (option.name === "max")
+            input.attr("max", option.value);
+    });
+
+    optionDiv.appendTo(container);
+}
+
+/**
+ * Construir Select Input.
+ * option.id será la clave del HashMap en Spring
+ * @param container Elemento contenedor del input
+ * @param option Valores sobre la opción (clave -> valor)
+ */
+function renderSelect(container, option) {
+    let optionDiv = $('<div>', {
+        class: "col-3 option-container form-group"
+    }).append(
+        $('<label>', {
+            for: option.id,
+            text: option.name
+        })
+    );
+
+    let select = $("<select></select>").attr({
+        id: "options'"+option.id+"'",
+        class: "form-control",
+        name: "options['"+option.id+"']"
+    });
+    select.appendTo(optionDiv);
+
+    $.each(option.options, function (index, option) {
+        let opt = $("<option></option>").attr("value", option.value).text(option.name);
+        opt.appendTo(select);
+    });
+
+    optionDiv.appendTo(container);
+}
+
+/**
+ * Construir Radio Input.
+ * option.id será la clave del HashMap en Spring
+ * @param container Elemento contenedor del input
+ * @param option Valores sobre la opción (clave -> valor)
+ */
+function renderRadio(container, option) {
+    let optionDiv = $('<div>', {
+        class: "col-3 option-container"
+    }).append(
+        $('<p>', {
+            text: option.name
+        })
+    );
+
+    $.each(option.options, function (index, opt) {
+        let innerDiv = $("<div></div>").addClass("custom-control custom-radio custom-control-inline");
+        let input = $("<input />").attr({
+            id: "options'"+option.id+"'"+opt.name,
+            name: "options['"+option.id+"']",
+            value: opt.value,
+            type: "radio",
+            class: "custom-control-input"
+        });
+        let label = $("<label></label>").attr({
+            for: "options'"+option.id+"'"+opt.name,
+            class: "custom-control-label"
+        }).text(opt.name);
+        if (option.default === opt.value)
+            input.attr("checked", "checked");
+        input.appendTo(innerDiv);
+        label.appendTo(innerDiv);
+        innerDiv.appendTo(optionDiv);
+    });
+
+    optionDiv.appendTo(container);
+}
+
+/**
+ * Construir Select para elegir ID de película en IMDB
+ * con Select2 (https://select2.org/)
+ */
+function renderIMDBSelect() {
+    $('.imdb-select').select2({
+        theme: "bootstrap",
+        placeholder: "Título de película",
+        language: "es",
+        ajax: {
+            url: ctx + "/api/imdb-lookup",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return {
+                    q: params.term,
+                    page: params.page
+                };
+            },
+            processResults: function(data, params) {
+                params.page = params.page || 1;
+                // Eliminamos de los resultados los que no tengan imdbID
+                for (let i=0; i<data.films.length; i++) {
+                    if (!data.films[i].imdbID)
+                        data.films.splice(i, 1);
+                }
+                // select2 necesita atributos id y text en el objeto que maneja
+                let select2Data = $.map(data.films, function (obj) {
+                    obj.id = obj.id || obj.imdbID;
+                    obj.text = obj.text || obj.title;
+                    return obj;
+                });
+                return {
+                    results: select2Data,
+                    pagination: {
+                        more: (params.page * 10) < data.total_count
+                    }
+                };
+            },
+            cache: true
+        },
+        escapeMarkup: function(markup) {
+            return markup;
+        },
+        minimumInputLength: 1,
+        templateResult: function(result) {
+            if (result.loading) return result.text;
+            return result.text + " (" + result.year + ")";
+        },
+        templateSelection: function(result) {
+            return result.title || result.text;
+        }
+    });
+}
+
+function renderClassifierRadio(container, parameter) {
+    let index = $(container).closest('.classifier-item').data("id");
+    let outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+    $('<p>' + parameter.name + '</p>').appendTo(outerDiv);
+    $.each(parameter.options, function (i, option) {
+        let innerDiv = $('<div>', {
+            class: 'custom-control custom-radio custom-control-inline'
+        });
+        innerDiv.append(
+            $('<input>', {
+                type: 'radio',
+                class: 'custom-control-input',
+                value: option.value,
+                id: "analysis'" + index + "'.options'"+parameter.id+"'"+option.value,
+                name: "analysis['" + index + "'].options['"+parameter.id+"']"
+            }),
+            $('<label>', {
+                class: 'custom-control-label',
+                for: "analysis'" + index + "'.options'"+parameter.id+"'"+option.value,
+                html: option.name
+            })
+        );
+        if (parameter.default === option.value)
+            $(innerDiv).find('input:radio').each(function() {
+                $(this).attr('checked', 'checked');
+            });
+        innerDiv.appendTo(outerDiv);
+    });
+    outerDiv.appendTo(container);
+}
+
+function renderClassifierSelect(container, parameter) {
+    let index = $(container).closest('.classifier-item').data("id");
+    let outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+    let label = $('<label>', {
+        for: "analysis'"+index+"'.options'"+parameter.id+"'",
+        html: parameter.name
+    });
+    let select = $('<select>', {
+        class: "form-control",
+        id: "analysis'"+index+"'.options'"+parameter.id+"'",
+        name: "analysis["+index+"].options["+parameter.id+"]"
+    });
+    $.each(parameter.options, function (i, option) {
+        select.append(
+            $('<option>', {
+                value: option.value,
+                html: option.name
+            })
+        );
+    });
+    label.appendTo(outerDiv);
+    select.appendTo(outerDiv);
+    outerDiv.appendTo(container);
+}
+
+function renderClassifierNumber(container, parameter) {
+    let index = $(container).closest('.classifier-item').data("id");
+    let outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+
+    outerDiv.append(
+        $('<label>', {
+            for: "analysis'"+index+"'.options'"+parameter.id+"'",
+            html: parameter.name
+        }),
+        $('<input>', {
+            class: "form-control",
+            type: "number",
+            id: "analysis'"+index+"'.options'"+parameter.id+"'",
+            name: "analysis["+index+"].options["+parameter.id+"]",
+            value: parameter.default
+        })
+    );
+
+    $.each(parameter.options, function(i, option) {
+        $(outerDiv).find(':input[type="number"]').attr(option.name, option.value);
+    });
+
+    outerDiv.appendTo(container);
+}
+
+function renderClassifierText(container, parameter) {
+    let index = $(container).closest('.classifier-item').data("id");
+    let outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+
+    outerDiv.append(
+        $('<label>', {
+            for: "analysis'"+index+"'.options'"+parameter.id+"'",
+            html: parameter.name
+        }),
+        $('<input>', {
+            class: "form-control",
+            type: "text",
+            id: "analysis'"+index+"'.options'"+parameter.id+"'",
+            name: "analysis["+index+"].options["+parameter.id+"]",
+            value: parameter.default
+        })
+    );
+
+    outerDiv.appendTo(container);
+}
+
+function sharedAnalysesChart(analyses, commentHashes, container) {
+    let opinionAnalyses = $.grep(analyses, function (analysis, index) {
+        return analysis.type === "opinion";
+    });
+    let polarityAnalyses = $.grep(analyses, function (analysis, index) {
+        return analysis.type === "polarity";
+    });
+    let opinionSeries = analysesSeries(opinionAnalyses, commentHashes);
+    let polaritySeries = analysesSeries(polarityAnalyses, commentHashes);
+    let opinionChartConfig = lineChartConfig(opinionSeries, "Índice de Subjetividad");
+    let polarityChartConfig = lineChartConfig(polaritySeries, "Índice de Positividad");
+    let sharedChartConfig;
+    let graphHeight = 300;
+    if (polaritySeries.length > 0 && opinionSeries.length > 0) {
+        sharedChartConfig = {
+            layout: "2x1",
+            graphset: [opinionChartConfig, polarityChartConfig]
+        };
+        graphHeight = 600;
+    }
+    else if (polaritySeries.length > 0 && opinionSeries.length == 0) {
+        sharedChartConfig = {
+            layout: "1x1",
+            graphset: [polarityChartConfig]
+        };
+    }
+    else if (polaritySeries.length == 0 && opinionSeries.length > 0) {
+        sharedChartConfig = {
+            layout: "1x1",
+            graphset: [opinionChartConfig]
+        };
+    }
+    else {
+        $(container).append($('<div>', {
+            class: "col-12 alert alert-warning",
+            role: "alert",
+            html: "No se han ejecutado análisis para el Corpus."
+        }));
+        return;
+    }
+    zingchart.render({
+        id: $(container).attr('id'),
+        data: sharedChartConfig,
+        height: graphHeight,
+        width: "100%"
+    });
+}
+
+function lineChartConfig(series, yAxisLabel) {
+    return {
+        type: 'line',
+        zoom: {
+            shared: true
+        },
+        legend: {
+            align: 'center',
+            verticalAlign: 'top',
+            backgroundColor: 'none',
+            borderWidth: 0,
+            item: {
+                cursor: 'hand'
+            },
+            marker: {
+                type: 'circle',
+                borderWidth: 0,
+                cursor: 'hand'
+            }
+        },
+        plotarea: {
+            margin: 'dynamic 70'
+        },
+        plot: {
+            tooltip: {
+                visible: false
+            }
+        },
+        scaleX: {
+            shared: true,
+            zooming: true,
+            zoomTo: [0, 35],
+            minValue: 1,
+            step: 1,
+            'max-items': 10
+        },
+        scrollX:{
+
+        },
+        scaleY: {
+            values: '0:100:10',
+            label: {
+                text: yAxisLabel,
+                fontSize: "14px"
+            },
+            format: "%v%",
+            markers: [{
+                type:"line",
+                range:[50],
+                lineStyle: "dashed",
+                lineWidth: 2,
+                lineColor:"green"
+            }]
+        },
+        crosshairX: {
+            shared: true,
+            plotLabel: {
+                text: '<span style="color:%color">%t:</span> %v%',
+                fontSize: '14px'
+            },
+            scaleLabel: {
+                text: 'Comentario #%v'
+            }
+        },
+        series: series
+    };
+}
+
+function analysesSeries(analyses, commentHashes) {
+    let colorNames = Object.keys(window.chartColors);
+    let series = [];
+
+    $.each(analyses, function(i, analysis) {
+        let colorName = colorNames[i % colorNames.length];
+        let color = window.chartColors[colorName];
+        let classifierName = analysis.classifier;
+        if (analysis.language_model != null)
+            classifierName += " (" + analysis.language_model + ")";
+        let serie = {
+            text: classifierName,
+            values: [],
+            lineColor: color,
+            marker: {
+                backgroundColor: color
+            }
+        };
+
+        let recordsMap = new Map();
+        $.each(analysis.records, function(j, record) {
+            recordsMap.set(record.comment_hash, record);
+        });
+        $.each(commentHashes.hashes, function(k, hash) {
+            if (recordsMap.has(hash)) {
+                let value = 0.0;
+                if (analysis.type === "opinion")
+                    value = Math.round(((recordsMap.get(hash).subjectiveScore) * 100) * 100) / 100;
+                else if (analysis.type === "polarity")
+                    value = Math.round(((recordsMap.get(hash).positiveScore) * 100) * 100) / 100;
+                serie.values.push(value);
+            }
+            else
+                serie.values.push(null);
+        });
+        series.push(serie);
+    });
+    return series;
+}
+
+/**
+ * Localización españa de datatables
+ * @returns {localización}
+ */
+function datatablesLocalization() {
+    let loc = {
+        "sProcessing":     "Procesando...",
+        "sLengthMenu":     "Mostrar _MENU_ entradas",
+        "sZeroRecords":    "No se encontraron resultados",
+        "sEmptyTable":     "Ningún dato disponible en esta tabla",
+        "sInfo":           "Mostrando entradas _START_ a _END_ de un total de _TOTAL_ entradas",
+        "sInfoEmpty":      "Mostrando 0 entradas",
+        "sInfoFiltered":   "(filtrado de un total de _MAX_ entradas)",
+        "sInfoPostFix":    "",
+        "sSearch":         "Buscar:",
+        "sUrl":            "",
+        "sInfoThousands":  ",",
+        "sLoadingRecords": "Cargando...",
+        "oPaginate": {
+            "sFirst":    "Primero",
+            "sLast":     "Último",
+            "sNext":     "Siguiente",
+            "sPrevious": "Anterior"
+        },
+        "oAria": {
+            "sSortAscending":  ": Actilet para ordenar la columna de manera ascendente",
+            "sSortDescending": ": Actilet para ordenar la columna de manera descendente"
+        }
+    };
+    return loc;
+}
+
+/**
+ * Ordenar filas por fecha en datatables
+ * https://datatables.net/plug-ins/sorting/date-euro
+ */
+if (typeof jQuery.fn.dataTableExt != 'undefined') {
+    jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+        "date-euro-pre": function ( a ) {
+            let x;
+
+            if ( $.trim(a) !== '' ) {
+                let frDatea = $.trim(a).split(' ');
+                let frTimea = (undefined != frDatea[1]) ? frDatea[1].split(':') : [0o0,0o0,0o0];
+                let frDatea2 = frDatea[0].split('/');
+                x = (frDatea2[2] + frDatea2[1] + frDatea2[0] + frTimea[0] + frTimea[1] + ((undefined != frTimea[2]) ? frTimea[2] : 0)) * 1;
+            }
+            else {
+                x = Infinity;
+            }
+
+            return x;
+        },
+
+        "date-euro-asc": function ( a, b ) {
+            return a - b;
+        },
+
+        "date-euro-desc": function ( a, b ) {
+            return b - a;
+        }
+    } );
+}

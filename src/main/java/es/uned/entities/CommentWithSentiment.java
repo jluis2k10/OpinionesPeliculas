@@ -13,7 +13,7 @@ import java.util.Date;
  *
  */
 @Entity
-@Table(name = "Comments")
+@Table(name = "Comments_with_sentiment")
 public class CommentWithSentiment implements Comparable<CommentWithSentiment> {
 
     @Id
@@ -44,14 +44,14 @@ public class CommentWithSentiment implements Comparable<CommentWithSentiment> {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "sentiment")
-    private Sentiment sentiment;
+    private Polarity sentiment;
 
     @Column(name = "sentiment_score", columnDefinition = "double")
     private double sentimentScore;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "subjectivity")
-    private Subjectivity subjectivity;
+    private Opinion subjectivity;
 
     @Column(name = "subjectivity_score", columnDefinition = "double")
     private double subjectivityScore;
@@ -116,14 +116,14 @@ public class CommentWithSentiment implements Comparable<CommentWithSentiment> {
         commentNode.put("date", dateFormat.format(getDate()));
         commentNode.put("comment", getComment());
         if (getSentiment() != null) {
-            commentNode.put("sentiment", getSentiment().getSentiment());
+            commentNode.put("sentiment", getSentiment().getPolarity());
             commentNode.put("sentiment_score", getSentimentScore());
         } else {
             commentNode.putNull("sentiment");
             commentNode.putNull("sentiment_score");
         }
         if (getSubjectivity() != null) {
-            commentNode.put("subjectivity", getSubjectivity().getSubjectivity());
+            commentNode.put("subjectivity", getSubjectivity().getOpinion());
             commentNode.put("subjectivity_score", getSubjectivityScore());
         } else {
             commentNode.putNull("subjectivity");
@@ -200,11 +200,11 @@ public class CommentWithSentiment implements Comparable<CommentWithSentiment> {
         this.tokenizedComment = tokenizedComment;
     }
 
-    public Sentiment getSentiment() {
+    public Polarity getSentiment() {
         return sentiment;
     }
 
-    public void setSentiment(Sentiment sentiment) {
+    public void setSentiment(Polarity sentiment) {
         this.sentiment = sentiment;
     }
 
@@ -216,11 +216,11 @@ public class CommentWithSentiment implements Comparable<CommentWithSentiment> {
         this.sentimentScore = sentimentScore;
     }
 
-    public Subjectivity getSubjectivity() {
+    public Opinion getSubjectivity() {
         return subjectivity;
     }
 
-    public void setSubjectivity(Subjectivity subjectivity) {
+    public void setSubjectivity(Opinion subjectivity) {
         this.subjectivity = subjectivity;
     }
 

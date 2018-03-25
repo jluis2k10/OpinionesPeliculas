@@ -1,6 +1,6 @@
 package es.uned.controllers;
 
-import es.uned.adapters.AdapterType;
+import es.uned.adapters.ClassifierType;
 import es.uned.adapters.SentimentAdapterFactory;
 import es.uned.adapters.SourceAdapterFactory;
 import es.uned.adapters.SubjectivityAdapterFactory;
@@ -45,13 +45,13 @@ public class ModelsController {
     public String myModels(Model model, Principal principal) {
         if (principal != null) {
             Account account = accountService.findByUserName(principal.getName());
-            Set<AdapterModels> userSentimentModels = adapterModelService.findUserModels(account, AdapterType.SENTIMENT);
-            Set<AdapterModels> userSubjectivityModels = adapterModelService.findUserModels(account, AdapterType.SUBJECTIVITY);
+            Set<AdapterModels> userSentimentModels = adapterModelService.findUserModels(account, ClassifierType.POLARITY);
+            Set<AdapterModels> userSubjectivityModels = adapterModelService.findUserModels(account, ClassifierType.OPINION);
             model.addAttribute("sentimentModels", userSentimentModels);
             model.addAttribute("subjectivityModels", userSubjectivityModels);
             if (account.isAdmin()) {
-                Set<AdapterModels> allSentimentModels = adapterModelService.findFromOthers(account, AdapterType.SENTIMENT);
-                Set<AdapterModels> allSubjectivityModels = adapterModelService.findFromOthers(account, AdapterType.SUBJECTIVITY);
+                Set<AdapterModels> allSentimentModels = adapterModelService.findFromOthers(account, ClassifierType.POLARITY);
+                Set<AdapterModels> allSubjectivityModels = adapterModelService.findFromOthers(account, ClassifierType.OPINION);
                 model.addAttribute("allSentimentModels", allSentimentModels);
                 model.addAttribute("allSubjectivityModels", allSubjectivityModels);
             }
@@ -77,11 +77,11 @@ public class ModelsController {
             aModel.setOwner(account);
         }
         if (modelParameters.get("classifierType").equals("polarity")) {
-            aModel.setAdapterType(AdapterType.SENTIMENT);
+            aModel.setAdapterType(ClassifierType.POLARITY);
             SentimentAdapter adapter = sentimentFactory.get(aModel.getAdapterClass());
             adapter.createModel(aModel.getLocation(), modelParameters, positivesSubjectives, negativesSubjectives);
         } else {
-            aModel.setAdapterType(AdapterType.SUBJECTIVITY);
+            aModel.setAdapterType(ClassifierType.OPINION);
             SubjectivityAdapter adapter = subjectivityFactory.get(aModel.getAdapterClass());
             adapter.createModel(aModel.getLocation(), modelParameters, positivesSubjectives, negativesSubjectives);
         }
@@ -116,13 +116,13 @@ public class ModelsController {
         } else {
             SourceAdapter sourceAdapter = sourceFactory.get(trainForm.getSourceClass());
             Search search = new Search(trainForm);
-            sourceAdapter.doSearch(search);
+            // (quitado tras cambio en interface sourceAdapter) sourceAdapter.doSearch(search);
             model.addAttribute("trainForm", trainForm);
             model.addAttribute("comments", search.getComments());
             return "train_comments";
         }
 
-        if (trainForm.getAdapterType() == AdapterType.SENTIMENT) {
+        if (trainForm.getAdapterType() == ClassifierType.POLARITY) {
             SentimentAdapter sentimentAdapter = sentimentFactory.get(trainForm.getAdapterClass());
             sentimentAdapter.trainModel(trainForm.getModelLocation(), pos_subj, neg_obj);
         } else {
@@ -155,7 +155,7 @@ public class ModelsController {
         Account account = accountService.findByUserName(principal.getName());
         if (model.getOwner() == account || account.isAdmin()) {
             String adapterPath = null;
-            if (model.getAdapterType() == AdapterType.SENTIMENT)
+            if (model.getAdapterType() == ClassifierType.POLARITY)
                 adapterPath = sentimentFactory.get(model.getAdapterClass()).get_adapter_path();
             else
                 adapterPath = subjectivityFactory.get(model.getAdapterClass()).get_adapter_path();

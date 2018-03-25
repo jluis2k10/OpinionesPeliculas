@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  *
@@ -35,14 +34,24 @@ public class RESTController {
     @Autowired
     private AccountService accountService;
 
-    @RequestMapping(value = "/comments-source", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(value = "/corpora-sources", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<ArrayNode> sources(@RequestBody Map postData) {
         String lang = (postData.get("lang") != null ? postData.get("lang").toString() : null);
-        String adapter = (postData.get("adapter") != null ? postData.get("adapter").toString() : null);
-        return ResponseEntity.status(HttpStatus.OK).body(configParser.getAllSources(lang, adapter ));
+        return ResponseEntity.status(HttpStatus.OK).body(configParser.getCorporaSources(lang));
     }
 
-    @RequestMapping(value = "/sentiment-adapters", method = RequestMethod.GET)
+    @RequestMapping(value = "/classifiers/{type}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<ArrayNode> opinionClassifiers(Principal principal,
+                                                        @PathVariable("type") String classifierType,
+                                                        @RequestBody Map postData)
+    {
+        String lang = (postData.get("lang") != null ? postData.get("lang").toString() : null);
+        boolean creation = postData.get("creation").equals("true");
+        ArrayNode response = configParser.getClassifiers(classifierType, principal, lang, creation);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    /*@RequestMapping(value = "/sentiment-adapters", method = RequestMethod.GET)
     public ResponseEntity<ArrayNode> sentimentAdapters(Principal principal, @RequestParam("create_params") Optional<String> create_params) {
         boolean creation = false;
         if (create_params.isPresent() && create_params.get().equals("true"))
@@ -58,7 +67,7 @@ public class RESTController {
             creation = true;
         ArrayNode response = configParser.getAdapters("subjectivity", principal, creation);
         return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
+    }*/
 
     @RequestMapping(value = "/imdb-lookup", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ObjectNode> imdbLookup(@RequestParam(value = "q", required = true) String title,

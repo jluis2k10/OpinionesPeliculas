@@ -1,36 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <adapters>
 
-    <adapter name="Twitter" limit="true" siceDate="false" untilDate="true" languages="true" imdbID="false" cleanTweet="true" updateable="true">
+    <adapter name="Twitter" limit="true" siceDate="false" untilDate="true" languages="true" imdbID="false" fileUpload="false">
         <class>es.uned.adapters.sources.TwitterSearch</class>
         <languages>
             <lang desc="Español">es</lang>
             <lang desc="Inglés">en</lang>
         </languages>
-        <parameter name="De usuario" type="Text" id="usuarioID" default="@usuario">
+        <parameter name="Del usuario" type="Text" id="usuarioID" default="@usuario">
             <description>Descripción del parámetro</description>
+        </parameter>
+        <parameter name="Numérico" type="number" id="numericoID" default="5">
+            <description></description>
+            <option name="min" value="0" />
+            <option name="max" value="10" />
+        </parameter>
+        <parameter name="Seleccionable" type="select" id="selectID">
+            <description></description>
+            <option name="Opcion 1" value="op1" />
+            <option name="Option 2" value="op2" />
+            <option name="Opcion 3" value="op3" />
+        </parameter>
+        <parameter name="Radio" type="radio" id="radioID" default="No">
+            <option name="Sí" value="Si" />
+            <option name="No" value="No" />
         </parameter>
     </adapter>
 
-    <adapter name="Frase" limit="false" sinceDate="false" untilDate="false" languages="true" imdbID="false" cleanTweet="false" updateable="false">
-        <class>es.uned.adapters.sources.SentenceSearch</class>
-        <languages>
-            <lang desc="Español">es</lang>
-            <lang desc="Inglés">en</lang>
-        </languages>
-    </adapter>
-
-    <adapter name="IMDB" limit="true" sinceDate="false" untilDate="false" languages="true" imdbID="true" cleanTweet="false" updateable="true">
+    <!--<adapter name="IMDB" limit="true" sinceDate="false" untilDate="false" languages="true" imdbID="true" fileUpload="false">
         <class>es.uned.adapters.sources.IMDBSearch</class>
         <languages>
             <lang desc="Español">es</lang>
             <lang desc="Inglés">en</lang>
         </languages>
-    </adapter>
+    </adapter>-->
 
-    <adapter name="Trakt" limit="true" sinceDate="false" untilDate="false" languages="false" imdbID="true" cleanTweet="false" updateable="true">
+    <adapter name="Trakt" limit="true" sinceDate="false" untilDate="false" languages="false" imdbID="true" fileUpload="false">
         <class>es.uned.adapters.sources.TraktSearch</class>
         <languages>
+            <lang desc="Inglés">en</lang>
+        </languages>
+    </adapter>
+
+    <adapter name="Dataset" limit="false" siceDate="false" untilDate="false" languages="true" imdbID="false" fileUpload="true">
+        <class>es.uned.adapters.sources.Dataset</class>
+        <languages>
+            <lang desc="Español">es</lang>
+            <lang desc="Inglés">en</lang>
+        </languages>
+    </adapter>
+
+    <adapter name="Frase" limit="false" sinceDate="false" untilDate="false" languages="true" imdbID="false" fileUpload="false">
+        <class>es.uned.adapters.sources.SentenceSearch</class>
+        <languages>
+            <lang desc="Español">es</lang>
             <lang desc="Inglés">en</lang>
         </languages>
     </adapter>

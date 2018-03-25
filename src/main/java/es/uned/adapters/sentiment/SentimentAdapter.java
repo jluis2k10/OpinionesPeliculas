@@ -1,7 +1,8 @@
 package es.uned.adapters.sentiment;
 
-import es.uned.adapters.AdapterType;
-import es.uned.entities.Search;
+import es.uned.adapters.ClassifierType;
+import es.uned.entities.Analysis;
+import es.uned.entities.Corpus;
 
 import java.util.List;
 import java.util.Map;
@@ -12,11 +13,11 @@ import java.util.Map;
 public interface SentimentAdapter {
 
     String MODELS_DIR = "/models/sentiment";
-    AdapterType adapterType = AdapterType.SENTIMENT;
+    ClassifierType adapterType = ClassifierType.POLARITY;
 
     String get_adapter_path();
 
-    void analyze(Search search);
+    void analyze(Corpus corpus, Analysis analysis);
 
     void trainModel(String modelLocation, List<String> positives, List<String> negatives);
 

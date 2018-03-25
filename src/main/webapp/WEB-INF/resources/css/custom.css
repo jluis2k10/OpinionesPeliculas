@@ -5,6 +5,7 @@ html, body {
 body {
     padding-bottom: 60px;
     background-color: #ffffff;
+    counter-reset: classifier-item;
 }
 
 .main-content {
@@ -97,11 +98,46 @@ a.readmore.results {
 .cover {
     height: 100vh;
     width: 100vw;
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(0, 0, 0, 0.75);
     z-index: 100000;
     position: fixed;
     display: none;
 }
+
+.loader-container {
+    position: relative;
+    width: auto;
+    pointer-events: none;
+    min-height: calc(100% - (1.75rem * 2));
+    max-width: 500px;
+    margin: 1.75rem auto;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+.loader-content {
+    position: relative;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    width: 100%;
+    height: 300px;
+    pointer-events: auto;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0,0,0,.2);
+    border-radius: .3rem;
+    outline: 0;
+}
+
 #loader {
     position: absolute;
     left: 50%;
@@ -119,6 +155,18 @@ a.readmore.results {
     animation: spin 2s linear infinite;
 }
 
+p.loader {
+    position: relative;
+    top: 70%;
+    z-index: 1;
+    margin: 0 auto;
+}
+
+@keyframes blink {50% { color: transparent }}
+.loader__dot { animation: 1s blink infinite }
+.loader__dot:nth-child(2) { animation-delay: 250ms }
+.loader__dot:nth-child(3) { animation-delay: 500ms }
+
 @-webkit-keyframes spin {
     0% { -webkit-transform: rotate(0deg); }
     100% { -webkit-transform: rotate(360deg); }
@@ -135,6 +183,95 @@ a.readmore.results {
     vertical-align: middle;
 }
 
-svg.feather {
-    vertical-align: sub;
+#generated-corpus td {
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
+
+.classifier-item h5::after {
+    counter-increment: classifier-item;
+    content: " #" counter(classifier-item);
+}
+
+.classifier-item:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.classifier-item:first-child > .remove-classifier {
+    display: none;
+}
+
+.add-classifier {
+    display: none;
+}
+
+.classifier-item:last-child > .add-classifier {
+    display: inline;
+}
+
+/**
+    Toggle switch (https://www.w3schools.com/howto/howto_css_switch.asp)
+ */
+/* The switch - the box around the slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {display:none;}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+    border-radius: 24px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+/**
+    /Toggle switch (https://www.w3schools.com/howto/howto_css_switch.asp)
+ */

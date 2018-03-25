@@ -1,2 +1,0 @@
-INSERT INTO PUBLIC.ACCOUNTS (ID, ACTIVE, EMAIL, PASSWORD, USER_NAME) VALUES (1, true, 'admin@localhost', '$2a$10$0j149AYZMpbFS68boykfqeIgNr8Hf5tXWXGSY3x/SZmTxSuJB/mGG', 'admin');
-INSERT INTO PUBLIC.ACCOUNTS (ID, ACTIVE, EMAIL, PASSWORD, USER_NAME) VALUES (2, true, 'usuario@localhost', '$2a$10$WzYwU.xuZA6DVgMsMxhG4uT2E08NagmloiUdWtIPttoX68i/uc/i6', 'usuario');

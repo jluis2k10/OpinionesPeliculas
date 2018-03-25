@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 @Component
 public class Tokenizer {
 
+    @Autowired
     private ResourceLoader resourceLoader;
 
     private final static String EN_STOP_WORDS = "en_stopwords.txt";
@@ -31,62 +32,8 @@ public class Tokenizer {
     private final static String CONSECUTIVE_CHARS = "([a-z])\\1{2,}";
     private final static String STARTS_WITH_NUMBER = "^[1-9]\\s*(\\w+)";
 
-    private String searchTerm = "";
     private String language;
-    private boolean remStopWords = false;
-    private boolean cleanTweet = false;
-
-    public Tokenizer() {}
-
-    private Tokenizer(TokenizerBuilder builder) {
-        this.searchTerm = builder.searchTerm;
-        this.language = builder.language;
-        this.remStopWords = builder.remStopWords;
-        this.cleanTweet = builder.cleanTweet;
-        this.resourceLoader = builder.resourceLoader;
-    }
-
-    @Component
-    public static class TokenizerBuilder {
-        @Autowired
-        private ResourceLoader resourceLoader;
-        private String searchTerm;
-        private String language;
-        private boolean remStopWords = false;
-        private boolean cleanTweet = false;
-
-        public TokenizerBuilder searchTerm(String searchTerm) {
-            this.searchTerm = searchTerm;
-            return this;
-        }
-
-        public TokenizerBuilder language(String language) {
-            this.language = language;
-            return this;
-        }
-
-        public TokenizerBuilder removeStopWords(boolean remStopWords) {
-            this.remStopWords = remStopWords;
-            return this;
-        }
-
-        public TokenizerBuilder cleanTweet(boolean cleanTweet) {
-            this.cleanTweet = cleanTweet;
-            return this;
-        }
-
-        public Tokenizer build() {
-            return new Tokenizer(this);
-        }
-    }
-
-    public String getSearchTerm() {
-        return searchTerm;
-    }
-
-    public void setSearchTerm(String searchTerm) {
-        this.searchTerm = searchTerm;
-    }
+    private boolean deleteStopWords = false;
 
     public String getLanguage() {
         return language;
@@ -96,20 +43,12 @@ public class Tokenizer {
         this.language = language;
     }
 
-    public boolean isRemStopWords() {
-        return remStopWords;
+    public boolean isDeleteStopWords() {
+        return deleteStopWords;
     }
 
-    public void setRemStopWords(boolean remStopWords) {
-        this.remStopWords = remStopWords;
-    }
-
-    public boolean isCleanTweet() {
-        return cleanTweet;
-    }
-
-    public void setCleanTweet(boolean cleanTweet) {
-        this.cleanTweet = cleanTweet;
+    public void setDeleteStopWords(boolean deleteStopWords) {
+        this.deleteStopWords = deleteStopWords;
     }
 
     /**
@@ -118,10 +57,23 @@ public class Tokenizer {
      * @return
      */
     public String tokenize(String text) {
-        if (isCleanTweet())
-            text = cleanUp(text);
-        if (isRemStopWords())
-            text= deleteStopWords(text);
+        // Escape HTML
+        text = text.replaceAll("&amp;", "&");
+        text = StringEscapeUtils.unescapeHtml(text);
+
+        // Convertir a minúsculas
+        text = text.toLowerCase();
+
+        // Eliminar stop-words
+        if (isDeleteStopWords())
+            text = deleteStopWords(text);
+
+        // Eliminar enlaces si quedan, nombres de usuario, palabras que empiezan por un número
+        // y caracteres consecutivos (más de 2, waaaay => way)
+        text = text.replaceAll("@([^\\s]+)", "");
+        text = text.replaceAll(URL_REGEX, "");
+        text = text.replaceAll(CONSECUTIVE_CHARS, "$1");
+        text = text.replaceAll(STARTS_WITH_NUMBER, "");
 
         // Edge punctuation
         // Queremos: 'foo' => ' foo ' pero conservando: don't => don't
@@ -172,29 +124,6 @@ public class Tokenizer {
         zippedStr = addAllnonempty(zippedStr, splitGoods.get(i));
 
         return StringUtils.join(zippedStr, " ");
-    }
-
-    private String  cleanUp(String tweet) {
-        // Escape HTML
-        tweet = tweet.replaceAll("&amp;", "&");
-        tweet = StringEscapeUtils.unescapeHtml(tweet);
-
-        // Convertir a minúsculas
-        tweet = tweet.toLowerCase();
-
-        // Eliminar término de búsqueda (para no incluirlo en las palabras a analizar)
-        if (!searchTerm.isEmpty()) {
-            tweet = tweet.replaceAll("\\b(" + searchTerm.toLowerCase() + ")\\b\\s?", "#SEARCH_TERM# ");
-        }
-
-        // Eliminar enlaces si quedan, nombres de usuario, palabras que empiezan por un número
-        // y caracteres consecutivos (más de 2, waaaay => way)
-        tweet = tweet.replaceAll("@([^\\s]+)", "");
-        tweet = tweet.replaceAll(URL_REGEX, "");
-        tweet = tweet.replaceAll(CONSECUTIVE_CHARS, "$1");
-        tweet = tweet.replaceAll(STARTS_WITH_NUMBER, "");
-
-        return tweet;
     }
 
     private String deleteStopWords(String text) {

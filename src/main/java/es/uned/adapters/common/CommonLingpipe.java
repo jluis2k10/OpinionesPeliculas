@@ -1,12 +1,14 @@
 package es.uned.adapters.common;
 
+import com.aliasi.classify.BaseClassifier;
 import com.aliasi.classify.DynamicLMClassifier;
 import com.aliasi.corpus.ObjectHandler;
 import com.aliasi.io.BitInput;
 import com.aliasi.lm.LanguageModel;
 import com.aliasi.lm.NGramBoundaryLM;
 import com.aliasi.lm.NGramProcessLM;
-import es.uned.adapters.AdapterType;
+import com.aliasi.util.AbstractExternalizable;
+import es.uned.adapters.ClassifierType;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -26,7 +28,20 @@ public abstract class CommonLingpipe {
 
     public abstract String get_adapter_path();
 
-    public abstract AdapterType get_adapter_type();
+    public abstract ClassifierType get_adapter_type();
+
+    public BaseClassifier<String> getBaseClassifier(Resource resource) {
+        BaseClassifier<String> baseClassifier = null;
+        try {
+            File modelFile = resource.getFile();
+            baseClassifier = (BaseClassifier<String>) AbstractExternalizable.readObject(modelFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return baseClassifier;
+    }
 
     /**
      * Lingpipe no tiene modelos que se puedan re-entrenar. Lo que hay que hacer es serializar los "language models",
@@ -35,7 +50,7 @@ public abstract class CommonLingpipe {
     public void trainModel(String modelLocation, List<String> positivesOrSubjectives, List<String> negativesOrObjectives) {
         ObjectHandler<CharSequence>[] lms = null;
         String[] categories = new String[2];
-        if (get_adapter_type() == AdapterType.SENTIMENT) {
+        if (get_adapter_type() == ClassifierType.POLARITY) {
             categories[0] = "pos";
             categories[1] = "neg";
         } else {
@@ -143,7 +158,7 @@ public abstract class CommonLingpipe {
         }
 
         String[] categories = new String[2];
-        if (get_adapter_type() == AdapterType.SENTIMENT) {
+        if (get_adapter_type() == ClassifierType.POLARITY) {
             categories[0] = "pos";
             categories[1] = "neg";
         } else {

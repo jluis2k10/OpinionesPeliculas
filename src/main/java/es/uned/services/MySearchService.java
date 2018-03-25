@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import es.uned.components.TrakttvLookup;
 import es.uned.entities.Account;
 import es.uned.entities.Search;
-import es.uned.repositories.CommentsRepo;
+import es.uned.repositories.CommentsWithSentimentRepo;
 import es.uned.repositories.SearchRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ public class MySearchService implements SearchService {
     @Autowired
     SearchRepo searchRepo;
     @Autowired
-    CommentsRepo commentsRepo;
+    CommentsWithSentimentRepo commentsWithSentimentRepo;
     @Autowired
     TrakttvLookup trakttvLookup;
 
@@ -36,7 +36,7 @@ public class MySearchService implements SearchService {
     public void save(Search search) {
         searchRepo.save(search);
         // Guardamos comentarios
-        commentsRepo.save(search.getComments());
+        commentsWithSentimentRepo.save(search.getComments());
     }
 
     @Override
@@ -73,7 +73,7 @@ public class MySearchService implements SearchService {
 
     @Override
     public void delete(Search search) {
-        commentsRepo.deleteInBatch(search.getComments());
+        commentsWithSentimentRepo.deleteInBatch(search.getComments());
         searchRepo.delete(search);
     }
 

@@ -1,11 +1,12 @@
 package es.uned.adapters.sources;
 
-import es.uned.entities.CommentWithSentiment;
-import es.uned.entities.Search;
+import es.uned.entities.Comment;
+import es.uned.entities.Corpus;
+import es.uned.forms.SourceForm;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.LinkedList;
 
 /**
  *
@@ -13,23 +14,39 @@ import java.util.LinkedList;
 @Component("es.uned.adapters.sources.SentenceSearch")
 public class SentenceSearch implements SourceAdapter {
 
+    private String phrase;
+    private String lang;
+
     @Override
-    public void doSearch(Search search) {
-        LinkedList<CommentWithSentiment> comments = new LinkedList<>();
-        CommentWithSentiment comment = new CommentWithSentiment.Builder()
-                .search(search)
-                .sourceUrl("")
+    public void setOptions(SourceForm sourceForm) {
+        this.phrase = sourceForm.getTerm();
+        this.lang = sourceForm.getLang();
+    }
+
+    @Override
+    public void generateCorpus(Corpus corpus) {
+        corpus.setLang(this.lang);
+        Comment comment = new Comment.Builder()
+                .source("Frase")
+                .url("")
                 .date(new Date())
-                .comment(search.getTerm())
+                .content(this.phrase)
+                .corpus(corpus)
                 .build();
-        comments.add(comment);
-        search.setComments(comments);
-        search.setUpdateable(false); // Las frases no se pueden actualizar (añadir más frases)
+        corpus.addComment(comment);
     }
 
     @Override
-    public int updateSearch(Search search) {
-        return 0;
+    public int updateCorpus(SourceForm sourceForm, Corpus corpus) {
+        corpus.setUpdated(LocalDateTime.now());
+        Comment comment = new Comment.Builder()
+                .source("Frase")
+                .url("")
+                .date(new Date())
+                .content(sourceForm.getTerm())
+                .corpus(corpus)
+                .build();
+        corpus.addComment(comment);
+        return 1;
     }
-
 }

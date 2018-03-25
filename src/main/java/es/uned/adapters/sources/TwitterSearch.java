@@ -1,7 +1,8 @@
 package es.uned.adapters.sources;
 
-import es.uned.entities.CommentWithSentiment;
-import es.uned.entities.Search;
+import es.uned.entities.Comment;
+import es.uned.entities.Corpus;
+import es.uned.forms.SourceForm;
 import org.springframework.core.env.Environment;
 import org.springframework.social.twitter.api.SearchParameters;
 import org.springframework.social.twitter.api.SearchResults;
@@ -11,8 +12,7 @@ import org.springframework.social.twitter.api.impl.TwitterTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -27,42 +27,56 @@ public class TwitterSearch implements SourceAdapter {
     @Inject
     private Environment environment;
 
+    /* Opciones de búsqueda */
+    private String lang;
+    private String source;
+    private int limit;
+    private String searchTerm;
+    private Date untilDate;
+
     @Override
-    public void doSearch(Search search) {
-        getComments(search, new LinkedHashMap<>());
+    public void setOptions(SourceForm sourceForm) {
+        this.lang = sourceForm.getLang();
+        this.source = sourceForm.getSource();
+        this.limit = sourceForm.getLimit();
+        this.searchTerm = sourceForm.getTerm();
+        this.untilDate = sourceForm.getUntilDate();
     }
 
     @Override
-    public int updateSearch(Search search) {
-        int sizeBefore = search.getComments().size();
-        Map<Integer, CommentWithSentiment> oldComments = search.getComments().stream()
-                .collect(Collectors.toMap(c -> c.getSourceURL().hashCode(), Function.identity(), (oldVal, newVal) -> oldVal, LinkedHashMap::new));
-        getComments(search, oldComments);
-        return search.getComments().size() - sizeBefore;
+    public void generateCorpus(Corpus corpus) {
+        corpus.setLang(lang);
+        addComments(corpus);
     }
 
-    private void getComments(Search search, Map<Integer, CommentWithSentiment> comments) {
+    @Override
+    public int updateCorpus(SourceForm sourceForm, Corpus corpus) {
+        setOptions(sourceForm);
+        Map<Integer, Comment> thisSourceComments = corpus.getComments().stream()
+                .filter(comment -> comment.getSource().equals(source))
+                .collect(Collectors.toMap(comment -> comment.getHash(), Function.identity(), (oldVal, newVal) -> oldVal, LinkedHashMap::new));
+
+        int oldSize = corpus.getComments().size();
+        addComments(corpus);
+        corpus.setUpdated(LocalDateTime.now());
+        return corpus.getComments().size() - oldSize;
+    }
+
+    private void addComments(Corpus corpus) {
         Twitter twitter = new TwitterTemplate(
                 environment.getProperty("twitter.consumerKey"),
                 environment.getProperty("twitter.consumerSecret")
         );
 
-        SearchParameters parameters = new SearchParameters(search.getTerm())
-                .lang(search.getLang())
+        SearchParameters parameters = new SearchParameters(searchTerm)
+                .lang(lang)
                 .resultType(SearchParameters.ResultType.RECENT)
                 .count(100)
+                .until((untilDate != null ? untilDate : null))
                 .includeEntities(false);
-        if (!search.getUntilDate().equals("")) {
-            SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
-            try {
-                Date untilDate = dateFormatter.parse(search.getUntilDate());
-                parameters.until(untilDate);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
 
-        while (comments.size() < search.getLimit()) {
+        int totalLimit = corpus.getComments().size() + limit;
+        while (corpus.getComments().size() < totalLimit) {
             SearchResults results = twitter.searchOperations().search(parameters);
             if (results.getTweets().size() == 0)
                 break;
@@ -70,15 +84,17 @@ public class TwitterSearch implements SourceAdapter {
             for (Tweet tweet : results.getTweets()) {
                 if (tweet.getRetweetCount() == 0 && // No retweets
                         tweet.getText().toLowerCase().indexOf("http") == -1 && // Que no contengan enlaces
-                        tweet.getText().toLowerCase().indexOf(search.getTerm().toLowerCase()) != -1 && // Que contengan el término de búsqueda
-                        comments.size() < search.getLimit()) {
-                    CommentWithSentiment comment = new CommentWithSentiment.Builder()
-                            .search(search)
-                            .sourceUrl("https://twitter.com/" + tweet.getFromUser() + "/status/" + tweet.getId())
+                        tweet.getText().toLowerCase().indexOf(searchTerm.toLowerCase()) != -1 && // Que contengan el término de búsqueda
+                        corpus.getComments().size() < totalLimit)
+                {
+                    // Al crear el comentario lo añadimos al corpus automáticamente evitando duplicados
+                    Comment comment = new Comment.Builder()
+                            .source(source)
+                            .url("https://twitter.com/" + tweet.getFromUser() + "/status/" + tweet.getId())
                             .date(tweet.getCreatedAt())
-                            .comment(tweet.getText())
+                            .content(tweet.getText())
+                            .corpus(corpus)
                             .build();
-                    comments.putIfAbsent(comment.getComment().hashCode(), comment);
                 }
             }
 
@@ -86,7 +102,5 @@ public class TwitterSearch implements SourceAdapter {
             Long maxID = results.getTweets().get(last).getId();
             parameters.maxId(maxID-1);
         }
-        // Convertimos hashmap a lista y la guardamos
-        search.setComments(new LinkedList<>(comments.values()));
     }
 }

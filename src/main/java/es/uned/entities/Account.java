@@ -4,6 +4,7 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  *
@@ -111,5 +112,22 @@ public class Account {
 
     public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Account)) return false;
+        Account account = (Account) o;
+        return isActive() == account.isActive() &&
+                Objects.equals(getId(), account.getId()) &&
+                Objects.equals(getUserName(), account.getUserName()) &&
+                Objects.equals(getEmail(), account.getEmail());
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(getId(), getUserName(), getEmail(), isActive());
     }
 }

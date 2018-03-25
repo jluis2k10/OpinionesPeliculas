@@ -53,3 +53,7 @@ src/main/resources/models/sentiment/datumbox/SentimentAnalysis/TextClassifier/ml
 src/main/webapp/WEB-INF/resources/img/
 /.gitignore
 !/.gitignore
+/node/
+/node_modules/
+/src/main/webapp/WEB-INF/resources/js/zingchart/
+/package-lock.json

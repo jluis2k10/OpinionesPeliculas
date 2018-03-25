@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+
+        <!-- Console Appender -->
+        <Console name="ConsoleOut" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%-5level] %d{dd/MM/yyyy HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
+            <Filters>
+                <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="ACCEPT" />
+            </Filters>
+        </Console>
+
+        <!-- Console Appender -->
+        <Console name="ConsoleErr" target="SYSTEM_ERR">
+            <PatternLayout pattern="[%-5level] %d{dd/MM/yyyy HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
+            <Filters>
+                <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY" />
+            </Filters>
+        </Console>
+
+        <!-- File Appender -->
+        <File name="File" fileName="c:/log/app.log">
+            <PatternLayout pattern="[%-5level] %d{dd/MM/yyyy HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
+        </File>
+
+    </Appenders>
+    <Loggers>
+        <!-- Log Spring -->
+        <Logger name="org.springframework" level="error" additivity="false">
+            <AppenderRef ref="ConsoleOut" />
+            <AppenderRef ref="ConsoleErr" />
+        </Logger>
+
+        <!-- Log everything in hibernate with level="info" -->
+        <Logger name="org.hibernate" level="info" additivity="false">
+            <AppenderRef ref="ConsoleOut" />
+            <AppenderRef ref="ConsoleErr" />
+        </Logger>
+
+        <!-- Log SQL statements with level="debug" -->
+        <Logger name="org.hibernate.SQL" level="error" additivity="false">
+            <AppenderRef ref="ConsoleOut" />
+            <AppenderRef ref="ConsoleErr" />
+            <AppenderRef ref="File" />
+        </Logger>
+
+        <!-- Log JDBC bind parameters with level="trace" -->
+        <Logger name="org.hibernate.type.descriptor.sql" level="error" additivity="false">
+            <AppenderRef ref="ConsoleOut" />
+            <AppenderRef ref="ConsoleErr" />
+            <AppenderRef ref="File" />
+        </Logger>
+
+        <!-- Log custom packages -->
+        <Logger name="es.uned" level="debug" additivity="false">
+            <AppenderRef ref="ConsoleOut" />
+            <AppenderRef ref="ConsoleErr" />
+            <AppenderRef ref="File" />
+        </Logger>
+
+        <Root level="error">
+            <AppenderRef ref="ConsoleOut" />
+            <AppenderRef ref="ConsoleErr" />
+            <AppenderRef ref="File" />
+        </Root>
+    </Loggers>
+</Configuration>

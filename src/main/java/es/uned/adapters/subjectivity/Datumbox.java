@@ -1,19 +1,16 @@
 package es.uned.adapters.subjectivity;
 
 import com.datumbox.framework.applications.nlp.TextClassifier;
-import com.datumbox.framework.common.Configuration;
 import com.datumbox.framework.core.common.dataobjects.Record;
 import com.datumbox.framework.core.machinelearning.MLBuilder;
-import es.uned.adapters.AdapterType;
+import es.uned.adapters.ClassifierType;
 import es.uned.adapters.common.CommonDatumbox;
 import es.uned.components.Tokenizer;
-import es.uned.entities.CommentWithSentiment;
-import es.uned.entities.Search;
-import es.uned.entities.Subjectivity;
+import es.uned.entities.Analysis;
+import es.uned.entities.Corpus;
+import es.uned.entities.Opinion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Iterator;
 
 /**
  *
@@ -21,11 +18,10 @@ import java.util.Iterator;
 @Component("es.uned.adapters.subjectivity.Datumbox")
 public class Datumbox extends CommonDatumbox implements SubjectivityAdapter {
 
-    @Autowired private Tokenizer.TokenizerBuilder tokenizerBuilder;
-
-    /* Debe coincidir con ID del XML */
-    private final String myID = "S01";
     private static final String ADAPTER_DIR = "/datumbox";
+
+    @Autowired
+    private Tokenizer tokenizer;
 
     @Override
     public String get_adapter_path() {
@@ -33,45 +29,35 @@ public class Datumbox extends CommonDatumbox implements SubjectivityAdapter {
     }
 
     @Override
-    public AdapterType get_adapter_type() {
-        return adapterType;
+    public void analyze(Corpus corpus, Analysis analysis) {
+        // Cargar modelo desde archivo serializado
+        TextClassifier subjectivityClassifier = MLBuilder.load(TextClassifier.class, analysis.getLanguageModelLocation(), defineConfiguration());
+
+        // Opciones para tokenizer
+        tokenizer.setLanguage(analysis.getLang());
+        tokenizer.setDeleteStopWords(analysis.isDeleteStopWords());
+
+        corpus.getComments().forEach(comment -> {
+            es.uned.entities.Record commentRecord = new es.uned.entities.Record();
+
+            Record opinion = subjectivityClassifier.predict(tokenizer.tokenize(comment.getContent()));
+            String prob = opinion.getYPredictedProbabilities().get(opinion.getYPredicted()).toString();
+            if (opinion.getYPredicted().toString().equals("subjective")) {
+                commentRecord.setOpinion(Opinion.SUBJECTIVE);
+                commentRecord.setSubjectiveScore(Double.parseDouble(prob));
+            }
+            else {
+                commentRecord.setOpinion(Opinion.OBJECTIVE);
+                commentRecord.setSubjectiveScore(1L - Double.parseDouble(prob));
+            }
+            comment.addRecord(commentRecord);
+            analysis.addRecord(commentRecord);
+        });
+        corpus.addAnalysis(analysis);
     }
 
     @Override
-    public void analyze(Search search) {
-        // Configuración del modelo
-        Configuration configuration = defineConfiguration();
-
-        // Cargar modelo desde archivo serializado
-        TextClassifier subjectivityClassifier = MLBuilder.load(TextClassifier.class, search.getSubjectivityModel().getLocation(), configuration);
-
-        // Crear tokenizer
-        Tokenizer tokenizer = tokenizerBuilder.searchTerm(search.getTerm())
-                .language(search.getLang())
-                .removeStopWords(search.isDelStopWords())
-                .cleanTweet(search.isCleanTweet())
-                .build();
-
-        Iterator<CommentWithSentiment> it = search.getComments().iterator();
-        while (it.hasNext()) {
-            CommentWithSentiment comment = it.next();
-            if (!comment.isTokenized()) {
-                comment.setTokenized(true);
-                comment.setTokenizedComment(tokenizer.tokenize(comment.getComment()));
-            }
-            Record subjectivity = subjectivityClassifier.predict(comment.getTokenizedComment());
-            String prob = subjectivity.getYPredictedProbabilities().get(subjectivity.getYPredicted()).toString();
-            comment.setSubjectivityScore(Double.parseDouble(prob));
-            switch (subjectivity.getYPredicted().toString()) {
-                case "subjective":
-                    comment.setSubjectivity(Subjectivity.SUBJECTIVE);
-                    break;
-                case "objective":
-                    comment.setSubjectivity(Subjectivity.OBJECTIVE);
-                    if (search.isDiscardNonSubjective())
-                        it.remove();
-                    break;
-            }
-        }
+    public ClassifierType get_adapter_type() {
+        return adapterType;
     }
 }

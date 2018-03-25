@@ -1,6 +1,6 @@
 package es.uned.entities;
 
-import es.uned.adapters.AdapterType;
+import es.uned.adapters.ClassifierType;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -22,7 +22,7 @@ public class TrainParams {
     private String sinceDate;
     private String untilDate;
     private String lang;
-    private AdapterType adapterType;
+    private ClassifierType adapterType;
     private String modelLocation;
     private String adapterClass;
     private String psText; // positive or subjective text
@@ -107,11 +107,11 @@ public class TrainParams {
         this.lang = lang;
     }
 
-    public AdapterType getAdapterType() {
+    public ClassifierType getAdapterType() {
         return adapterType;
     }
 
-    public void setAdapterType(AdapterType adapterType) {
+    public void setAdapterType(ClassifierType adapterType) {
         this.adapterType = adapterType;
     }
 

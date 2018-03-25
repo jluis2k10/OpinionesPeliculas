@@ -5,7 +5,7 @@
 <sec:authentication var="user" property="principal" />
 <!DOCTYPE html>
 <head>
-    <link type="text/css" rel="stylesheet" href="/webjars/bootstrap/4.0.0/css/bootstrap.min.css"  media="screen,projection"/>
+    <link type="text/css" rel="stylesheet" href="${path}/webjars/bootstrap/4.0.0/css/bootstrap.min.css"  media="screen,projection"/>
     <link type="text/css" rel="stylesheet" href="${path}/css/custom.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <%-- Etiquetas con información sobre el token csrf para utilizarlo en ajax POSTs --%>
@@ -15,7 +15,7 @@
     <title>${title}</title>
 </head>
 <body>
-<div class="cover"><div id="loader"></div></div>
+<div class="cover"><div class="loader-container"><div class="loader-content mx-auto"><div id="loader"></div></div></div></div>
 <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
     <div class="container">
         <a class="navbar-brand" href="${path}/">Logo</a>
@@ -48,3 +48,13 @@
     </div>
 </nav>
 <div class="container main-content">
+    <c:if test="${not empty flashMessage}">
+        <c:forEach var="message" items="${flashMessage}" varStatus="index">
+            <div class="alert alert-${message.key} alert-dismissible fade show" role="alert">
+                ${message.value}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </c:forEach>
+    </c:if>

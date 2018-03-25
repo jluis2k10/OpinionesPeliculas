@@ -1,7 +1,8 @@
 package es.uned.adapters.subjectivity;
 
-import es.uned.adapters.AdapterType;
-import es.uned.entities.Search;
+import es.uned.adapters.ClassifierType;
+import es.uned.entities.Analysis;
+import es.uned.entities.Corpus;
 
 import java.util.List;
 import java.util.Map;
@@ -12,11 +13,11 @@ import java.util.Map;
 public interface SubjectivityAdapter {
 
     String MODELS_DIR = "/models/subjectivity";
-    AdapterType adapterType = AdapterType.SUBJECTIVITY;
+    ClassifierType adapterType = ClassifierType.OPINION;
 
     String get_adapter_path();
 
-    void analyze(Search search);
+    void analyze(Corpus corpus, Analysis analysis);
 
     void trainModel(String modelLocation, List<String> subjectives, List<String> objectives);
 

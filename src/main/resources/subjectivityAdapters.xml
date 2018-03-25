@@ -17,6 +17,11 @@
         <parameter name="Texto" type="text" id="textID" default="Texto por defecto">
             <description>Descriptción texto</description>
         </parameter>
+        <parameter name="Radio" type="radio" id="radioID" default="No">
+            <option name="Sí" value="Si" />
+            <option name="No" value="No" />
+            <option name="No sé" value="Nose" />
+        </parameter>
     </adapter>
 
     <adapter id="S02" name="Lingpipe" class="es.uned.adapters.subjectivity.Lingpipe" models="true" lang="en" model_creation="true">

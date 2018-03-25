@@ -118,7 +118,7 @@
                     data: null,
                     defaultContent: "",
                     "render": function () {
-                        return '<span class="open-details"><i class="fas fa-plus-circle"></i></i></span>';
+                        return '<span class="open-details"><i class="fas fa-plus-circle"></i></span>';
                     }
                 },
                 {data: "id"},

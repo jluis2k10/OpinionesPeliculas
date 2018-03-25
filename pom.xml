@@ -27,7 +27,7 @@
       <dependency>
         <groupId>io.spring.platform</groupId>
         <artifactId>platform-bom</artifactId>
-        <version>Brussels-SR1</version>
+        <version>Brussels-SR7</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -115,6 +115,7 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
+      <!--<version>5.2.15.Final</version>-->
     </dependency>
     <!-- Spring Data JPA -->
     <dependency>
@@ -125,6 +126,7 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-validator</artifactId>
+      <!--<version>6.0.8.Final</version>-->
     </dependency>
     <!-- Java Sevlets -->
     <dependency>
@@ -164,6 +166,10 @@
     <dependency>
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
     </dependency>
 
     <!-- Bibliotecas NLP -->
@@ -218,14 +224,13 @@
     <dependency>
       <groupId>org.webjars.bower</groupId>
       <artifactId>tempusdominus-bootstrap-4</artifactId>
-      <version>5.0.0-alpha8</version>
+      <version>5.0.0-alpha.16</version>
     </dependency>
     <dependency>
       <groupId>org.webjars</groupId>
       <artifactId>font-awesome</artifactId>
       <version>5.0.6</version>
     </dependency>
-
   </dependencies>
 
   <build>
@@ -248,6 +253,38 @@
         <configuration>
           <encoding>${project.build.sourceEncoding}</encoding>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <id>install node and npm</id>
+            <goals>
+              <goal>install-node-and-npm</goal>
+            </goals>
+            <configuration>
+              <nodeVersion>v8.10.0</nodeVersion>
+              <npmVersion>5.6.0</npmVersion>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm install</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>gulp build</id>
+            <goals>
+              <goal>gulp</goal>
+            </goals>
+            <configuration>
+              <arguments>default</arguments>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.tomcat.maven</groupId>
