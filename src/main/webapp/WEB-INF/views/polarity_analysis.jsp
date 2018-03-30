@@ -51,10 +51,6 @@
 
 <%@ include file="_js.jsp"%>
 
-<sec:authorize access="isAuthenticated()">
-    <%@include file="_modal_save.jsp"%>
-</sec:authorize>
-
 <link rel="stylesheet" href="webjars/datatables/1.10.16/css/dataTables.bootstrap4.min.css" />
 <script type="text/javascript" src="webjars/datatables/1.10.16/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="webjars/datatables/1.10.16/js/dataTables.bootstrap4.min.js"></script>
@@ -157,5 +153,9 @@
         }
     });
 </script>
+
+<sec:authorize access="isAuthenticated()">
+    <%@include file="_modal_save.jsp"%>
+</sec:authorize>
 
 <%@ include file="_footer.jsp"%>

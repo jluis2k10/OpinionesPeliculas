@@ -1,5 +1,7 @@
 package es.uned.forms;
 
+import es.uned.entities.LanguageModel;
+
 import java.util.Map;
 
 /**
@@ -11,9 +13,7 @@ public class AnalysisForm {
 
     private String adapterClass;
 
-    private String languageModel;
-
-    private String languageModelLocation;
+    private LanguageModel languageModel;
 
     private String language;
 
@@ -44,16 +44,12 @@ public class AnalysisForm {
         this.language = language;
     }
 
-    public String getLanguageModel() {
+    public LanguageModel getLanguageModel() {
         return languageModel;
     }
 
-    public String getLanguageModelLocation() {
-        return languageModelLocation;
-    }
-
-    public void setLanguageModelLocation(String languageModelLocation) {
-        this.languageModelLocation = languageModelLocation;
+    public void setLanguageModel(LanguageModel languageModel) {
+        this.languageModel = languageModel;
     }
 
     public void setAdapterClass(String adapterClass) {
@@ -62,10 +58,6 @@ public class AnalysisForm {
 
     public String getLanguage() {
         return language;
-    }
-
-    public void setLanguageModel(String languageModel) {
-        this.languageModel = languageModel;
     }
 
     public boolean isDeleteStopWords() {

@@ -13,7 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
 
@@ -21,7 +24,7 @@ import java.security.Principal;
  *
  */
 @Controller
-@RequestMapping(value = "/corpus")
+@RequestMapping(value = "/corpora")
 public class CorporaController {
 
     @Autowired
@@ -30,14 +33,19 @@ public class CorporaController {
     @Autowired
     AccountService accountService;
 
+    @RequestMapping(value = {"", "/"}, method = RequestMethod.GET)
+    public String myCorpora() {
+        return "corpora/view_corpora";
+    }
+
     @RequestMapping(value = "/view/{corpusID}", method = RequestMethod.GET)
     public String viewCorpus(@PathVariable("corpusID") Long corpusID, Principal principal, Model model) {
         Corpus corpus = corpusService.findOne(corpusID);
         Account account = accountService.findByUserName(principal.getName());
         if (account == null || account != corpus.getOwner())
             return "redirect:/denied";
-        model.addAttribute("corpusID", corpus.getId());
-        return "view_corpus";
+        model.addAttribute("corpus", corpus);
+        return "corpora/view_corpus";
     }
 
     @Transactional
@@ -70,7 +78,7 @@ public class CorporaController {
 
         if (corpus.getAnalyses() != null) {
             corpus.getAnalyses().forEach(analysis ->
-                    response.add(analysis.toJson())
+                    response.add(analysis.toJson(true))
             );
         }
         return ResponseEntity.status(HttpStatus.OK).body(response);

@@ -26,7 +26,7 @@
     </Appenders>
     <Loggers>
         <!-- Log Spring -->
-        <Logger name="org.springframework" level="error" additivity="false">
+        <Logger name="org.springframework" level="debug" additivity="false">
             <AppenderRef ref="ConsoleOut" />
             <AppenderRef ref="ConsoleErr" />
         </Logger>

@@ -31,7 +31,7 @@ public class Datumbox extends CommonDatumbox implements SubjectivityAdapter {
     @Override
     public void analyze(Corpus corpus, Analysis analysis) {
         // Cargar modelo desde archivo serializado
-        TextClassifier subjectivityClassifier = MLBuilder.load(TextClassifier.class, analysis.getLanguageModelLocation(), defineConfiguration());
+        TextClassifier subjectivityClassifier = MLBuilder.load(TextClassifier.class, analysis.getLanguageModel().getLocation(), defineConfiguration());
 
         // Opciones para tokenizer
         tokenizer.setLanguage(analysis.getLang());

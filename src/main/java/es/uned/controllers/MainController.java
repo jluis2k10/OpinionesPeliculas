@@ -9,10 +9,7 @@ import es.uned.adapters.SubjectivityAdapterFactory;
 import es.uned.adapters.sentiment.SentimentAdapter;
 import es.uned.adapters.sources.SourceAdapter;
 import es.uned.adapters.subjectivity.SubjectivityAdapter;
-import es.uned.entities.Account;
-import es.uned.entities.Analysis;
-import es.uned.entities.Corpus;
-import es.uned.entities.Search;
+import es.uned.entities.*;
 import es.uned.forms.AnalysisForm;
 import es.uned.forms.AnalysisFormList;
 import es.uned.forms.SourceForm;
@@ -33,9 +30,7 @@ import org.springframework.web.servlet.View;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  *
@@ -208,7 +203,7 @@ public class MainController {
         ArrayNode response = mapper.createArrayNode();
         if (corpus.getAnalyses() != null) {
             corpus.getAnalyses().forEach(analysis ->
-                response.add(analysis.toJson())
+                response.add(analysis.toJson(true))
             );
         }
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -219,7 +214,9 @@ public class MainController {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode response = mapper.createObjectNode();
         ArrayNode hashesArray = mapper.createArrayNode();
-        corpus.getComments().forEach(comment ->
+        LinkedList<Comment> commentsList = new LinkedList<>(corpus.getComments());
+        Collections.sort(commentsList);
+        commentsList.forEach(comment ->
             hashesArray.add(comment.getHash())
         );
         response.set("hashes", hashesArray);

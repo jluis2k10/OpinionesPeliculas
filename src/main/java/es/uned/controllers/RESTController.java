@@ -1,10 +1,14 @@
 package es.uned.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import es.uned.components.ConfigParser;
 import es.uned.components.TrakttvLookup;
+import es.uned.entities.Account;
+import es.uned.entities.Corpus;
 import es.uned.services.AccountService;
+import es.uned.services.CorpusService;
 import es.uned.services.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,6 +32,9 @@ public class RESTController {
 
     @Autowired
     private TrakttvLookup trakttvLookup;
+
+    @Autowired
+    CorpusService corpusService;
 
     @Autowired
     private SearchService searchService;
@@ -51,34 +59,37 @@ public class RESTController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    /*@RequestMapping(value = "/sentiment-adapters", method = RequestMethod.GET)
-    public ResponseEntity<ArrayNode> sentimentAdapters(Principal principal, @RequestParam("create_params") Optional<String> create_params) {
-        boolean creation = false;
-        if (create_params.isPresent() && create_params.get().equals("true"))
-            creation = true;
-        ArrayNode response = configParser.getAdapters("sentiment", principal, creation);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
-    @RequestMapping(value = "/subjectivity-adapters", method = RequestMethod.GET)
-    public ResponseEntity<ArrayNode> subjectivityAdapters(Principal principal, @RequestParam("create_params") Optional<String> create_params) {
-        boolean creation = false;
-        if (create_params.isPresent() && create_params.get().equals("true"))
-            creation = true;
-        ArrayNode response = configParser.getAdapters("subjectivity", principal, creation);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }*/
-
-    @RequestMapping(value = "/imdb-lookup", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/imdb-lookup", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<ObjectNode> imdbLookup(@RequestParam(value = "q", required = true) String title,
                                                  @RequestParam(value = "page", required = false) String page) {
         ObjectNode response = trakttvLookup.lookup(title, (page == null ? "1" : page));
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @RequestMapping(value = "/searches" , method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/user-corpora", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<ArrayNode> getUserCorpora(Principal principal) {
+        if (principal == null)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode response = mapper.createArrayNode();
+        Account account = accountService.findByUserName(principal.getName());
+        List<Corpus> corpora = corpusService.findByOwner(account);
+        corpora.forEach(corpus -> {
+            ObjectNode corpusNode = corpus.toJson(false);
+            ArrayNode analysesArray = mapper.createArrayNode();
+            corpus.getAnalyses().forEach(analysis ->
+                    analysesArray.add(analysis.toJson(false))
+            );
+            corpusNode.set("analyses", analysesArray);
+            response.add(corpusNode);
+        });
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    /*@RequestMapping(value = "/searches" , method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ObjectNode> searches(Principal principal) {
         ObjectNode response = searchService.JSONsearches(accountService.findByUserName(principal.getName()));
         return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
+    }*/
 }

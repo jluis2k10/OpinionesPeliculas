@@ -51,7 +51,6 @@
         $(this).prop("disabled", true);
         $.when(saveCorpus())
             .done(function (_response) {
-                console.log(_response);
                 if (_response.status === "error") {
                     $('#corpus-title').addClass('is-invalid');
                     $('.invalid-feedback').html(_response.message);
@@ -59,13 +58,13 @@
                 else if (_response.status === "success") {
                     $('#corpus-title').removeClass("is-invalid");
                     $('.invalid-feedback').html("");
-                    showMessage(_response.message);
+                    showFlashMessage('success', _response.message);
                     $('#modal-saveCorpus').modal('hide');
                 }
                 $('button.delete-confirm').prop("disabled", false);
             })
             .fail(function (_response) {
-
+                showFlashMessage('danger', "<strong>Atención</strong>: no se ha podido guardar el Corpus.");
             })
     })
 
@@ -74,21 +73,7 @@
             type: "POST",
             data: $('form#save-corpus').serialize(),
             url: ctx + "/save-corpus",
-            timeout: 5000
+            timeout: 15000
         }));
-    }
-
-    function showMessage(message) {
-        $('<div>', {
-            class: "alert alert-success alert-dismissible fade show",
-            role: "alert",
-            html: message
-        }).append($('<button>', {
-            type: "button",
-            class: "close",
-            "data-dismiss": "alert",
-            "aria-label": "cerrar",
-            html: '<span aria-hidden="true">&times;</span>'
-        })).prependTo($('.main-content'));
     }
 </script>

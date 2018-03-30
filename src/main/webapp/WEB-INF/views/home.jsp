@@ -115,7 +115,7 @@
                 <button type="submit" class="btn btn-primary btn-lg btn-block" value="get-comments"><i class="fas fa-comments"></i> Recuperar comentarios</button>
             </div>
             <div class="col-4">
-                <button type="submit" class="btn btn-success btn-lg btn-block" value="next" disabled="disabled">Siguiente <i class="fas fa-angle-right"></i> <small><em>Análisis de Opinión</em></small></button>
+                <button type="submit" class="btn btn-secondary btn-lg btn-block" value="next" disabled="disabled">Siguiente <i class="fas fa-angle-right"></i> <small><em>Análisis de Opinión</em></small></button>
             </div>
         </c:otherwise>
     </c:choose>
@@ -125,10 +125,6 @@
 </form:form>
 
 <%@ include file="_js.jsp"%>
-
-<sec:authorize access="isAuthenticated()">
-    <%@include file="_modal_save.jsp"%>
-</sec:authorize>
 
 <link rel="stylesheet" href="webjars/select2/4.0.3/css/select2.min.css" />
 <link rel="stylesheet" href="${path}/css/select2-bootstrap.min.css" />
@@ -216,5 +212,9 @@
         }
     });
 </script>
+
+<sec:authorize access="isAuthenticated()">
+    <%@include file="_modal_save.jsp"%>
+</sec:authorize>
 
 <%@ include file="_footer.jsp"%>

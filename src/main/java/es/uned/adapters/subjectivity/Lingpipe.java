@@ -39,7 +39,7 @@ public class Lingpipe extends CommonLingpipe implements SubjectivityAdapter {
         tokenizer.setLanguage(analysis.getLang());
         tokenizer.setDeleteStopWords(analysis.isDeleteStopWords());
 
-        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR + "/"  + analysis.getLanguageModelLocation() + "/classifier.model");
+        Resource resource = resourceLoader.getResource("classpath:" + MODELS_DIR + ADAPTER_DIR + "/"  + analysis.getLanguageModel().getLocation() + "/classifier.model");
         final BaseClassifier<String> baseClassifier = getBaseClassifier(resource);
 
         corpus.getComments().forEach(comment -> {

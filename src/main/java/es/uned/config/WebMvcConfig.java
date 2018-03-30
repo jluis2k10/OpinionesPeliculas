@@ -3,7 +3,12 @@ package es.uned.config;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import es.uned.components.IdToLanguageModelConverter;
+import es.uned.services.LanguageModelService;
+import es.uned.services.MyLanguageModelService;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -68,4 +73,14 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
         configurer.enable();
     }
 
+    // Registrar convertidores
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(new IdToLanguageModelConverter(languageModelService()));
+    }
+
+    @Bean
+    public LanguageModelService languageModelService() {
+        return new MyLanguageModelService();
+    }
 }

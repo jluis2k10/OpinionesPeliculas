@@ -4,9 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import es.uned.entities.Account;
-import es.uned.entities.AdapterModels;
+import es.uned.entities.LanguageModel;
 import es.uned.services.AccountService;
 import es.uned.services.AdapterModelService;
+import es.uned.services.LanguageModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -38,6 +39,8 @@ public class ConfigParser {
     private ResourceLoader resourceLoader;
     @Autowired
     private AdapterModelService adapterModelService;
+    @Autowired
+    private LanguageModelService languageModelService;
     @Autowired
     private AccountService accountService;
 
@@ -164,59 +167,6 @@ public class ConfigParser {
         return results;
     }
 
-    /**
-     * Adaptadores disponibles.
-     * Genera objeto JSON desde el archivo de configuración
-     * @return Objeto ArrayNode que representa al archivo de configuración XML
-     */
-    public ArrayNode getAdapters(String adapterType, Principal principal, boolean creation_params) {
-        ArrayNode results = mapper.createArrayNode();
-        NodeList adapters = null;
-        Account account = null;
-
-        if (principal != null)
-            account = accountService.findByUserName(principal.getName());
-
-        switch (adapterType) {
-            case "sentiment":
-                adapters = readXML(POLARITY_XML);
-                break;
-            case "subjectivity":
-                adapters = readXML(OPINION_XML);
-                break;
-        }
-
-        for (int i = 0; i < adapters.getLength(); i++) {
-            Node adapter = adapters.item(i);
-            if (adapter.getNodeType() != Node.ELEMENT_NODE)
-                continue;
-            Element element = (Element) adapter;
-            ObjectNode adapterNode = mapper.createObjectNode();
-
-            adapterNode.put("ID", element.getAttribute("id"));
-            adapterNode.put("name", element.getAttribute("name"));
-            adapterNode.put("class", element.getAttribute("class"));
-            adapterNode.put("lang", element.getAttribute("lang"));
-            adapterNode.put("models_enabled", element.getAttribute("models").equals("true"));
-            adapterNode.set("models", this.getAdapterModels(element.getAttribute("class"), account));
-            adapterNode.put("model_creation", element.getAttribute("model_creation").equals("true"));
-            adapterNode.put("description", element.getElementsByTagName("description").item(0).getTextContent());
-            if (!creation_params)
-                adapterNode.set("parameters", this.getAdapterParameters(element, creation_params));
-            else
-                adapterNode.set("model_creation_params", this.getAdapterParameters(element, creation_params));
-
-            if (creation_params && adapterNode.get("models_enabled").asBoolean() && adapterNode.get("model_creation").asBoolean())
-                results.add(adapterNode);
-            else if (!creation_params && !adapterNode.get("models_enabled").asBoolean())
-                results.add(adapterNode);
-            else if (!creation_params && adapterNode.get("models_enabled").asBoolean() && adapterNode.get("models").size() > 0)
-                results.add(adapterNode);
-        }
-        
-        return results;
-    }
-
     private ArrayNode getAdapterParameters(Element adapter, boolean creation_params) {
         ArrayNode results = mapper.createArrayNode();
         NodeList allParameters = adapter.getElementsByTagName("parameter");
@@ -283,7 +233,19 @@ public class ConfigParser {
 
     private ArrayNode getAdapterModels(String adapterClass, String lang, Account account) {
         ArrayNode results = mapper.createArrayNode();
-        Set<AdapterModels> models = adapterModelService.findByAdapterClassAndLang(adapterClass, lang, account);
+        Set<LanguageModel> models = languageModelService.findByAdapterClassAndLang(adapterClass, lang, account);
+        models.forEach(languageModel -> {
+            ObjectNode modelNode = mapper.createObjectNode();
+            modelNode.put("id", languageModel.getId());
+            modelNode.put("name", languageModel.getName());
+            modelNode.put("location", languageModel.getLocation());
+            modelNode.put("lang", languageModel.getLanguage());
+            modelNode.put("trainable", languageModel.isTrainable());
+            modelNode.put("is_public", languageModel.isPublic());
+            modelNode.put("description", languageModel.getDescription());
+            results.add(modelNode);
+        });
+        /*Set<AdapterModels> models = adapterModelService.findByAdapterClassAndLang(adapterClass, lang, account);
         for(AdapterModels model: models) {
             ObjectNode modelNode = mapper.createObjectNode();
             modelNode.put("id", model.getId());
@@ -295,31 +257,7 @@ public class ConfigParser {
             modelNode.put("is_open", model.isOpen());
             modelNode.put("description", model.getDescription());
             results.add(modelNode);
-        }
-        return results;
-    }
-
-    /**
-     * Modelos disponibles para aplicar a un adaptador (clasificador).
-     * Se recuperan de la base de datos.
-     * @param adapterClass Identificador del adaptador para el cual obtener los modelos disponibles.
-     * @return Objeto ArrayNode que representa en formato JSON los modelos disponibles
-     */
-    private ArrayNode getAdapterModels(String adapterClass, Account account) {
-        ArrayNode results = mapper.createArrayNode();
-        Set<AdapterModels> models = adapterModelService.findByAdapterClass(adapterClass, account);
-        for(AdapterModels model: models) {
-            ObjectNode modelNode = mapper.createObjectNode();
-            modelNode.put("id", model.getId());
-            modelNode.put("name", model.getName());
-            modelNode.put("location", model.getLocation());
-            modelNode.put("lang", model.getLanguage());
-            modelNode.put("trainable", model.isTrainable());
-            modelNode.put("owner_id", model.getOwner().getId());
-            modelNode.put("is_open", model.isOpen());
-            modelNode.put("description", model.getDescription());
-            results.add(modelNode);
-        }
+        }*/
         return results;
     }
 }

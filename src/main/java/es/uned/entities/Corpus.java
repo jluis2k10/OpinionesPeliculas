@@ -81,6 +81,8 @@ public class Corpus {
             corpusNode.put("updated", getUpdated().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         else
             corpusNode.putNull("updated");
+        corpusNode.put("is_public", isPublic());
+        corpusNode.put("total_comments", getComments().size());
         if (withComments) {
             LinkedList<Comment> commentsList = new LinkedList<>(getComments());
             Collections.sort(commentsList);

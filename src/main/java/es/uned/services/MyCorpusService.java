@@ -1,5 +1,6 @@
 package es.uned.services;
 
+import es.uned.entities.Account;
 import es.uned.entities.Corpus;
 import es.uned.entities.Record;
 import es.uned.entities.RecordID;
@@ -8,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
+import java.util.List;
 
 /**
  *
@@ -28,13 +29,14 @@ public class MyCorpusService implements CorpusService {
     @Autowired
     RecordsService recordsService;
 
-    @Autowired
-    EntityManager entityManager;
-
-
     @Override
     public Corpus findOne(Long id) {
         return corporaRepo.findOne(id);
+    }
+
+    @Override
+    public List<Corpus> findByOwner(Account owner) {
+        return corporaRepo.findAllByOwner(owner);
     }
 
     @Transactional

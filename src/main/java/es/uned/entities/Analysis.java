@@ -46,11 +46,9 @@ public class Analysis {
     @Column(name = "adapterClass", nullable = false)
     private String adapterClass;
 
-    @Column(name = "language_model")
-    private String languageModel;
-
-    @Column(name = "language_model_location")
-    private String languageModelLocation;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "language_model")
+    private LanguageModel languageModel;
 
     @Column(name = "language")
     private String lang;
@@ -80,14 +78,13 @@ public class Analysis {
         this.classifier = analysisForm.getClassifierName();
         this.adapterClass = analysisForm.getAdapterClass();
         this.languageModel = analysisForm.getLanguageModel();
-        this.languageModelLocation = analysisForm.getLanguageModelLocation();
         this.lang = analysisForm.getLanguage();
         this.deleteStopWords = analysisForm.isDeleteStopWords();
         this.onlyOpinions = analysisForm.isIgnoreObjectives();
         this.options = analysisForm.getOptions();
     }
 
-    public ObjectNode toJson() {
+    public ObjectNode toJson(boolean withRecords) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode analysisNode = mapper.createObjectNode();
 
@@ -106,15 +103,28 @@ public class Analysis {
             analysisNode.put("type", "polarity");
         analysisNode.put("classifier", getClassifier());
         if (getLanguageModel() != null)
-            analysisNode.put("language_model", getLanguageModel());
+            analysisNode.put("language_model", getLanguageModel().getName());
         else
             analysisNode.putNull("language_model");
         analysisNode.put("lang", getLang());
-
-
-        ArrayNode recordsArray = mapper.createArrayNode();
-        getRecords().forEach(record -> recordsArray.add(record.toJson(getAnalysisType())));
-        analysisNode.set("records", recordsArray);
+        analysisNode.put("total_records", getRecords().size());
+        if (withRecords) {
+            ArrayNode recordsArray = mapper.createArrayNode();
+            getRecords().forEach(record -> recordsArray.add(record.toJson(getAnalysisType())));
+            analysisNode.set("records", recordsArray);
+        }
+        analysisNode.put("stop_words_deletion", isDeleteStopWords());
+        analysisNode.put("opinions_only", isOnlyOpinions());
+        if (getOptions().size() > 0) {
+            ObjectNode optionsNode = mapper.createObjectNode();
+            getOptions().forEach((key, val) ->
+                    optionsNode.put(key, val)
+            );
+            analysisNode.set("options", optionsNode);
+        }
+        else {
+            analysisNode.putNull("options");
+        }
 
         return analysisNode;
     }
@@ -187,20 +197,12 @@ public class Analysis {
         this.adapterClass = adapterClass;
     }
 
-    public String getLanguageModelLocation() {
-        return languageModelLocation;
-    }
-
-    public String getLanguageModel() {
+    public LanguageModel getLanguageModel() {
         return languageModel;
     }
 
-    public void setLanguageModel(String languageModel) {
+    public void setLanguageModel(LanguageModel languageModel) {
         this.languageModel = languageModel;
-    }
-
-    public void setLanguageModelLocation(String languageModelLocation) {
-        this.languageModelLocation = languageModelLocation;
     }
 
     public String getLang() {
@@ -268,8 +270,6 @@ public class Analysis {
                 getAnalysisType() == analysis.getAnalysisType() &&
                 Objects.equals(getClassifier(), analysis.getClassifier()) &&
                 Objects.equals(getAdapterClass(), analysis.getAdapterClass()) &&
-                Objects.equals(getLanguageModel(), analysis.getLanguageModel()) &&
-                Objects.equals(getLanguageModelLocation(), analysis.getLanguageModelLocation()) &&
                 Objects.equals(getLang(), analysis.getLang()) &&
                 Objects.equals(getOptions(), analysis.getOptions()) &&
                 Objects.equals(getRecords().size(), analysis.getRecords().size());
@@ -278,6 +278,6 @@ public class Analysis {
     @Override
     public int hashCode() {
 
-        return Objects.hash(getId(), getAnalysisType(), getClassifier(), getAdapterClass(), getLanguageModel(), getLanguageModelLocation(), getLang(), isDeleteStopWords(), isOnlyOpinions(), getOptions(), getRecords().size());
+        return Objects.hash(getId(), getAnalysisType(), getClassifier(), getAdapterClass(), getLang(), isDeleteStopWords(), isOnlyOpinions(), getOptions(), getRecords().size());
     }
 }

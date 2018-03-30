@@ -41,24 +41,20 @@
 <sec:authorize access="isAuthenticated()">
     <div class="row">
         <div class="col-12">
-            <button type="button" class="btn btn-primary save-corpus"><i class="fas fa-save"></i> Guardar Corpus</button>
+            <button type="submit" class="btn btn-primary btn-lg btn-block save-corpus"><i class="fas fa-save"></i> Guardar Corpus</button>
         </div>
     </div>
 </sec:authorize>
 
 <%@ include file="_js.jsp"%>
 
-<sec:authorize access="isAuthenticated()">
-    <%@include file="_modal_save.jsp"%>
-</sec:authorize>
-
 <script type="text/javascript" src="${path}/js/pagination.js"></script>
 <script type="text/javascript" src="${path}/js/readmore.js"></script>
-<script type="text/javascript" src="webjars/momentjs/2.20.1/min/moment-with-locales.min.js"></script>
+<%--<script type="text/javascript" src="webjars/momentjs/2.20.1/min/moment-with-locales.min.js"></script>--%>
 <script type="text/javascript" src="${path}/js/zingchart/zingchart.min.js"></script>
 <script type="text/javascript" src="${path}/js/common.js"></script>
 <script>
-    moment.locale('es');
+    //moment.locale('es');
 
     $(document).ready(function () {
         myPagination(5, ${corpus.toJson(true).toString()}, $("#comments-list"));
@@ -98,4 +94,9 @@
         $('#modal-saveCorpus').modal();
     });
 </script>
+
+<sec:authorize access="isAuthenticated()">
+    <%@include file="_modal_save.jsp"%>
+</sec:authorize>
+
 <%@ include file="_footer.jsp"%>

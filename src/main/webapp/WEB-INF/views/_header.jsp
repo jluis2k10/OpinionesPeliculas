@@ -16,6 +16,7 @@
 </head>
 <body>
 <div class="cover"><div class="loader-container"><div class="loader-content mx-auto"><div id="loader"></div></div></div></div>
+<wrapper class="d-flex flex-column">
 <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
     <div class="container">
         <a class="navbar-brand" href="${path}/">Logo</a>
@@ -37,17 +38,24 @@
                     <li class="nav-item"><a class="nav-link" href="${path}/login">Login</a></li>
                 </sec:authorize>
                 <sec:authorize access="isAuthenticated()">
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="document.getElementById('logout-form').submit()">Logout</a></li>
-                    <form action="${path}/logout" method="POST" id="logout-form" style="display: none;">
-                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                    </form>
-                    <li class="nav-item"><a class="nav-link" >Hola ${user.username}</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userAccountLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Hola ${user.username}
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="userAccountLink">
+                            <a class="dropdown-item" href="${path}/corpora">Mi Corpora</a>
+                            <a class="dropdown-item" href="#" onclick="document.getElementById('logout-form').submit()">Logout</a>
+                            <form action="${path}/logout" method="POST" id="logout-form" style="display: none;">
+                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                            </form>
+                        </div>
+                    </li>
                 </sec:authorize>
             </ul>
         </div>
     </div>
 </nav>
-<div class="container main-content">
+<main class="container py-3 flex-fill main-content">
     <c:if test="${not empty flashMessage}">
         <c:forEach var="message" items="${flashMessage}" varStatus="index">
             <div class="alert alert-${message.key} alert-dismissible fade show" role="alert">

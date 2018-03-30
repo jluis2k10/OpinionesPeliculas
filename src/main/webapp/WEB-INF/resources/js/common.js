@@ -29,6 +29,20 @@ function showLoading(msg) {
     $('.cover').show();
 }
 
+function showFlashMessage(msgType, message) {
+    $('<div>', {
+        class: "alert alert-" + msgType + " alert-dismissible fade show",
+        role: "alert",
+        html: message
+    }).append($('<button>', {
+        type: "button",
+        class: "close",
+        "data-dismiss": "alert",
+        "aria-label": "cerrar",
+        html: '<span aria-hidden="true">&times;</span>'
+    })).prependTo($('.main-content'));
+}
+
 /**
  * Recuperar fuentes de comentarios para Corpus
  * @param lang Idioma de los comentarios
@@ -92,6 +106,14 @@ function getCorpusCommentHashes() {
         dataType: "json",
         contentType: "application/json; charset=UTF-8",
         url: ctx + "/get-corpus-comment-hashes",
+        timeout: 5000
+    }))
+}
+
+function getUserCorpora() {
+    return Promise.resolve($.ajax({
+        type: "GET",
+        url: ctx + "/api/user-corpora",
         timeout: 5000
     }))
 }
@@ -261,16 +283,16 @@ function renderClassifierOptions(selectedAdpter, classifiers) {
     if (classifier.models_enabled && classifier.models.length > 0) {
         let innerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
         let label = $('<label></label>')
-            .attr('for', "analysis'" + index + "'.languageModelLocation")
+            .attr('for', "analysis'" + index + "'.languageModel")
             .html('Modelo de Lenguaje');
         let select = $('<select></select>')
             .addClass('form-control')
             .attr({
-                id: "analysis'" + index + "'.languageModelLocation",
-                name: "analysis["+ index + "].languageModelLocation"
+                id: "analysis'" + index + "'.languageModel",
+                name: "analysis["+ index + "].languageModel"
             });
         $.each(classifier.models, function (i, model) {
-            select.append(new Option(model.name, model.location));
+            select.append(new Option(model.name, model.id));
         });
         let hiddenModelName = $('<input>', {
             type: 'hidden',

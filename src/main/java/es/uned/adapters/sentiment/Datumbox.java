@@ -32,7 +32,7 @@ public class Datumbox extends CommonDatumbox implements SentimentAdapter {
     @Override
     public void analyze(Corpus corpus, Analysis analysis) {
         // Cargar modelo desde archivo serializado
-        TextClassifier sentimentClassifier = MLBuilder.load(TextClassifier.class, analysis.getLanguageModelLocation(), defineConfiguration());
+        TextClassifier sentimentClassifier = MLBuilder.load(TextClassifier.class, analysis.getLanguageModel().getLocation(), defineConfiguration());
 
         // Opciones para tokenizer
         tokenizer.setLanguage(analysis.getLang());

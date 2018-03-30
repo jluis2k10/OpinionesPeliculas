@@ -1,16 +1,23 @@
-html, body {
+html {
     height: 100%;
 }
 
 body {
-    padding-bottom: 60px;
     background-color: #ffffff;
     counter-reset: classifier-item;
 }
 
+body, wrapper {
+    min-height: 100vh;
+}
+
 .main-content {
-    height: 100%;
     padding-top: 20px;
+    flex: 1 1 auto;
+}
+
+.footer {
+
 }
 
 .signin {
@@ -184,6 +191,13 @@ p.loader {
 }
 
 #generated-corpus td {
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+td.oneLiner {
     max-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;

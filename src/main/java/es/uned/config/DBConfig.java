@@ -9,6 +9,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.jdbc.datasource.init.DatabasePopulator;
+import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -30,7 +31,7 @@ import java.util.Properties;
 public class DBConfig {
 
     // Recursos con scripts SQL para inicializar la BBDD
-    @Value("classpath:db/schema.sql")
+    @Value("classpath:db/*.sql")
     Resource[] sqlScripts;
 
     // Base de Datos H2 (en memoria)
@@ -41,7 +42,7 @@ public class DBConfig {
         dataSource.setUrl("jdbc:h2:mem:OpinionesPeliculas;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;");
         dataSource.setUsername("sa");
         dataSource.setPassword("");
-        //DatabasePopulatorUtils.execute(createDatabasePopulator(), dataSource);
+        DatabasePopulatorUtils.execute(createDatabasePopulator(), dataSource);
         return dataSource;
     }
 
@@ -87,6 +88,7 @@ public class DBConfig {
         jpaProperties.put("hibernate.hbm2ddl.auto", "create-drop");
 
         /* Script sql a ejecutar tras creación automática del esquema */
+        jpaProperties.put("hibernate.hbm2ddl.import_files_sql_extractor", "es.uned.config.helpers.utf8HibernateSQLExtractor");
         jpaProperties.put("hibernate.hbm2ddl.import_files", "db/data/accounts.sql, db/data/models.sql, db/data/corpora.sql");
 
         /* Configura la estrategia que sigue Hibernate para crear los nombres de
