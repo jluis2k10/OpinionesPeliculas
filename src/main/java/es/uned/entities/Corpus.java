@@ -57,7 +57,7 @@ public class Corpus {
     public Corpus() {
     }
 
-    public ObjectNode toJson (boolean withComments) {
+    public ObjectNode toJson (boolean withComments, boolean withAnalyses) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode corpusNode = mapper.createObjectNode();
 
@@ -89,6 +89,11 @@ public class Corpus {
             ArrayNode commentsArrayNode = mapper.createArrayNode();
             commentsList.forEach(comment -> commentsArrayNode.add(comment.toJson()));
             corpusNode.set("comments", commentsArrayNode);
+        }
+        if (withAnalyses) {
+            ArrayNode analysesArray = mapper.createArrayNode();
+            getAnalyses().forEach(analysis -> analysesArray.add(analysis.toJson(true)));
+            corpusNode.set("analyses", analysesArray);
         }
 
         return corpusNode;

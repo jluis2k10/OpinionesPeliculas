@@ -1,7 +1,6 @@
 package es.uned.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import es.uned.adapters.SentimentAdapterFactory;
 import es.uned.adapters.SourceAdapterFactory;
@@ -9,7 +8,10 @@ import es.uned.adapters.SubjectivityAdapterFactory;
 import es.uned.adapters.sentiment.SentimentAdapter;
 import es.uned.adapters.sources.SourceAdapter;
 import es.uned.adapters.subjectivity.SubjectivityAdapter;
-import es.uned.entities.*;
+import es.uned.entities.Account;
+import es.uned.entities.Analysis;
+import es.uned.entities.Corpus;
+import es.uned.entities.Search;
 import es.uned.forms.AnalysisForm;
 import es.uned.forms.AnalysisFormList;
 import es.uned.forms.SourceForm;
@@ -30,7 +32,9 @@ import org.springframework.web.servlet.View;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  *
@@ -197,7 +201,7 @@ public class MainController {
         return "analysis_results";
     }
 
-    @RequestMapping(value = "/get-analyses", method = RequestMethod.POST)
+    /*@RequestMapping(value = "/get-analyses", method = RequestMethod.POST)
     public ResponseEntity<ArrayNode> getAnalyses(@ModelAttribute("corpus") Corpus corpus) {
         ObjectMapper mapper = new ObjectMapper();
         ArrayNode response = mapper.createArrayNode();
@@ -221,7 +225,7 @@ public class MainController {
         );
         response.set("hashes", hashesArray);
         return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
+    }*/
 
     @RequestMapping(value = "/save-corpus", method = RequestMethod.POST)
     public ResponseEntity<ObjectNode> saveCorpus(

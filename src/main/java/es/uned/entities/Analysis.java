@@ -230,7 +230,7 @@ public class Analysis {
     }
 
     public Map<String, String> getOptions() {
-        return options;
+        return this.options;
     }
 
     public void setOptions(Map<String, String> options) {

@@ -61,7 +61,7 @@ public class CorporaController {
         if (account == null || account != corpus.getOwner())
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
 
-        response = corpus.toJson(true);
+        response = corpus.toJson(true, false);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

@@ -59,7 +59,7 @@
 <script>
     var classifiers;
     var index = 1;
-    var corpus = ${corpus.toJson(true).toString()};
+    var corpus = ${corpus.toJson(true, false).toString()};
     $(document).ready(function () {
         // Recuperar clasificadores disponibles
         $.when(getPolarityClassifiers("${corpus.lang}"))

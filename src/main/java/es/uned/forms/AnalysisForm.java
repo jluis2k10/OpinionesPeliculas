@@ -2,6 +2,7 @@ package es.uned.forms;
 
 import es.uned.entities.LanguageModel;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -23,7 +24,7 @@ public class AnalysisForm {
 
     private String classifierType;
 
-    private Map<String, String> options;
+    private Map<String, String> options = new HashMap<>();
 
     public AnalysisForm() {
     }

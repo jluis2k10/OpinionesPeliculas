@@ -53,19 +53,21 @@
 <%--<script type="text/javascript" src="webjars/momentjs/2.20.1/min/moment-with-locales.min.js"></script>--%>
 <script type="text/javascript" src="${path}/js/zingchart/zingchart.min.js"></script>
 <script type="text/javascript" src="${path}/js/common.js"></script>
+<script type="text/javascript" src="${path}/js/graphs.js"></script>
 <script>
     //moment.locale('es');
-
+    var corpus = ${corpus.toJson(true, true).toString()};
     $(document).ready(function () {
-        myPagination(5, ${corpus.toJson(true).toString()}, $("#comments-list"));
+        myPagination(5, corpus, $("#comments-list"));
+        renderSharedChart('sharedChart', corpus);
 
-        $.when(getCorpusAnalyses(), getCorpusCommentHashes())
+        /*$.when(getCorpusAnalyses(), getCorpusCommentHashes())
             .done(function (_analyses, _commentHashes) {
                 sharedAnalysesChart(_analyses, _commentHashes, $('#sharedChart'));
             })
             .fail(function () {
                 console.error("Error recuperando análisis");
-            })
+            })*/
     });
 
     // Listener para el botón de "volver"
@@ -85,7 +87,7 @@
     // Listener para selección de comentarios por página
     $("#page-size").change(function () {
         $("#comments-pagination").pagination('destroy');
-        myPagination(this.value, ${corpus.toJson(true).toString()}, $("#comments-list"));
+        myPagination(this.value, ${corpus.toJson(true, false).toString()}, $("#comments-list"));
     });
 
     // Listener para el botón de Guardar Corpus

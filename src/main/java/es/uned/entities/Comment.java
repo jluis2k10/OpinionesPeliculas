@@ -139,6 +139,7 @@ public class Comment implements Comparable<Comment> {
             commentNode.put("id", getId());
         else
             commentNode.putNull("id");
+        commentNode.put("hash", getHash());
         commentNode.put("date", getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         commentNode.put("source", getSource());
         commentNode.put("url", getUrl());
