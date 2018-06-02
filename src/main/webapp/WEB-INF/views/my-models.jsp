@@ -353,6 +353,7 @@
                 alertMsg("success", "Modelo <strong>" + $deleteBtn.data("modelname") + "</strong> eliminado correctamente.");
             })
             .fail(function () {
+                table.row(".selected").removeClass("selected");
                 alertMsg("danger", "No se ha podido eliminar el modelo <strong>" + $deleteBtn.data("modelname") + "</strong>.");
             })
     });

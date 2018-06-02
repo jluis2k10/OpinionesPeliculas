@@ -38,7 +38,7 @@ public class Datumbox extends CommonDatumbox implements SubjectivityAdapter {
         tokenizer.setDeleteStopWords(analysis.isDeleteStopWords());
 
         corpus.getComments().forEach(comment -> {
-            es.uned.entities.Record commentRecord = new es.uned.entities.Record();
+            es.uned.entities.Record commentRecord = comment.findRecord(analysis.getId());
 
             Record opinion = subjectivityClassifier.predict(tokenizer.tokenize(comment.getContent()));
             String prob = opinion.getYPredictedProbabilities().get(opinion.getYPredicted()).toString();

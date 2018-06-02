@@ -11,5 +11,6 @@ public interface RecordsService {
     void save(Record record);
     Record findOne(RecordID recordID);
     void delete(Record record);
+    void deleteByAnalysis(Long analysisID);
 
 }

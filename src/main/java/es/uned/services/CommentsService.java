@@ -9,5 +9,6 @@ public interface CommentsService {
 
     void save(Comment comment);
     void delete(Comment comment);
+    void deleteByCorpus(Long corpusID);
 
 }

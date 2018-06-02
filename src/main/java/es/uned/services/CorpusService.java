@@ -11,8 +11,10 @@ import java.util.List;
 public interface CorpusService {
 
     Corpus findOne(Long id);
+    Corpus findOneFetchAll(Long id);
     List<Corpus> findByOwner(Account owner);
     void save(Corpus corpus);
+    void quickSave(Corpus corpus);
     void delete(Corpus corpus);
 
 }

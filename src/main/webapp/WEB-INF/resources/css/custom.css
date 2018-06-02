@@ -101,6 +101,10 @@ a.readmore.results {
     float: right;
 }
 
+.popover-details {
+    max-width: 100% !important;
+}
+
 /* Loader */
 .cover {
     height: 100vh;

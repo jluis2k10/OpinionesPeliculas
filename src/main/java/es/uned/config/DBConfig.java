@@ -42,7 +42,7 @@ public class DBConfig {
         dataSource.setUrl("jdbc:h2:mem:OpinionesPeliculas;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;");
         dataSource.setUsername("sa");
         dataSource.setPassword("");
-        DatabasePopulatorUtils.execute(createDatabasePopulator(), dataSource);
+        //DatabasePopulatorUtils.execute(createDatabasePopulator(), dataSource);
         return dataSource;
     }
 

@@ -1,7 +1,9 @@
 package es.uned.entities;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import es.uned.adapters.ClassifierType;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -131,7 +133,67 @@ public class Comment implements Comparable<Comment> {
         records.remove(record);
     }
 
-    public ObjectNode toJson() {
+    public Record findRecord(Long analysisID) {
+        if (records.size() == 0 || null == analysisID)
+            return new Record();
+        return records.stream()
+                .filter(record -> analysisID.equals(record.getAnalysis().getId()))
+                .findAny()
+                .orElse(new Record());
+    }
+
+    public void refreshScores() {
+        setPolarityScore(0L);
+        setOpinionScore(0L);
+        setPositivityScore(0L);
+        setNegativityScore(0L);
+        setNeutralityScore(0L);
+        setPolarity(null);
+        setOpinion(null);
+
+        long totalOpinionAnalyses = getRecords().stream()
+                .filter(record -> record.getAnalysis().getAnalysisType() == ClassifierType.OPINION)
+                .count();
+        totalOpinionAnalyses = totalOpinionAnalyses > 0 ? totalOpinionAnalyses : 1L; // No queremos dividir /0
+        long totalPolarityAnalyses = getRecords().stream()
+                .filter(record -> record.getAnalysis().getAnalysisType() == ClassifierType.POLARITY)
+                .count();
+        totalPolarityAnalyses = totalPolarityAnalyses > 0 ? totalPolarityAnalyses : 1L; // Idem
+
+        getRecords().forEach(record -> {
+            if (record.getAnalysis().getAnalysisType() == ClassifierType.OPINION) {
+                this.opinionScore += record.getSubjectiveScore();
+            } else {
+                this.positivityScore += record.getPositiveScore();
+                this.negativityScore += record.getNegativeScore();
+                this.neutralityScore += record.getNeutralScore();
+            }
+        });
+        this.opinionScore = this.opinionScore / totalOpinionAnalyses;
+        this.positivityScore = this.positivityScore / totalPolarityAnalyses;
+        this.negativityScore = this.negativityScore / totalPolarityAnalyses;
+        this.neutralityScore = this.neutralityScore / totalPolarityAnalyses;
+
+        if (this.opinionScore >= 0.5)
+            setOpinion(Opinion.SUBJECTIVE);
+        else
+            setOpinion(Opinion.OBJECTIVE);
+
+        if (this.positivityScore >= this.negativityScore && this.positivityScore >= this.neutralityScore) {
+            setPolarity(Polarity.POSITIVE);
+            this.polarityScore = this.positivityScore;
+        }
+        else if (this.negativityScore > this.positivityScore && this.negativityScore >= this.neutralityScore) {
+            setPolarity(Polarity.NEGATIVE);
+            this.polarityScore = this.negativityScore;
+        }
+        else if (this.neutralityScore > this.positivityScore && this.neutralityScore > this.negativityScore) {
+            setPolarity(Polarity.NEUTRAL);
+            this.polarityScore = this.neutralityScore;
+        }
+    }
+
+    public ObjectNode toJson(boolean withRecords) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode commentNode = mapper.createObjectNode();
 
@@ -157,6 +219,31 @@ public class Comment implements Comparable<Comment> {
         commentNode.put("positivityScore", getPositivityScore());
         commentNode.put("negativityScore", getNegativityScore());
         commentNode.put("neutralityScore", getNeutralityScore());
+
+        if (withRecords) {
+            ArrayNode sentimentRecordsArray = mapper.createArrayNode();
+            ArrayNode opinionRecordsArray = mapper.createArrayNode();
+            getRecords().forEach(record -> {
+                ObjectNode recordNode = mapper.createObjectNode();
+                String classifierName = record.getAnalysis().getClassifier();
+                if (null != record.getAnalysis().getLanguageModel())
+                    classifierName += " (" + record.getAnalysis().getLanguageModel().getName() + ")";
+                recordNode.put("classifier", classifierName);
+                recordNode.set("record", record.toJson());
+                if (record.getAnalysis().getAnalysisType() == ClassifierType.POLARITY)
+                    sentimentRecordsArray.add(recordNode);
+                else if (record.getAnalysis().getAnalysisType() == ClassifierType.OPINION)
+                    opinionRecordsArray.add(recordNode);
+            });
+            if (sentimentRecordsArray.size() > 0)
+                commentNode.set("sentimentRecords", sentimentRecordsArray);
+            else
+                commentNode.putNull("sentimentRecords");
+            if (opinionRecordsArray.size() > 0)
+                commentNode.set("opinionRecords", opinionRecordsArray);
+            else
+                commentNode.putNull("opinionRecords");
+        }
 
         return commentNode;
     }
@@ -314,7 +401,6 @@ public class Comment implements Comparable<Comment> {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(getHash(), getSource(), getUrl(), getContent());
     }
 

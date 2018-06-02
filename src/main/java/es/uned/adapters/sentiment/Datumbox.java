@@ -6,10 +6,8 @@ import com.datumbox.framework.core.machinelearning.MLBuilder;
 import es.uned.adapters.ClassifierType;
 import es.uned.adapters.common.CommonDatumbox;
 import es.uned.components.Tokenizer;
-import es.uned.entities.Analysis;
-import es.uned.entities.Corpus;
-import es.uned.entities.Opinion;
-import es.uned.entities.Polarity;
+import es.uned.entities.*;
+import es.uned.services.RecordsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +18,9 @@ import org.springframework.stereotype.Component;
 public class Datumbox extends CommonDatumbox implements SentimentAdapter {
 
     private static final String ADAPTER_DIR = "/datumbox";
+
+    @Autowired
+    private RecordsService recordsService;
 
     @Autowired
     private Tokenizer tokenizer;
@@ -41,7 +42,8 @@ public class Datumbox extends CommonDatumbox implements SentimentAdapter {
         corpus.getComments().stream()
                 .filter(c -> !analysis.isOnlyOpinions() || (analysis.isOnlyOpinions() && c.getOpinion() == Opinion.SUBJECTIVE))
                 .forEach(comment -> {
-            es.uned.entities.Record commentRecord = new es.uned.entities.Record();
+            es.uned.entities.Record commentRecord = comment.findRecord(analysis.getId());
+
             Record sentiment = sentimentClassifier.predict(tokenizer.tokenize(comment.getContent()));
             String prob = sentiment.getYPredictedProbabilities().get(sentiment.getYPredicted()).toString();
             if (sentiment.getYPredicted().toString().equals("positive")) {
@@ -57,8 +59,10 @@ public class Datumbox extends CommonDatumbox implements SentimentAdapter {
             commentRecord.setPositiveScore(sentiment.getYPredictedProbabilities().getDouble("positive"));
             commentRecord.setNegativeScore(sentiment.getYPredictedProbabilities().getDouble("negative"));
             commentRecord.setNeutralScore(sentiment.getYPredictedProbabilities().getDouble("neutral"));
+
             comment.addRecord(commentRecord);
             analysis.addRecord(commentRecord);
+
         });
         corpus.addAnalysis(analysis);
     }

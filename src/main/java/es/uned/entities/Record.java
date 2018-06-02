@@ -60,22 +60,32 @@ public class Record {
     public Record() {
     }
 
-    public ObjectNode toJson(ClassifierType type) {
+    public ObjectNode toJson() {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode recordNode = mapper.createObjectNode();
         recordNode.put("comment_hash", getCommentHash());
-        if (type == ClassifierType.POLARITY) {
+        if (analysis.getAnalysisType() == ClassifierType.POLARITY) {
             recordNode.put("polarity", getPolarity().getPolarity());
             recordNode.put("score", getPolarityScore());
             recordNode.put("positiveScore", getPositiveScore());
             recordNode.put("neutralScore", getNeutralScore());
             recordNode.put("negativeScore", getNegativeScore());
         }
-        else if (type == ClassifierType.OPINION) {
+        else if (analysis.getAnalysisType() == ClassifierType.OPINION) {
             recordNode.put("opinion", getOpinion().getOpinion());
             recordNode.put("subjectiveScore", getSubjectiveScore());
         }
         return recordNode;
+    }
+
+    public void update(Record fromRecord) {
+        this.polarity = fromRecord.getPolarity();
+        this.opinion = fromRecord.getOpinion();
+        this.polarityScore = fromRecord.getPolarityScore();
+        this.positiveScore = fromRecord.getPositiveScore();
+        this.negativeScore = fromRecord.getNegativeScore();
+        this.neutralScore = fromRecord.getNeutralScore();
+        this.subjectiveScore = fromRecord.getSubjectiveScore();
     }
 
     public RecordID getId() {
@@ -115,16 +125,16 @@ public class Record {
             return;
         Comment oldComment = this.comment;
         this.comment = comment;
-        this.id.setComment(comment.getId());
+        this.id.setComment(comment == null ? null: comment.getId());
         if (oldComment != null)
             oldComment.removeRecord(this);
         if (comment != null)
             comment.addRecord(this);
-        this.commentHash = comment.getHash();
+        this.commentHash = comment == null ? 0 : comment.getHash();
     }
 
     public boolean sameAsFormer(Comment newComment) {
-        return comment == null ? newComment == null : newComment.equals(comment);
+        return comment == null ? newComment == null : comment.equals(newComment);
     }
 
     public int getCommentHash() {
@@ -196,16 +206,8 @@ public class Record {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Record record = (Record) o;
-        return getCommentHash() == record.getCommentHash() &&
-                Double.compare(record.getPolarityScore(), getPolarityScore()) == 0 &&
-                Double.compare(record.getPositiveScore(), getPositiveScore()) == 0 &&
-                Double.compare(record.getNeutralScore(), getNeutralScore()) == 0 &&
-                Double.compare(record.getNegativeScore(), getNegativeScore()) == 0 &&
-                Double.compare(record.getSubjectiveScore(), getSubjectiveScore()) == 0 &&
-                Objects.equals(getAnalysis(), record.getAnalysis()) &&
-                Objects.equals(getComment(), record.getComment()) &&
-                getPolarity() == record.getPolarity() &&
-                getOpinion() == record.getOpinion();
+        return Objects.equals(getAnalysis(), record.getAnalysis()) &&
+                Objects.equals(getComment(), record.getComment());
     }
 
     @Override

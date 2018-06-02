@@ -5,6 +5,7 @@ import es.uned.entities.Corpus;
 import es.uned.repositories.AnalysisRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
@@ -18,8 +19,8 @@ public class MyAnalysisService implements AnalysisService {
     RecordsService recordsService;
 
     @Override
-    public int countByCorpus(Corpus corpus) {
-        return analysisRepo.countAllByCorpus(corpus);
+    public Analysis findOne(Long analysisID) {
+        return analysisRepo.findOne(analysisID);
     }
 
     @Override
@@ -29,6 +30,8 @@ public class MyAnalysisService implements AnalysisService {
 
     @Override
     public void delete(Analysis analysis) {
+        recordsService.deleteByAnalysis(analysis.getId());
+        analysis.clearAllRecords();
         analysisRepo.delete(analysis);
     }
 }

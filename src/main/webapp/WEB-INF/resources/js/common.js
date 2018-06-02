@@ -1,9 +1,9 @@
 /* Contexto */
-let ctx = $("meta[name='_context']").attr("content");
+var ctx = $("meta[name='_context']").attr("content");
 
 /* Recuperar token csrf para incluirlo como cabecera en cada envío ajax */
-let token = $("meta[name='_csrf']").attr("content");
-let header = $("meta[name='_csrf_header']").attr("content");
+var token = $("meta[name='_csrf']").attr("content");
+var header = $("meta[name='_csrf_header']").attr("content");
 $(document).ajaxSend(function (e, xhr, options) {
     xhr.setRequestHeader(header, token);
 });
@@ -27,6 +27,14 @@ function showLoading(msg) {
     $('.loader-content').append('<p class="loader">' + msg  + '</p>');
     $('p.loader').append('<span class="loader__dot">.</span><span class="loader__dot">.</span><span class="loader__dot">.</span></div>');
     $('.cover').show();
+}
+
+/**
+ * Oculta el cover/modal de "Cargando"
+ */
+function hideLoading() {
+    $('.cover').hide();
+    $('p.loader').remove();
 }
 
 function showFlashMessage(msgType, message) {
@@ -106,7 +114,7 @@ function renderSourcesButton(sources, corpusLang) {
     $.each(sources, function (index, source) {
         $(" #sources-dropdown").append('<a href="#" class="dropdown-item source-button" data-name="' + source.name + '">' + source.name + '</a>');
     });
-    let selectedSource = $.grep(sources, function (source) {
+    var selectedSource = $.grep(sources, function (source) {
         return source.name === $("#sources-dropdown a:first-child").get(0).dataset.name;
     })[0];
     renderSourceOptions(selectedSource, corpusLang);
@@ -202,7 +210,7 @@ function renderSourceOptions(source, corpusLang) {
 }
 
 function renderClassifierForm(classifiers, index) {
-    let listItem = $('<div>', {
+    var listItem = $('<div>', {
         class: "list-group-item flex-column align-items-start classifier-item",
         data: {id: index}
     }).append(
@@ -228,11 +236,11 @@ function renderClassifierForm(classifiers, index) {
             html: "<i class='fas fa-plus mr-1'></i> Añadir análisis"
         })
     );
-    let innerDiv = $('<div>', {class: 'form-group col-3'});
-    let label = $('<label></label>')
+    var innerDiv = $('<div>', {class: 'form-group col-3'});
+    var label = $('<label></label>')
         .attr('for', "analysis'" + index + "'.adapterClass")
         .html('Clasificador');
-    let select = $('<select></select>')
+    var select = $('<select></select>')
         .addClass('form-control')
         .attr({
             id: "analysis'" + index + "'.adapterClass",
@@ -246,25 +254,25 @@ function renderClassifierForm(classifiers, index) {
     innerDiv.appendTo($(listItem).find('.classifier-container'));
     listItem.appendTo($('.classifiers'));
 
-    let selectedAdapter = $('select[name="analysis['+ index + '].adapterClass"] option:selected');
+    var selectedAdapter = $('select[name="analysis['+ index + '].adapterClass"] option:selected');
     addClassifierSelectListener($('select[name="analysis['+ index + '].adapterClass"]'), classifiers);
     renderClassifierOptions(selectedAdapter, classifiers);
 }
 
 function renderClassifierOptions(selectedAdpter, classifiers) {
-    let container = selectedAdpter.closest('.classifier-container');
-    let index = $(container).closest('.classifier-item').data("id");
-    let classifier = $.grep(classifiers, function (c) {
+    var container = selectedAdpter.closest('.classifier-container');
+    var index = $(container).closest('.classifier-item').data("id");
+    var classifier = $.grep(classifiers, function (c) {
         return c.class === selectedAdpter.val();
     })[0];
 
     // El clasificador tiene modelos de lenguaje, mostrar select con ellos
     if (classifier.models_enabled && classifier.models.length > 0) {
-        let innerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
-        let label = $('<label></label>')
+        var innerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+        var label = $('<label></label>')
             .attr('for', "analysis'" + index + "'.languageModel")
             .html('Modelo de Lenguaje');
-        let select = $('<select></select>')
+        var select = $('<select></select>')
             .addClass('form-control')
             .attr({
                 id: "analysis'" + index + "'.languageModel",
@@ -273,7 +281,7 @@ function renderClassifierOptions(selectedAdpter, classifiers) {
         $.each(classifier.models, function (i, model) {
             select.append(new Option(model.name, model.id));
         });
-        let hiddenModelName = $('<input>', {
+        var hiddenModelName = $('<input>', {
             type: 'hidden',
             class: 'classifier-option',
             value: '',
@@ -294,9 +302,9 @@ function renderClassifierOptions(selectedAdpter, classifiers) {
     }
 
     // Mostrar radio para elegir eliminar/no eliminar Stop Words
-    let innerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+    var innerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
     $('<p>Eliminar <em>Stop-words</em></p>').appendTo(innerDiv);
-    let yesOption = $('<div>', {
+    var yesOption = $('<div>', {
         class: 'custom-control custom-radio custom-control-inline'
     });
     yesOption.append(
@@ -313,7 +321,7 @@ function renderClassifierOptions(selectedAdpter, classifiers) {
             html: 'Sí'
         })
     );
-    let noOption = $('<div>', {
+    var noOption = $('<div>', {
         class: 'custom-control custom-radio custom-control-inline'
     });
     noOption.append(
@@ -338,9 +346,9 @@ function renderClassifierOptions(selectedAdpter, classifiers) {
     // Mostrar radio para elegir si analizar sólo opiniones o no (en caso de
     // que el clasificador sea de polaridad
     if (classifier.type === "polarity") {
-        let opinionsInnerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+        var opinionsInnerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
         $('<p>Analizar <strong>sólo</strong> opiniones</p>').appendTo(opinionsInnerDiv);
-        let opinionsOnlyYes = $('<div>', {
+        var opinionsOnlyYes = $('<div>', {
             class: 'custom-control custom-radio custom-control-inline'
         });
         opinionsOnlyYes.append(
@@ -357,7 +365,7 @@ function renderClassifierOptions(selectedAdpter, classifiers) {
                 html: 'Sí'
             })
         );
-        let opinionsOnlyNo = $('<div>', {
+        var opinionsOnlyNo = $('<div>', {
             class: 'custom-control custom-radio custom-control-inline'
         });
         opinionsOnlyNo.append(
@@ -427,36 +435,37 @@ function renderClassifierOptions(selectedAdpter, classifiers) {
 
 function addClassifierSelectListener(select, classifiers) {
     $(select).change(function() {
-        let selected = $(this).find("option:selected");
+        var selected = $(this).find("option:selected");
         $(selected.closest('.classifier-container')).children('.classifier-option').remove();
         renderClassifierOptions(selected, classifiers);
     })
 }
 
 // Paginación de resultados
-function myPagination(size, data, container) {
+function myPagination(size, corpus, container, showDetails) {
     $("#comments-pagination").pagination({
-        dataSource: data,
+        dataSource: corpus,
         locator: 'comments',
         pageSize: size,
         callback: function (comments, pagination) {
-            formatComments(comments, container, pagination);
+            formatComments(comments, container, pagination, showDetails);
             generateReadMore();
         },
         ulClassName: "pagination justify-content-end"
     });
 }
-function formatComments(comments, $container, pagination) {
+
+function formatComments(comments, $container, pagination, showDetails) {
     $container.empty();
     comments.forEach(function (comment, i) {
-        let commentIndex = (pagination.pageNumber - 1) * pagination.pageSize + i + 1;
-        let $listItem = $('<li></li>').addClass('list-group-item flex-column align-items-start');
+        var commentIndex = (pagination.pageNumber - 1) * pagination.pageSize + i + 1;
+        var $listItem = $('<li></li>').addClass('list-group-item flex-column align-items-start');
 
         // Cabecera del item (fuente y fecha)
-        let $headerDiv = $('<div>', {
+        var $headerDiv = $('<div>', {
             class: "d-flex justify-content-between"
         }).appendTo($listItem);
-        let $sourceContent = $('<small>', {
+        var $sourceContent = $('<small>', {
             class: "mb-2 text-muted",
             html: "<strong>#" + commentIndex + "</strong> " + comment.source
         }).appendTo($headerDiv);
@@ -480,23 +489,25 @@ function formatComments(comments, $container, pagination) {
         }).appendTo($listItem);
 
         // Pie del item (medias de los análisis realizados sobre el comentario)
-        let sentiment = "N/A";
-        let cssClass;
-        let sentimentIcon = '<i class="far fa-question-circle"></i> ';
-        let sentimentScore = '';
+        var sentiment = "N/A";
+        var cssClass;
+        var sentimentIcon = '<i class="far fa-question-circle"></i> ';
+        var sentimentScore = '';
+
+        // Sentimiento promedio del análisis
         if (comment.polarity === "Positive") {
-            sentiment = "Positivo"
+            sentiment = "Positivo "
             cssClass = "text-success";
             sentimentIcon = '<i class="far fa-thumbs-up"></i> ';
             sentimentScore = '(' + (parseFloat(comment.polarityScore) * 100).toFixed(2) + '%)';
         }
         else if (comment.polarity === "Negative") {
-            sentiment = "Negativo";
+            sentiment = "Negativo ";
             cssClass = "text-danger";
             sentimentIcon = '<i class="far fa-thumbs-down"></i> ';
             sentimentScore = '(' + (parseFloat(comment.polarityScore) * 100).toFixed(2) + '%)';
         } else if (comment.polarity === "Neutral") {
-            sentiment = "Neutral";
+            sentiment = "Neutral ";
             cssClass = "";
             sentimentIcon = '<i class="far fa-meh"></i> ';
             sentimentScore = '(' + (parseFloat(comment.polarityScore) * 100).toFixed(2) + '%)';
@@ -506,7 +517,7 @@ function formatComments(comments, $container, pagination) {
             html: '<strong>' + sentimentIcon + sentiment + '</strong>' + sentimentScore
         }).appendTo($listItem);
 
-
+        // Opinión media del análisis
         if (comment.opinion != null && comment.opinion === "Subjective") {
             $('<small>', {
                 html: ' &ndash; <strong>Subjetivo</strong> ' + '(' + (parseFloat(comment.opinionScore) * 100).toFixed(2) + '%)'
@@ -516,6 +527,48 @@ function formatComments(comments, $container, pagination) {
             $('<small>', {
                 html: ' &ndash; <strong>Objetivo</strong> ' + '(' + ((1 - parseFloat(comment.opinionScore)) * 100).toFixed(2) + '%)'
             }).appendTo($listItem);
+        }
+
+        // Añadir información con los detalles de cada análisis ejecutado
+        if (showDetails) {
+            var details =  $('<a>', {
+                href: "#",
+                class: "ml-2 analysis-popover",
+                data: {toggle: "popover"},
+                title: "Detalles del Análisis",
+                html: '<i class="fas fa-info-circle"></i>'
+            });
+            $(details)
+                .popover({
+                    content: function () {
+                        var res = "";
+                        if (comment.sentimentRecords != null && comment.sentimentRecords.length > 0) {
+                            res += '<p><strong>Sentimiento:</strong><br/>';
+                            comment.sentimentRecords.forEach(function(record, j) {
+                                res += record.classifier + ": " + record.record.polarity + " (";
+                                res += Math.round10(record.record.score * 100, -2) + "%)<br/>";
+                            })
+                            res += '</p>';
+                        }
+                        if (comment.opinionRecords != null && comment.opinionRecords.length > 0) {
+                            res += '<p><strong>Opinión:</strong><br/>';
+                            comment.opinionRecords.forEach(function(record, j) {
+                                res += record.classifier + ": " + record.record.opinion + " (";
+                                if (record.record.opinion === "Subjective")
+                                    res += Math.round10(record.record.subjectiveScore * 100, -2) + "%)<br/>";
+                                else
+                                    res += Math.round10(100 - record.record.subjectiveScore * 100, -2) + "%)<br/>";
+                            })
+                            res += '</p>';
+                        }
+                        return res;
+                    },
+                    html: true,
+                    trigger: "focus",
+                    container: '#comments-list',
+                    template: '<div class="popover popover-details" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>'
+                });
+            $(details).appendTo($listItem);
         }
 
         $listItem.appendTo($container);
@@ -537,7 +590,7 @@ function generateReadMore() {
  * @param option Valores sobre la opción (clave -> valor)
  */
 function renderText(container, option) {
-    let optionDiv = $('<div>', {
+    var optionDiv = $('<div>', {
         class: "col-3 option-container form-group"
     }).append(
         $('<label>', {
@@ -562,7 +615,7 @@ function renderText(container, option) {
  * @param option Valores sobre la opción (clave -> valor)
  */
 function renderNumber(container, option) {
-    let optionDiv = $('<div>', {
+    var optionDiv = $('<div>', {
         class: "col-3 option-container form-group"
     }).append(
         $('<label>', {
@@ -571,7 +624,7 @@ function renderNumber(container, option) {
         })
     );
 
-    let input = $('<input>', {
+    var input = $('<input>', {
         type: 'number',
         id: "options'"+option.id+"'",
         class: 'form-control',
@@ -597,7 +650,7 @@ function renderNumber(container, option) {
  * @param option Valores sobre la opción (clave -> valor)
  */
 function renderSelect(container, option) {
-    let optionDiv = $('<div>', {
+    var optionDiv = $('<div>', {
         class: "col-3 option-container form-group"
     }).append(
         $('<label>', {
@@ -606,7 +659,7 @@ function renderSelect(container, option) {
         })
     );
 
-    let select = $("<select></select>").attr({
+    var select = $("<select></select>").attr({
         id: "options'"+option.id+"'",
         class: "form-control",
         name: "options['"+option.id+"']"
@@ -614,7 +667,7 @@ function renderSelect(container, option) {
     select.appendTo(optionDiv);
 
     $.each(option.options, function (index, option) {
-        let opt = $("<option></option>").attr("value", option.value).text(option.name);
+        var opt = $("<option></option>").attr("value", option.value).text(option.name);
         opt.appendTo(select);
     });
 
@@ -628,7 +681,7 @@ function renderSelect(container, option) {
  * @param option Valores sobre la opción (clave -> valor)
  */
 function renderRadio(container, option) {
-    let optionDiv = $('<div>', {
+    var optionDiv = $('<div>', {
         class: "col-3 option-container"
     }).append(
         $('<p>', {
@@ -637,15 +690,15 @@ function renderRadio(container, option) {
     );
 
     $.each(option.options, function (index, opt) {
-        let innerDiv = $("<div></div>").addClass("custom-control custom-radio custom-control-inline");
-        let input = $("<input />").attr({
+        var innerDiv = $("<div></div>").addClass("custom-control custom-radio custom-control-inline");
+        var input = $("<input />").attr({
             id: "options'"+option.id+"'"+opt.name,
             name: "options['"+option.id+"']",
             value: opt.value,
             type: "radio",
             class: "custom-control-input"
         });
-        let label = $("<label></label>").attr({
+        var label = $("<label></label>").attr({
             for: "options'"+option.id+"'"+opt.name,
             class: "custom-control-label"
         }).text(opt.name);
@@ -681,12 +734,12 @@ function renderIMDBSelect() {
             processResults: function(data, params) {
                 params.page = params.page || 1;
                 // Eliminamos de los resultados los que no tengan imdbID
-                for (let i=0; i<data.films.length; i++) {
+                for (var i=0; i<data.films.length; i++) {
                     if (!data.films[i].imdbID)
                         data.films.splice(i, 1);
                 }
                 // select2 necesita atributos id y text en el objeto que maneja
-                let select2Data = $.map(data.films, function (obj) {
+                var select2Data = $.map(data.films, function (obj) {
                     obj.id = obj.id || obj.imdbID;
                     obj.text = obj.text || obj.title;
                     return obj;
@@ -715,11 +768,11 @@ function renderIMDBSelect() {
 }
 
 function renderClassifierRadio(container, parameter) {
-    let index = $(container).closest('.classifier-item').data("id");
-    let outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+    var index = $(container).closest('.classifier-item').data("id");
+    var outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
     $('<p>' + parameter.name + '</p>').appendTo(outerDiv);
     $.each(parameter.options, function (i, option) {
-        let innerDiv = $('<div>', {
+        var innerDiv = $('<div>', {
             class: 'custom-control custom-radio custom-control-inline'
         });
         innerDiv.append(
@@ -746,13 +799,13 @@ function renderClassifierRadio(container, parameter) {
 }
 
 function renderClassifierSelect(container, parameter) {
-    let index = $(container).closest('.classifier-item').data("id");
-    let outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
-    let label = $('<label>', {
+    var index = $(container).closest('.classifier-item').data("id");
+    var outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+    var label = $('<label>', {
         for: "analysis'"+index+"'.options'"+parameter.id+"'",
         html: parameter.name
     });
-    let select = $('<select>', {
+    var select = $('<select>', {
         class: "form-control",
         id: "analysis'"+index+"'.options'"+parameter.id+"'",
         name: "analysis["+index+"].options["+parameter.id+"]"
@@ -771,8 +824,8 @@ function renderClassifierSelect(container, parameter) {
 }
 
 function renderClassifierNumber(container, parameter) {
-    let index = $(container).closest('.classifier-item').data("id");
-    let outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+    var index = $(container).closest('.classifier-item').data("id");
+    var outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
 
     outerDiv.append(
         $('<label>', {
@@ -796,8 +849,8 @@ function renderClassifierNumber(container, parameter) {
 }
 
 function renderClassifierText(container, parameter) {
-    let index = $(container).closest('.classifier-item').data("id");
-    let outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
+    var index = $(container).closest('.classifier-item').data("id");
+    var outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
 
     outerDiv.append(
         $('<label>', {
@@ -823,7 +876,7 @@ function renderClassifierText(container, parameter) {
  * @returns {localización}
  */
 function datatablesLocalization() {
-    let loc = {
+    var loc = {
         "sProcessing":     "Procesando...",
         "sLengthMenu":     "Mostrar _MENU_ entradas",
         "sZeroRecords":    "No se encontraron resultados",
@@ -843,8 +896,8 @@ function datatablesLocalization() {
             "sPrevious": "Anterior"
         },
         "oAria": {
-            "sSortAscending":  ": Actilet para ordenar la columna de manera ascendente",
-            "sSortDescending": ": Actilet para ordenar la columna de manera descendente"
+            "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
+            "sSortDescending": ": Activar para ordenar la columna de manera descendente"
         }
     };
     return loc;
@@ -857,12 +910,12 @@ function datatablesLocalization() {
 if (typeof jQuery.fn.dataTableExt != 'undefined') {
     jQuery.extend( jQuery.fn.dataTableExt.oSort, {
         "date-euro-pre": function ( a ) {
-            let x;
+            var x;
 
             if ( $.trim(a) !== '' ) {
-                let frDatea = $.trim(a).split(' ');
-                let frTimea = (undefined != frDatea[1]) ? frDatea[1].split(':') : [0o0,0o0,0o0];
-                let frDatea2 = frDatea[0].split('/');
+                var frDatea = $.trim(a).split(' ');
+                var frTimea = (undefined != frDatea[1]) ? frDatea[1].split(':') : [0o0,0o0,0o0];
+                var frDatea2 = frDatea[0].split('/');
                 x = (frDatea2[2] + frDatea2[1] + frDatea2[0] + frTimea[0] + frTimea[1] + ((undefined != frTimea[2]) ? frTimea[2] : 0)) * 1;
             }
             else {
@@ -881,3 +934,51 @@ if (typeof jQuery.fn.dataTableExt != 'undefined') {
         }
     } );
 }
+
+(function(){
+    /**
+     * Decimal adjustment of a number.
+     *
+     * @param   {String}    type    The type of adjustment.
+     * @param   {Number}    value   The number.
+     * @param   {Integer}   exp     The exponent (the 10 logarithm of the adjustment base).
+     * @returns {Number}            The adjusted value.
+     */
+    function decimalAdjust(type, value, exp) {
+        // If the exp is undefined or zero...
+        if (typeof exp === 'undefined' || +exp === 0) {
+            return Math[type](value);
+        }
+        value = +value;
+        exp = +exp;
+        // If the value is not a number or the exp is not an integer...
+        if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+            return NaN;
+        }
+        // Shift
+        value = value.toString().split('e');
+        value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
+        // Shift back
+        value = value.toString().split('e');
+        return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
+    }
+
+    // Decimal round
+    if (!Math.round10) {
+        Math.round10 = function(value, exp) {
+            return decimalAdjust('round', value, exp);
+        };
+    }
+    // Decimal floor
+    if (!Math.floor10) {
+        Math.floor10 = function(value, exp) {
+            return decimalAdjust('floor', value, exp);
+        };
+    }
+    // Decimal ceil
+    if (!Math.ceil10) {
+        Math.ceil10 = function(value, exp) {
+            return decimalAdjust('ceil', value, exp);
+        };
+    }
+})();

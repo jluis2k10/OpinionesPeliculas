@@ -9,4 +9,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface CommentsRepo extends JpaRepository<Comment, Long> {
+
+    void deleteByCorpus_Id(Long corpusID);
+
 }

@@ -5,8 +5,10 @@ import es.uned.entities.Corpus;
 import es.uned.entities.Record;
 import es.uned.entities.RecordID;
 import es.uned.repositories.CorporaRepo;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -32,6 +34,23 @@ public class MyCorpusService implements CorpusService {
     @Override
     public Corpus findOne(Long id) {
         return corporaRepo.findOne(id);
+    }
+
+    /**
+     * Al actualizar el corpus, es necesario que las diferentes colecciones de elementos que
+     * contiene (comentarios, análisis y records) no se recuperen mediante "Lazy Loading",
+     * así que obligamos a que hibernate las inicialice todas.
+     * @param id
+     * @return
+     */
+    @Override
+    public Corpus findOneFetchAll(Long id) {
+        Corpus corpus = findOne(id);
+        Hibernate.initialize(corpus.getComments());
+        Hibernate.initialize(corpus.getAnalyses());
+        corpus.getComments().forEach(comment -> Hibernate.initialize(comment.getRecords()));
+        corpus.getAnalyses().forEach(analysis -> Hibernate.initialize(analysis.getRecords()));
+        return corpus;
     }
 
     @Override
@@ -66,16 +85,14 @@ public class MyCorpusService implements CorpusService {
     }
 
     @Override
+    public void quickSave(Corpus corpus) {
+        corporaRepo.save(corpus);
+    }
+
+    @Override
     public void delete(Corpus corpus) {
-        corpus.getComments().forEach(comment -> {
-            comment.getRecords().forEach(record -> recordsService.delete(record));
-            comment.clearRecords();
-            commentsService.delete(comment);
-        });
-        corpus.getAnalyses().forEach(analysis -> {
-            analysis.clearRecords();
-            analysisService.delete(analysis);
-        });
+        corpus.getAnalyses().forEach(analysis -> analysisService.delete(analysis));
+        commentsService.deleteByCorpus(corpus.getId());
         corpus.clearAll();
         corporaRepo.delete(corpus);
     }

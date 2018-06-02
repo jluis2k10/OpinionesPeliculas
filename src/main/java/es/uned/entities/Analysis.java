@@ -110,7 +110,7 @@ public class Analysis {
         analysisNode.put("total_records", getRecords().size());
         if (withRecords) {
             ArrayNode recordsArray = mapper.createArrayNode();
-            getRecords().forEach(record -> recordsArray.add(record.toJson(getAnalysisType())));
+            getRecords().forEach(record -> recordsArray.add(record.toJson()));
             analysisNode.set("records", recordsArray);
         }
         analysisNode.put("stop_words_deletion", isDeleteStopWords());
@@ -255,7 +255,7 @@ public class Analysis {
         records.remove(record);
     }
 
-    public void clearRecords() {
+    public void clearAllRecords() {
         records.clear();
     }
 
@@ -277,7 +277,6 @@ public class Analysis {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(getId(), getAnalysisType(), getClassifier(), getAdapterClass(), getLang(), isDeleteStopWords(), isOnlyOpinions(), getOptions(), getRecords().size());
     }
 }

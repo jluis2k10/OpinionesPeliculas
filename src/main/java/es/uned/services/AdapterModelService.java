@@ -16,6 +16,4 @@ public interface AdapterModelService {
     AdapterModels findOne(Long id);
     Set<AdapterModels> findUserModels(Account account, ClassifierType adapterType);
     Set<AdapterModels> findFromOthers(Account account, ClassifierType adapterType);
-    Set<AdapterModels> findByAdapterClass(String adapterClass, Account account);
-    Set<AdapterModels> findByAdapterClassAndLang(String adapterClass, String lang, Account account);
 }

@@ -8,8 +8,7 @@ import es.uned.entities.Corpus;
  */
 public interface AnalysisService {
 
-    //Analysis findOne(Analysis.AnalysisPK pk);
-    int countByCorpus(Corpus corpus);
+    Analysis findOne(Long analysisID);
     void save(Analysis analysis);
     void delete(Analysis analysis);
 

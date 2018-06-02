@@ -10,36 +10,64 @@
 </div>
 <div id="graphs" class="collapse show">
     <div class="row d-flex flex-row pt-3">
-        <div id="pie" class="col-6"></div>
-        <div id="bar" class="col-6"></div>
-        <div id="shared" class="col-12"></div>
-        <div id="time" class="col-12"></div>
+        <div id="pie" class="col-6 mb-5"></div>
+        <div id="bar" class="col-6 mb-5"></div>
+        <div id="shared" class="col-12 mb-5"></div>
+        <div id="time" class="col-12 mb-5"></div>
+        <div id="scatter" class="col-12 mb-5"></div>
     </div>
 </div>
-<div id="comments" class="collapse">
+<div id="comments" class="collapse pt-3">
     <div class="row d-flex flex-row">
         <div class="col-12">
-            comentarios
+            <ul id="comments-list" class="list-group mb-3"></ul>
+            <div class="row">
+                <div class="col-12 col-md-6">
+                    <label>
+                        Mostrar
+                        <select class="form-control form-control-sm pages-size" id="page-size">
+                            <option>5</option>
+                            <option>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                            <option>100</option>
+                        </select>
+                        comentarios
+                    </label>
+                </div>
+                <div id="comments-pagination" class="col-12 col-md-6"></div>
+            </div>
         </div>
     </div>
 </div>
 
 <%@ include file="../_js.jsp"%>
+<script type="text/javascript" src="${path}/js/pagination.js"></script>
+<script type="text/javascript" src="${path}/js/readmore.js"></script>
 <script type="text/javascript" src="${path}/js/zingchart/zingchart.min.js"></script>
 <script type="text/javascript" src="${path}/js/common.js"></script>
 <script type="text/javascript" src="${path}/js/graphs.js"></script>
 
 <script>
-    var corpus = ${corpus.toJson(true, true).toString()};
-
+    var corpus = ${corpus.toJson(true, true, false).toString()};
     $(document).ready(function () {
         renderPieChart('pie', corpus.comments);
         renderBarChart('bar', corpus.comments);
         renderSharedChart('shared', corpus);
+        // Renderizar gráficas de evolución temporal y de distribución sólo si hay análisis
+        // de polaridad ejecutados sobre el corpus
         if ($.grep(corpus.analyses, function (analysis) {
             return analysis.type === "polarity";
-        }).length > 0)
+        }).length > 0) {
             renderTimeEvoChart('time', corpus.comments);
+            // Para la gráfica de distribución también necesitamos que haya análisis de opinión
+            if ($.grep(corpus.analyses, function (analysis) {
+                return analysis.type === "opinion"
+            }).length > 0)
+                renderScatterChart('scatter', corpus);
+        }
+
+        myPagination(5, ${corpus.toJson(true, false, true).toString()}, $("#comments-list"), true);
     });
 
     // Listeners para toggle de las gráficas/comentarios
@@ -52,11 +80,16 @@
         $('#comments').collapse('show');
     });
 
-    // Listeners para los clicks en las etiquetas de las gráficas
-    /*zingchart.bind(null, 'label_click', function(e) {
+    // Listener para selección de comentarios por página
+    $("#page-size").change(function () {
+        $("#comments-pagination").pagination('destroy');
+        myPagination(this.value, ${corpus.toJson(true, false, true).toString()}, $("#comments-list"), true);
+    });
 
-    });*/
-
+    // Evitar enlace a # en los popovers de los detalles del análisis
+    $('#comments-list').on('click', 'a.analysis-popover', function (e) {
+        e.preventDefault();
+    });
 </script>
 
 <%@ include file="../_footer.jsp"%>

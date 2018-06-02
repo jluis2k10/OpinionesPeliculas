@@ -46,7 +46,7 @@ public class Corpus {
     @Column(name = "public", nullable = false)
     private boolean isPublic = false;
 
-    @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "corpus_id")
     private Collection<Analysis> analyses = new LinkedList<>();
 
@@ -57,7 +57,11 @@ public class Corpus {
     public Corpus() {
     }
 
-    public ObjectNode toJson (boolean withComments, boolean withAnalyses) {
+    public void refreshScores() {
+        this.comments.forEach(comment -> comment.refreshScores());
+    }
+
+    public ObjectNode toJson(boolean withComments, boolean withAnalyses, boolean withRecords) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode corpusNode = mapper.createObjectNode();
 
@@ -87,7 +91,7 @@ public class Corpus {
             LinkedList<Comment> commentsList = new LinkedList<>(getComments());
             Collections.sort(commentsList);
             ArrayNode commentsArrayNode = mapper.createArrayNode();
-            commentsList.forEach(comment -> commentsArrayNode.add(comment.toJson()));
+            commentsList.forEach(comment -> commentsArrayNode.add(comment.toJson(withRecords)));
             corpusNode.set("comments", commentsArrayNode);
         }
         if (withAnalyses) {

@@ -100,7 +100,7 @@ public class MainController {
             }
 
             Map<String, String> flashMsg = new HashMap<String, String>(){{
-                put("primary", "Añadidos <strong>" + updatedComments + "</strong> mensajes nuevos al Corpus.");
+                put("primary", "Añadidos <strong>" + updatedComments + "</strong> comentarios nuevos al Corpus.");
             }};
             model.addAttribute("flashMessage", flashMsg);
             return "home";
@@ -177,7 +177,7 @@ public class MainController {
                 Iterator<AnalysisForm> it = analysisFormList.getAnalysis().iterator();
                 while (it.hasNext()) {
                     AnalysisForm analysisForm = it.next();
-                    SentimentAdapter sentimentAdapter= sentimentFactory.get(analysisForm.getAdapterClass());
+                    SentimentAdapter sentimentAdapter = sentimentFactory.get(analysisForm.getAdapterClass());
                     sentimentAdapter.analyze(corpus, new Analysis(analysisForm));
                 }
             }
@@ -229,7 +229,6 @@ public class MainController {
 
     @RequestMapping(value = "/save-corpus", method = RequestMethod.POST)
     public ResponseEntity<ObjectNode> saveCorpus(
-            SessionStatus sessionStatus,
             @ModelAttribute("corpus") Corpus corpus, Principal principal,
             @RequestParam(value = "corpus-title", required = false) String title,
             @RequestParam(value = "corpus-description", required = false) String description,

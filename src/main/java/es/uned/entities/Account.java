@@ -127,7 +127,6 @@ public class Account {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(getId(), getUserName(), getEmail(), isActive());
     }
 }

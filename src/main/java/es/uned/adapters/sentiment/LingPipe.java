@@ -42,7 +42,7 @@ public class LingPipe extends CommonLingpipe implements SentimentAdapter {
         corpus.getComments().stream()
                 .filter(c -> !analysis.isOnlyOpinions() || (analysis.isOnlyOpinions() && c.getOpinion() == Opinion.SUBJECTIVE))
                 .forEach(comment -> {
-            Record commentRecord = new Record();
+            Record commentRecord = comment.findRecord(analysis.getId());
             Classification classification = baseClassifier.classify(tokenizer.tokenize(comment.getContent()));
             if (classification.bestCategory().equals("pos")) {
                 commentRecord.setPolarity(Polarity.POSITIVE);
@@ -54,6 +54,7 @@ public class LingPipe extends CommonLingpipe implements SentimentAdapter {
             commentRecord.setPositiveScore(((JointClassification) classification).conditionalProbability("pos"));
             commentRecord.setNegativeScore(((JointClassification) classification).conditionalProbability("neg"));
             commentRecord.setNeutralScore(0);
+
             comment.addRecord(commentRecord);
             analysis.addRecord(commentRecord);
         });

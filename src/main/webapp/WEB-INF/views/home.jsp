@@ -24,7 +24,7 @@
         </table>
     </div>
     <script>
-        var corpus = ${corpus.toJson(true, false).toString()};
+        var corpus = ${corpus.toJson(true, false, false).toString()};
     </script>
 </c:if>
 

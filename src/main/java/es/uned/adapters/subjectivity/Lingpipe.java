@@ -43,7 +43,7 @@ public class Lingpipe extends CommonLingpipe implements SubjectivityAdapter {
         final BaseClassifier<String> baseClassifier = getBaseClassifier(resource);
 
         corpus.getComments().forEach(comment -> {
-            Record commentRecord = new Record();
+            Record commentRecord = comment.findRecord(analysis.getId());
             Classification classification = baseClassifier.classify(tokenizer.tokenize(comment.getContent()));
             double prob = ((JointClassification) classification).conditionalProbability(classification.bestCategory());
             if (classification.bestCategory().equals("subjective")) {

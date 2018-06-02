@@ -40,16 +40,20 @@
             </div>
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-ban"></i> Cancelar</button>
-                <button type="button" class="btn btn-primary delete-confirm"><i class="fas fa-save"></i> Guardar</button>
+                <button type="button" class="btn btn-primary save-corpus"><i class="fas fa-save"></i> Guardar</button>
             </div>
         </div>
     </div>
 </div>
 <script>
-    $('button.delete-confirm').click(function (e) {
+    $('button.save-corpus').click(function (e) {
         e.preventDefault();
-        $(this).prop("disabled", true);
+        var saveButton = $(this);
+        saveButton.prop("disabled", true);
         $.when(saveCorpus())
+            .always(function () {
+                saveButton.prop("disabled", false);
+            })
             .done(function (_response) {
                 if (_response.status === "error") {
                     $('#corpus-title').addClass('is-invalid');
@@ -61,10 +65,11 @@
                     showFlashMessage('success', _response.message);
                     $('#modal-saveCorpus').modal('hide');
                 }
-                $('button.delete-confirm').prop("disabled", false);
+                $('button.save-corpus').prop("disabled", false);
             })
             .fail(function (_response) {
                 showFlashMessage('danger', "<strong>Atención</strong>: no se ha podido guardar el Corpus.");
+                $('#modal-saveCorpus').modal('hide');
             })
     })
 

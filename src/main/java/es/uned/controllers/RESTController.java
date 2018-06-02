@@ -76,7 +76,7 @@ public class RESTController {
         Account account = accountService.findByUserName(principal.getName());
         List<Corpus> corpora = corpusService.findByOwner(account);
         corpora.forEach(corpus -> {
-            ObjectNode corpusNode = corpus.toJson(false, false);
+            ObjectNode corpusNode = corpus.toJson(false, false, false);
             ArrayNode analysesArray = mapper.createArrayNode();
             corpus.getAnalyses().forEach(analysis ->
                     analysesArray.add(analysis.toJson(false))

@@ -56,9 +56,9 @@
 <script type="text/javascript" src="${path}/js/graphs.js"></script>
 <script>
     //moment.locale('es');
-    var corpus = ${corpus.toJson(true, true).toString()};
+    var corpus = ${corpus.toJson(true, true, false).toString()};
     $(document).ready(function () {
-        myPagination(5, corpus, $("#comments-list"));
+        myPagination(5, corpus, $("#comments-list"), false);
         renderSharedChart('sharedChart', corpus);
 
         /*$.when(getCorpusAnalyses(), getCorpusCommentHashes())
@@ -87,7 +87,7 @@
     // Listener para selección de comentarios por página
     $("#page-size").change(function () {
         $("#comments-pagination").pagination('destroy');
-        myPagination(this.value, ${corpus.toJson(true, false).toString()}, $("#comments-list"));
+        myPagination(this.value, ${corpus.toJson(true, false, false).toString()}, $("#comments-list"), false);
     });
 
     // Listener para el botón de Guardar Corpus

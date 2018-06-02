@@ -57,18 +57,4 @@ public class MyAdapterModelService implements AdapterModelService {
     public Set<AdapterModels> findFromOthers(Account account, ClassifierType adapterType) {
         return adapterModelRepo.findByOwnerNotAndAdapterType(account, adapterType);
     }
-
-
-    @Override
-    public Set<AdapterModels> findByAdapterClass(String adapterClass, Account account) {
-        if (account != null && account.isAdmin())
-            return adapterModelRepo.findAllByAdapterClass(adapterClass);
-        else
-            return adapterModelRepo.findByAdapterClassAndOwner_OrAdapterClassAndOpenTrue(adapterClass, account, adapterClass);
-    }
-
-    @Override
-    public Set<AdapterModels> findByAdapterClassAndLang(String adapterClass, String lang, Account account) {
-        return adapterModelRepo.findByAdapterClassAndLanguageAndOwner_OrAdapterClassAndLanguageAndOpenTrue(adapterClass, lang, account, adapterClass, lang);
-    }
 }

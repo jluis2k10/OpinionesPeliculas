@@ -66,23 +66,6 @@ zingchart.defineModule('toolbar-zoom', 'plugin', function(chartJson){
             "z-index": 1
         });
 
-    /*
-    * Add label_click event listener, use the clicked label's
-    * id in a switch
-    */
-    zingchart.label_click = function (p) {
-        switch (p.labelid) {
-            case "zoomin":
-                zingchart.exec(p.id, "zoomin");
-                break;
-            case "zoomout":
-                zingchart.exec(p.id, "zoomout");
-                break;
-            case "viewall":
-                zingchart.exec(p.id, "viewall");
-                break;
-        }
-    };
 
     /*
     * If the "background-color" attr exists, loop over each label and
@@ -110,7 +93,6 @@ zingchart.defineModule('toolbar-zoom', 'plugin', function(chartJson){
 });
 
 zingchart.defineModule('expand-time-chart', 'plugin', function (chartJson) {
-
     chartJson.labels = chartJson.labels ? chartJson.labels : [];
     chartJson.labels.push({
         type: 'rectangle',
@@ -123,53 +105,67 @@ zingchart.defineModule('expand-time-chart', 'plugin', function (chartJson) {
         anchor: 'c'
     });
 
-    zingchart.label_click = function (p) {
-        // Hay que añadir de nuevo los eventos para el zoom, por lo visto al añadir
-        // un listener nuevo se pisan los anteriores
-        switch (p.labelid) {
-            case "expand":
-                if (chartJson["my-series"].expanded) {
-                    zingchart.exec(p.id, 'setseriesvalues', {
-                        values: [
-                            chartJson["my-series"].series.positives.shorten,
-                            chartJson["my-series"].series.negatives.shorten,
-                            chartJson["my-series"].series.percentages.shorten
-                        ]
-                    });
-                    // Escala únicamente con etiquetas correspondientes a los días que tienen datos (comentarios)
-                    setChartScaleXLabel(chartJson, chartJson["my-series"].series.labels, false);
-                    zingchart.exec(p.id, 'setdata', {
-                        data: chartJson
-                    });
-                }
-                else {
-                    zingchart.exec(p.id, 'setseriesvalues', {
-                        values: [
-                            chartJson["my-series"].series.positives.expanded,
-                            chartJson["my-series"].series.negatives.expanded,
-                            chartJson["my-series"].series.percentages.expanded
-                        ]
-                    });
-                    // Escala vacía (se muestran todos los días desde el primer comentario hasta el último, aunque estén vacíos)
-                    setChartScaleXLabel(chartJson, null, true);
-                    zingchart.exec(p.id, 'setdata', {
-                        data: chartJson
-                    });
-                }
-                break;
-            case "zoomin":
-                zingchart.exec(p.id, "zoomin");
-                break;
-            case "zoomout":
-                zingchart.exec(p.id, "zoomout");
-                break;
-            case "viewall":
-                zingchart.exec(p.id, "viewall");
-                break;
-            default:
-                break;
-        }
-    };
+    return chartJson;
+});
+
+zingchart.defineModule('change-scatter', 'plugin', function(chartJson){
+    chartJson.labels = chartJson.labels ? chartJson.labels : [];
+    chartJson.labels.push({
+        type: 'rectangle',
+        marginTop: 100,
+        marginLeft: 20,
+        text: 'Mostrar por:',
+        fontSize: 14,
+    }, {
+        type: 'rectangle',
+        id: 'positivos',
+        width: 30,
+        height: 30,
+        backgroundColor: "#ddd",
+        backgroundImage: "/img/smile.png",
+        backgroundRepeat: "no-repeat",
+        cursor: "hand",
+        marginTop:95,
+        marginLeft:105,
+        marginRight:"auto",
+        borderWidth: 1,
+        borderColor: "#aaa",
+        borderTopLeftRadius: 5,
+        borderBottomLeftRadius: 5,
+        zIndex: 1
+    }, {
+        type: "rectangle",
+        id: 'negativos',
+        width: 30,
+        height: 30,
+        backgroundColor: "#ddd",
+        backgroundImage: "/img/frown.png",
+        backgroundRepeat: "no-repeat",
+        cursor: "hand",
+        marginTop:95,
+        marginLeft:135,
+        marginRight:"auto",
+        borderWidth: 1,
+        borderColor: "#aaa",
+        zIndex: 1
+    }, {
+        type: "rectangle",
+        id: 'neutrales',
+        width: 30,
+        height: 30,
+        backgroundColor: "#ddd",
+        backgroundImage: "/img/meh.png",
+        backgroundRepeat: "no-repeat",
+        cursor: "hand",
+        marginTop: 95,
+        marginLeft:165,
+        marginRight:"auto",
+        borderWidth: 1,
+        borderColor: "#aaa",
+        borderTopLeftRadius: 5,
+        borderBottomRightRadius: 5,
+        zIndex: 1
+    });
 
     return chartJson;
 });
@@ -184,7 +180,7 @@ zingchart.defineModule('expand-time-chart', 'plugin', function (chartJson) {
  */
 function setChartScaleXLabel(chart, label, isExpanded) {
     chart["my-series"].expanded = isExpanded;
-    chart["scale-x"].labels = label;
+    chart["scaleX"].labels = label;
 }
 
 function renderSharedChart(container, corpus) {
@@ -236,6 +232,19 @@ function renderSharedChart(container, corpus) {
         height: graphHeight,
         width: "100%",
         modules: 'toolbar-zoom'
+    });
+    zingchart.bind(container, 'label_click', function(p) {
+        switch (p.labelid) {
+            case "zoomin":
+                zingchart.exec(p.id, "zoomin");
+                break;
+            case "zoomout":
+                zingchart.exec(p.id, "zoomout");
+                break;
+            case "viewall":
+                zingchart.exec(p.id, "viewall");
+                break;
+        };
     });
 }
 
@@ -711,13 +720,62 @@ function renderTimeEvoChart(containerID, comments) {
         width: '100%',
         modules: 'toolbar-zoom,expand-time-chart'
     });
+
+    zingchart.bind(containerID, 'label_click', function(p) {
+        switch (p.labelid) {
+            case "zoomin":
+                zingchart.exec(p.id, "zoomin");
+                break;
+            case "zoomout":
+                zingchart.exec(p.id, "zoomout");
+                break;
+            case "viewall":
+                zingchart.exec(p.id, "viewall");
+                break;
+        };
+    });
+
+    zingchart.bind(containerID, 'label_click', function(p) {
+        switch (p.labelid) {
+            case "expand":
+                if (myConfig["my-series"].expanded) {
+                    // Escala únicamente con etiquetas correspondientes a los días que tienen datos (comentarios)
+                    setChartScaleXLabel(myConfig, myConfig["my-series"].series.labels, false);
+                    zingchart.exec(p.id, 'setdata', {
+                        data: myConfig
+                    });
+                    zingchart.exec(p.id, 'setseriesvalues', {
+                        values: [
+                            myConfig["my-series"].series.positives.shorten,
+                            myConfig["my-series"].series.negatives.shorten,
+                            myConfig["my-series"].series.percentages.shorten
+                        ]
+                    });
+                }
+                else {
+                    // Escala vacía (se muestran todos los días desde el primer comentario hasta el último, aunque estén vacíos)
+                    setChartScaleXLabel(myConfig, null, true);
+                    zingchart.exec(p.id, 'setdata', {
+                        data: myConfig
+                    });
+                    zingchart.exec(p.id, 'setseriesvalues', {
+                        values: [
+                            myConfig["my-series"].series.positives.expanded,
+                            myConfig["my-series"].series.negatives.expanded,
+                            myConfig["my-series"].series.percentages.expanded
+                        ]
+                    });
+                }
+                break;
+        }
+    })
 }
 
 function getTimeSeries(comments) {
     var prevDate = 0, totalPositives = 0, totalNegatives = 0;
     var positivesMap = new Map(), negativesMap = new Map(), percentageMap = new Map();
     $.each(comments, function (i, comment) {
-        // Ignoramos los comentarios clasificados neutrales o están sin clasificar
+        // Ignoramos los comentarios clasificados neutrales o sin clasificar
         if (comment.polarity === "Neutral" || comment.polarity == null)
             return true;
 
@@ -779,6 +837,238 @@ function getTimeSeries(comments) {
         labels: labels,
         maxSum: maxSum
     };
+}
+
+function renderScatterChart(containerID, corpus) {
+    var series = getScatterSeries(corpus);
+    var displaySeries = [];
+    $.each(series, function (i, serie) {
+        displaySeries.push(serie.positives);
+    });
+    var myConfig = {
+        type: "scatter",
+        title: {
+            text: "DISPERSIÓN SENTIMIENTO/SUBJETIVIDAD",
+            fontSize: 16,
+            fontColor: 'gray',
+            adjustLayout: true
+        },
+        'change-scatter': {
+            fullSeries: series
+        },
+        plotarea: {
+            marginLeft: 'dynamic'
+        },
+        scaleX: {
+            values: '0:100:10',
+            label: {
+                text: "Índice de Subjetividad",
+                fontSize: "14px"
+            },
+            format: "%v%",
+            offsetStart: "0%"
+        },
+        scaleY: {
+            values: '0:100:10',
+            label: {
+                text: "Índice de Positividad",
+                fontSize: "14px"
+            },
+            format: "%v%",
+            offsetStart: "0%"
+        },
+        legend: {
+            layout: 'x3',
+            overflow: 'scroll',
+            maxItems: 3,
+            align: 'center',
+            verticalAlign: 'top',
+            backgroundColor: 'none',
+            borderWidth: 0,
+            item: {
+                cursor: 'hand'
+            },
+            marker: {
+                type: 'circle',
+                borderWidth: 0,
+                cursor: 'hand'
+            }
+        },
+        series: displaySeries
+    };
+
+    zingchart.render({
+        id : containerID,
+        modules: 'change-scatter',
+        data : myConfig,
+        height: 600,
+        width: '100%'
+    });
+
+    zingchart.bind(containerID, 'label_click', function(p) {
+        displaySeries = [];
+        switch (p.labelid) {
+            case "positivos":
+                $.each(series, function (i, serie) {
+                    displaySeries.push(serie.positives);
+                });
+                zingchart.exec(p.id, 'setseriesdata', {
+                    graphid : 0,
+                    data : displaySeries
+                });
+                zingchart.exec(p.id, 'modify', {
+                    graphid : 0,
+                    data : {
+                        scaleY: {
+                            label: {
+                                text: "Índice de Positividad",
+                            },
+                        },
+                    }
+                });
+                break;
+            case "negativos":
+                $.each(series, function (i, serie) {
+                    displaySeries.push(serie.negatives);
+                });
+                zingchart.exec(p.id, 'setseriesdata', {
+                    graphid : 0,
+                    data : displaySeries
+                });
+                zingchart.exec(p.id, 'modify', {
+                    graphid : 0,
+                    data : {
+                        scaleY: {
+                            label: {
+                                text: "Índice de Negatividad",
+                            },
+                        },
+                    }
+                });
+                break;
+            case "neutrales":
+                $.each(series, function (i, serie) {
+                    displaySeries.push(serie.neutrals);
+                });
+                zingchart.exec(p.id, 'setseriesdata', {
+                    graphid : 0,
+                    data : displaySeries
+                });
+                zingchart.exec(p.id, 'modify', {
+                    graphid : 0,
+                    data : {
+                        scaleY: {
+                            label: {
+                                text: "Índice de Neutralidad",
+                            },
+                        },
+                    }
+                });
+                break;
+        };
+    });
+}
+
+function getScatterSeries(corpus) {
+    var opinions = [], polarityAnalyses = [];
+    var mediaPolarities = new Map();
+    $.each(corpus.comments, function (i, comment) {
+        if (comment.opinion != null) {
+            opinions.push({
+                comment_hash: comment.hash,
+                opinion_score: Math.round10(comment.opinionScore * 100, -2)
+            });
+        }
+        if (comment.polarity != null) {
+            mediaPolarities.set(comment.hash, {
+                polarity: comment.polarity,
+                positivity: Math.round10(nullIfZero(comment.positivityScore) * 100, -2),
+                negativity: Math.round10(nullIfZero(comment.negativityScore) * 100, -2),
+                neutrality: Math.round10(nullIfZero(comment.neutralityScore) * 100, -2)
+            })
+        }
+    });
+    polarityAnalyses.push({
+        classifier_name: "Media",
+        language_model: null,
+        records: mediaPolarities
+    });
+
+    // Creamos mapas para cada análisis de sentimiento
+    var pAnalyses = $.grep(corpus.analyses, function (analysis) {
+        return analysis.type === "polarity";
+    });
+    $.each(pAnalyses, function (i, analysis) {
+        var analysisPolarities = new Map();
+        $.each(analysis.records, function(j, record) {
+            analysisPolarities.set(record.comment_hash, {
+                polarity: record.polarity,
+                positivity: Math.round10(nullIfZero(record.positiveScore) * 100, -2),
+                negativity: Math.round10(nullIfZero(record.negativeScore) * 100, -2),
+                neutrality: Math.round10(nullIfZero(record.neutralScore) * 100, -2)
+            })
+        });
+        polarityAnalyses.push({
+            classifier_name: analysis.classifier,
+            language_model: analysis.language_model,
+            records: analysisPolarities
+        });
+    });
+
+    // Creamos las series. Serán de la forma:
+    // series[x] = {
+    //                  classifier_name: "Clasificador",
+    //                  language_model: "Modelo de Lenguaje",
+    //                  positives: [
+    //                                  [subjectivty_score, positivity_score],
+    //                                  [subjectivty_score, positivity_score],
+    //                                  ...
+    //                             ],
+    //                  negatives: [
+    //                                  [subjectivty_score, negativity_score],
+    //                                  [subjectivty_score, negativity_score],
+    //                                  ...
+    //                             ],
+    //                  neutrals: [
+    //                                  [subjectivty_score, neutrality_score],
+    //                                  [subjectivty_score, neutrality_score],
+    //                                  ...
+    //                            ]
+    //             }
+
+    var series = [];
+    $.each(polarityAnalyses, function (i, polarityAnalysis) {
+        var legendText = polarityAnalysis.classifier_name;
+        if (polarityAnalysis.language_model != null)
+            legendText += "<br /><em>" + polarityAnalysis.language_model + "</em>";
+        var serie = {
+            classifier_name: polarityAnalysis.classifier_name,
+            language_model: polarityAnalysis.language_model,
+            positives: {
+                values: [],
+                legendText: legendText
+            },
+            negatives: {
+                values: [],
+                legendText: legendText
+            },
+            neutrals: {
+                values: [],
+                legendText: legendText
+            }
+        };
+
+        $.each(opinions, function (j, opinion) {
+            if (polarityAnalysis.records.has(opinion.comment_hash)) {
+                serie.positives.values.push([opinion.opinion_score, polarityAnalysis.records.get(opinion.comment_hash).positivity]);
+                serie.negatives.values.push([opinion.opinion_score, polarityAnalysis.records.get(opinion.comment_hash).negativity]);
+                serie.neutrals.values.push([opinion.opinion_score, polarityAnalysis.records.get(opinion.comment_hash).neutrality]);
+            }
+        });
+
+        series.push(serie);
+    });
+    return series;
 }
 
 function nullIfZero(number) {

@@ -3,6 +3,8 @@ package es.uned.adapters.sentiment;
 import es.uned.adapters.ClassifierType;
 import es.uned.entities.Analysis;
 import es.uned.entities.Corpus;
+import es.uned.services.RecordsService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Map;
