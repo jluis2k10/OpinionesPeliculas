@@ -29,7 +29,7 @@
                 <sec:authorize access="isAuthenticated()">
                     <li class="nav-item"><a class="nav-link" href="${path}/models">Mis modelos</a></li>
                     <li class="nav-item"><a class="nav-link" href="${path}/models/create">Crear modelo</a></li>
-                    <li class="nav-item"><a class="nav-link" href="${path}/searches">Mis Búsquedas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="${path}/corpora">Mi Corpora</a></li>
                 </sec:authorize>
             </ul>
             <ul class="navbar-nav ml-auto">
@@ -43,7 +43,6 @@
                             Hola ${user.username}
                         </a>
                         <div class="dropdown-menu" aria-labelledby="userAccountLink">
-                            <a class="dropdown-item" href="${path}/corpora">Mi Corpora</a>
                             <a class="dropdown-item" href="#" onclick="document.getElementById('logout-form').submit()">Logout</a>
                             <form action="${path}/logout" method="POST" id="logout-form" style="display: none;">
                                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>

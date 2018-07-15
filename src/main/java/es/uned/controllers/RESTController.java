@@ -9,7 +9,6 @@ import es.uned.entities.Account;
 import es.uned.entities.Corpus;
 import es.uned.services.AccountService;
 import es.uned.services.CorpusService;
-import es.uned.services.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,9 +36,6 @@ public class RESTController {
     CorpusService corpusService;
 
     @Autowired
-    private SearchService searchService;
-
-    @Autowired
     private AccountService accountService;
 
     @RequestMapping(value = "/corpora-sources", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -54,7 +50,7 @@ public class RESTController {
                                                         @RequestBody Map postData)
     {
         String lang = (postData.get("lang") != null ? postData.get("lang").toString() : null);
-        boolean creation = postData.get("creation").equals("true");
+        boolean creation = "true".equals(postData.get("creation").toString());
         ArrayNode response = configParser.getClassifiers(classifierType, principal, lang, creation);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -87,9 +83,5 @@ public class RESTController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    /*@RequestMapping(value = "/searches" , method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ObjectNode> searches(Principal principal) {
-        ObjectNode response = searchService.JSONsearches(accountService.findByUserName(principal.getName()));
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }*/
+
 }

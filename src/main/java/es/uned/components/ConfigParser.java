@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import es.uned.entities.Account;
 import es.uned.entities.LanguageModel;
 import es.uned.services.AccountService;
-import es.uned.services.AdapterModelService;
 import es.uned.services.LanguageModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -38,8 +37,6 @@ public class ConfigParser {
     @Autowired
     private ResourceLoader resourceLoader;
     @Autowired
-    private AdapterModelService adapterModelService;
-    @Autowired
     private LanguageModelService languageModelService;
     @Autowired
     private AccountService accountService;
@@ -60,6 +57,7 @@ public class ConfigParser {
             Element e = (Element) adapter;
             ObjectNode adapterNode = mapper.createObjectNode();
             adapterNode.put("name", e.getAttribute("name"));
+            adapterNode.put("searchTermEnabled", e.getAttribute("searchTermEnabled").equals("true"));
             adapterNode.put("adapterClass", e.getElementsByTagName("class").item(0).getTextContent());
             adapterNode.put("limit", e.getAttribute("limit").equals("true"));
             adapterNode.put("sinceDate", e.getAttribute("sinceDate").equals("true"));
@@ -68,6 +66,7 @@ public class ConfigParser {
             adapterNode.set("languages", this.constructLanguagesList(e.getElementsByTagName("languages").item(0).getChildNodes()));
             adapterNode.put("imdbIDEnabled", e.getAttribute("imdbID").equals("true"));
             adapterNode.put("fileUpload", e.getAttribute("fileUpload").equals("true"));
+            adapterNode.put("textDataset", e.getAttribute("textDataset").equals("true"));
             adapterNode.set("options", this.getAdapterParameters(e, false));
             if ((selectedLang != null && this.hasSelectedLanguage(e, selectedLang)) || selectedLang == null)
                 results.add(adapterNode);
@@ -245,19 +244,6 @@ public class ConfigParser {
             modelNode.put("description", languageModel.getDescription());
             results.add(modelNode);
         });
-        /*Set<AdapterModels> models = adapterModelService.findByAdapterClassAndLang(adapterClass, lang, account);
-        for(AdapterModels model: models) {
-            ObjectNode modelNode = mapper.createObjectNode();
-            modelNode.put("id", model.getId());
-            modelNode.put("name", model.getName());
-            modelNode.put("location", model.getLocation());
-            modelNode.put("lang", model.getLanguage());
-            modelNode.put("trainable", model.isTrainable());
-            modelNode.put("owner_id", model.getOwner().getId());
-            modelNode.put("is_open", model.isOpen());
-            modelNode.put("description", model.getDescription());
-            results.add(modelNode);
-        }*/
         return results;
     }
 }

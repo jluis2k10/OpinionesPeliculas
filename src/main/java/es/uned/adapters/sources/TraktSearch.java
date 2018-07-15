@@ -2,7 +2,6 @@ package es.uned.adapters.sources;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.uned.components.TrakttvLookup;
 import es.uned.entities.Comment;
 import es.uned.entities.Corpus;
 import es.uned.forms.SourceForm;
@@ -13,7 +12,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -36,9 +34,6 @@ public class TraktSearch implements SourceAdapter {
 
     @Inject
     private Environment environment;
-
-    @Autowired
-    private TrakttvLookup trakttvLookup;
 
     /* Opciones de búsqueda */
     private String source;

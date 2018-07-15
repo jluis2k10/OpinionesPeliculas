@@ -11,13 +11,11 @@ import es.uned.adapters.subjectivity.SubjectivityAdapter;
 import es.uned.entities.Account;
 import es.uned.entities.Analysis;
 import es.uned.entities.Corpus;
-import es.uned.entities.Search;
 import es.uned.forms.AnalysisForm;
 import es.uned.forms.AnalysisFormList;
 import es.uned.forms.SourceForm;
 import es.uned.forms.validators.SourceFormValidator;
 import es.uned.services.AccountService;
-import es.uned.services.AdapterModelService;
 import es.uned.services.CorpusService;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +25,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.View;
 
 import javax.servlet.http.HttpServletRequest;
@@ -47,7 +44,6 @@ public class MainController {
     @Autowired private SubjectivityAdapterFactory subjectivityFactory;
     @Autowired private SentimentAdapterFactory sentimentFactory;
 
-    @Autowired private AdapterModelService adapterModelService;
     @Autowired private AccountService accountService;
     @Autowired private CorpusService corpusService;
 
@@ -201,31 +197,6 @@ public class MainController {
         return "analysis_results";
     }
 
-    /*@RequestMapping(value = "/get-analyses", method = RequestMethod.POST)
-    public ResponseEntity<ArrayNode> getAnalyses(@ModelAttribute("corpus") Corpus corpus) {
-        ObjectMapper mapper = new ObjectMapper();
-        ArrayNode response = mapper.createArrayNode();
-        if (corpus.getAnalyses() != null) {
-            corpus.getAnalyses().forEach(analysis ->
-                response.add(analysis.toJson(true))
-            );
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
-    @RequestMapping(value = "/get-corpus-comment-hashes", method = RequestMethod.POST)
-    public ResponseEntity<ObjectNode> getCorpusCommentHashes(@ModelAttribute("corpus") Corpus corpus) {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode response = mapper.createObjectNode();
-        ArrayNode hashesArray = mapper.createArrayNode();
-        LinkedList<Comment> commentsList = new LinkedList<>(corpus.getComments());
-        Collections.sort(commentsList);
-        commentsList.forEach(comment ->
-            hashesArray.add(comment.getHash())
-        );
-        response.set("hashes", hashesArray);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }*/
 
     @RequestMapping(value = "/save-corpus", method = RequestMethod.POST)
     public ResponseEntity<ObjectNode> saveCorpus(
@@ -261,30 +232,5 @@ public class MainController {
             response.put("message", "Corpus guardado correctamente.");
         }
         return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
-    @RequestMapping(value = "/results", method = RequestMethod.POST)
-    public String results(Model model, @ModelAttribute("searchForm") Search search,
-                       BindingResult searchFormErrors, HttpServletRequest request) {
-        search.makeExtraParams(request.getParameterMap());
-        // TODO: hay que comprobar antes que el formulario contiene un id o un id válido
-        search.setSentimentModel(adapterModelService.findOne(search.getSentimentModel().getId()));
-        if (search.isClassifySubjectivity())
-            search.setSubjectivityModel(adapterModelService.findOne(search.getSubjectivityModel().getId()));
-        SourceAdapter sourceAdapter = sourceFactory.get(search.getSourceClass());
-        // (quitado tras cambio en interface sourceAdapter) sourceAdapter.doSearch(search);
-
-        if (search.isClassifySubjectivity()) {
-            SubjectivityAdapter subjectivityAdapter = subjectivityFactory.get(search.getSubjectivityAdapter());
-            //subjectivityAdapter.analyze(search);
-        }
-
-        SentimentAdapter sentimentAdapter = sentimentFactory.get(search.getSentimentAdapter());
-        //sentimentAdapter.analyze(search);
-
-        //searchWrapper.setSearch(search);
-
-        model.addAttribute("search", search);
-        return "results";
     }
 }

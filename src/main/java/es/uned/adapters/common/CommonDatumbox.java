@@ -21,15 +21,14 @@ import com.datumbox.framework.core.machinelearning.preprocessing.MinMaxScaler;
 import com.datumbox.framework.core.machinelearning.preprocessing.StandardScaler;
 import com.datumbox.framework.storage.inmemory.InMemoryConfiguration;
 import es.uned.adapters.ClassifierType;
+import es.uned.entities.Opinion;
+import es.uned.entities.Polarity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Clase común para los clasificadores de la librería Datumbox
@@ -72,50 +71,20 @@ public abstract class CommonDatumbox  {
         classifier.save(modelLocation);
     }
 
-    /**
-     * Genera lista de records para ser añadidos al dataset.
-     * @param textExtractor          TextExtractor para procesar el String
-     * @param positivesOrSubjectives Lista de comentarios positivos o subjetivos
-     * @param negativesOrObjectives  Lista de comentarios negativos u objetivos
-     * @return Lista de records
-     */
-    private List<Record> generateRecords(AbstractTextExtractor textExtractor, List<String> positivesOrSubjectives, List<String> negativesOrObjectives) {
-        List<Record> records = new ArrayList<>();
-        String POStext = "positive";
-        String NOOtext = "negative";
-        if (get_adapter_type() == ClassifierType.OPINION) {
-            POStext = "subjective";
-            NOOtext = "objective";
-        }
-        for (String sentence: positivesOrSubjectives) {
-            if (!sentence.isEmpty()) {
-                AssociativeArray xData = new AssociativeArray(textExtractor.extract(StringCleaner.clear(sentence)));
-                records.add(new Record(xData, POStext));
-            }
-        }
-        for (String sentence: negativesOrObjectives) {
-            if (!sentence.isEmpty()) {
-                AssociativeArray xData = new AssociativeArray(textExtractor.extract(StringCleaner.clear(sentence)));
-                records.add(new Record(xData, NOOtext));
-            }
-        }
-        return records;
-    }
-
-    public void trainModel(String modelLocation, List<String> positivesOrSubjectives, List<String> negativesOrObjectives) {
+    public void trainModel(String modelLocation, Map<Enum, List<String>> datasets) {
         RandomGenerator.setGlobalSeed(42L);
         Configuration configuration = defineConfiguration();
 
         // Cargar el clasificador según el modelo indicado
-        TextClassifier sentimentClassifier = MLBuilder.load(TextClassifier.class, modelLocation, configuration);
-        TextClassifier.TrainingParameters trainingParameters = (TextClassifier.TrainingParameters) sentimentClassifier.getTrainingParameters();
+        TextClassifier classifier = MLBuilder.load(TextClassifier.class, modelLocation, configuration);
+        TextClassifier.TrainingParameters trainingParameters = (TextClassifier.TrainingParameters) classifier.getTrainingParameters();
         AbstractTextExtractor textExtractor = AbstractTextExtractor.newInstance(trainingParameters.getTextExtractorParameters());
 
         // Cargar el dataset con el que se construyó el modelo
         Dataframe dataset = Dataframe.Builder.load(modelLocation + "/dataset", configuration);
 
         // Crear nuevas entradas para el dataset
-        List<Record> records = generateRecords(textExtractor, positivesOrSubjectives, negativesOrObjectives);
+        List<Record> records = generateRecords(textExtractor, datasets);
 
         // Añadir entradas al dataset
         for (Record r: records) {
@@ -123,12 +92,12 @@ public abstract class CommonDatumbox  {
         }
 
         // Entrenar el clasificador
-        sentimentClassifier.fit(dataset);
+        classifier.fit(dataset);
 
-        saveModel(modelLocation, dataset, sentimentClassifier);
+        saveModel(modelLocation, dataset, classifier);
     }
 
-    public void createModel(String modelLocation, Map<String,String> options, List<String> positivesOrSubjectives, List<String> negativesOrObjectives) {
+    public void createModel(String modelLocation, Map<String,String> options, Map<Enum, List<String>> datasets) {
         RandomGenerator.setGlobalSeed(42L);
         Configuration configuration = defineConfiguration();
 
@@ -165,7 +134,10 @@ public abstract class CommonDatumbox  {
                 trainingParameters.setFeatureSelectorTrainingParametersList(Arrays.asList(CSTrainingParameters));
                 break;
             case "MutualInformation":
-                trainingParameters.setFeatureSelectorTrainingParametersList(Arrays.asList(new MutualInformation.TrainingParameters()));
+                MutualInformation.TrainingParameters MITrainingParameters = new MutualInformation.TrainingParameters();
+                MITrainingParameters.setRareFeatureThreshold(Integer.parseInt(options.get("MutualInformation_RareFeatureThreshold")));
+                MITrainingParameters.setMaxFeatures(Integer.parseInt(options.get("MutualInformation_MaxFeatures")));
+                trainingParameters.setFeatureSelectorTrainingParametersList(Arrays.asList(MITrainingParameters));
                 break;
         }
 
@@ -231,7 +203,7 @@ public abstract class CommonDatumbox  {
         AbstractTextExtractor textExtractor = AbstractTextExtractor.newInstance(trainingParameters.getTextExtractorParameters());
 
         // Crear nuevas entradas para el dataset
-        List<Record> records = generateRecords(textExtractor, positivesOrSubjectives, negativesOrObjectives);
+        List<Record> records = generateRecords(textExtractor, datasets);
 
         // Añadir entradas al dataset
         Dataframe trainingData = new Dataframe(configuration);
@@ -243,6 +215,55 @@ public abstract class CommonDatumbox  {
         classifier.fit(trainingData);
 
         saveModel(modelLocation, trainingData, classifier);
+    }
+
+    /**
+     * Genera lista de records para ser añadidos al dataset.
+     * @param textExtractor TextExtractor para procesar el String
+     * @param datasets      Datasets de comentarios clasificados por categoría (positivos, negativos, objetivos...)
+     * @return Lista de records
+     */
+    private List<Record> generateRecords(AbstractTextExtractor textExtractor, Map<Enum, List<String>> datasets) {
+        List<Record> records = new ArrayList<>();
+
+        if (get_adapter_type() == ClassifierType.POLARITY) {
+            datasets.get(Polarity.POSITIVE).stream()
+                    .filter(sentence -> null != sentence && !sentence.isEmpty())
+                    .forEach(sentence -> {
+                        AssociativeArray xData = new AssociativeArray(textExtractor.extract(StringCleaner.clear(sentence)));
+                        records.add(new Record(xData, "positive"));
+                    });
+            datasets.get(Polarity.NEGATIVE).stream()
+                    .filter(sentence -> null != sentence && !sentence.isEmpty())
+                    .forEach(sentence -> {
+                        AssociativeArray xData = new AssociativeArray(textExtractor.extract(StringCleaner.clear(sentence)));
+                        records.add(new Record(xData, "negative"));
+                    });
+            if (datasets.containsKey(Polarity.NEUTRAL)) {
+                datasets.get(Polarity.NEUTRAL).stream()
+                        .filter(sentence -> null != sentence && !sentence.isEmpty())
+                        .forEach(sentence -> {
+                            AssociativeArray xData = new AssociativeArray(textExtractor.extract(StringCleaner.clear(sentence)));
+                            records.add(new Record(xData, "neutral"));
+                        });
+            }
+        }
+        else if (get_adapter_type() == ClassifierType.OPINION) {
+            datasets.get(Opinion.SUBJECTIVE).stream()
+                    .filter(sentence -> null != sentence && !sentence.isEmpty())
+                    .forEach(sentence -> {
+                        AssociativeArray xData = new AssociativeArray(textExtractor.extract(StringCleaner.clear(sentence)));
+                        records.add(new Record(xData, "subjective"));
+                    });
+            datasets.get(Opinion.OBJECTIVE).stream()
+                    .filter(sentence -> null != sentence && !sentence.isEmpty())
+                    .forEach(sentence -> {
+                        AssociativeArray xData = new AssociativeArray(textExtractor.extract(StringCleaner.clear(sentence)));
+                        records.add(new Record(xData, "objective"));
+                    });
+        }
+
+        return records;
     }
 
 }

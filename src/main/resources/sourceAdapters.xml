@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <adapters>
 
-    <adapter name="Twitter" limit="true" siceDate="false" untilDate="true" languages="true" imdbID="false" fileUpload="false">
+    <adapter name="Twitter" searchTermEnabled="true" limit="true" siceDate="false" untilDate="true" languages="true" imdbID="false" fileUpload="false" textDataset="false">
         <class>es.uned.adapters.sources.TwitterSearch</class>
         <languages>
             <lang desc="Español">es</lang>
@@ -27,22 +27,14 @@
         </parameter>
     </adapter>
 
-    <!--<adapter name="IMDB" limit="true" sinceDate="false" untilDate="false" languages="true" imdbID="true" fileUpload="false">
-        <class>es.uned.adapters.sources.IMDBSearch</class>
-        <languages>
-            <lang desc="Español">es</lang>
-            <lang desc="Inglés">en</lang>
-        </languages>
-    </adapter>-->
-
-    <adapter name="Trakt" limit="true" sinceDate="false" untilDate="false" languages="false" imdbID="true" fileUpload="false">
+    <adapter name="Trakt" searchTermEnabled="false" limit="true" sinceDate="false" untilDate="false" languages="false" imdbID="true" fileUpload="false" textDataset="false">
         <class>es.uned.adapters.sources.TraktSearch</class>
         <languages>
             <lang desc="Inglés">en</lang>
         </languages>
     </adapter>
 
-    <adapter name="Dataset" limit="false" siceDate="false" untilDate="false" languages="true" imdbID="false" fileUpload="true">
+    <adapter name="Dataset" searchTermEnabled="false" limit="false" siceDate="false" untilDate="false" languages="true" imdbID="false" fileUpload="true" textDataset="false">
         <class>es.uned.adapters.sources.Dataset</class>
         <languages>
             <lang desc="Español">es</lang>
@@ -50,7 +42,7 @@
         </languages>
     </adapter>
 
-    <adapter name="Frase" limit="false" sinceDate="false" untilDate="false" languages="true" imdbID="false" fileUpload="false">
+    <adapter name="Frase" searchTermEnabled="true" limit="false" sinceDate="false" untilDate="false" languages="true" imdbID="false" fileUpload="false" textDataset="false">
         <class>es.uned.adapters.sources.SentenceSearch</class>
         <languages>
             <lang desc="Español">es</lang>

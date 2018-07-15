@@ -49,7 +49,7 @@
     var corpus = ${corpus.toJson(true, false, false).toString()};
     $(document).ready(function () {
         // Recuperar clasificadores disponibles
-        $.when(getPolarityClassifiers("${corpus.lang}"))
+        $.when(getPolarityClassifiers("${corpus.lang}", false))
             .done(function(_classifiers) {
                 classifiers = _classifiers;
                 if (classifiers.length > 0)

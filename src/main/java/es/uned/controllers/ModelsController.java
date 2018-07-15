@@ -8,11 +8,13 @@ import es.uned.adapters.sentiment.SentimentAdapter;
 import es.uned.adapters.sources.SourceAdapter;
 import es.uned.adapters.subjectivity.SubjectivityAdapter;
 import es.uned.entities.Account;
-import es.uned.entities.AdapterModels;
-import es.uned.entities.Search;
-import es.uned.entities.TrainParams;
+import es.uned.entities.Corpus;
+import es.uned.entities.LanguageModel;
+import es.uned.forms.CreateLanguageModelForm;
+import es.uned.forms.TrainModelForm;
 import es.uned.services.AccountService;
-import es.uned.services.AdapterModelService;
+import es.uned.services.AnalysisService;
+import es.uned.services.LanguageModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,110 +40,104 @@ public class ModelsController {
     @Autowired private SubjectivityAdapterFactory subjectivityFactory;
     @Autowired private SentimentAdapterFactory sentimentFactory;
 
-    @Autowired private AdapterModelService adapterModelService;
+    @Autowired private LanguageModelService languageModelService;
+    @Autowired private AnalysisService analysisService;
     @Autowired private AccountService accountService;
 
     @RequestMapping(value = "", method = RequestMethod.GET)
     public String myModels(Model model, Principal principal) {
         if (principal != null) {
             Account account = accountService.findByUserName(principal.getName());
-            Set<AdapterModels> userSentimentModels = adapterModelService.findUserModels(account, ClassifierType.POLARITY);
-            Set<AdapterModels> userSubjectivityModels = adapterModelService.findUserModels(account, ClassifierType.OPINION);
-            model.addAttribute("sentimentModels", userSentimentModels);
-            model.addAttribute("subjectivityModels", userSubjectivityModels);
+            Set<LanguageModel> userPolarityModels = languageModelService.findUserModels(account, ClassifierType.POLARITY);
+            Set<LanguageModel> userOpinionModels = languageModelService.findUserModels(account, ClassifierType.OPINION);
+            model.addAttribute("polarityModels", userPolarityModels);
+            model.addAttribute("opinionModels", userOpinionModels);
             if (account.isAdmin()) {
-                Set<AdapterModels> allSentimentModels = adapterModelService.findFromOthers(account, ClassifierType.POLARITY);
-                Set<AdapterModels> allSubjectivityModels = adapterModelService.findFromOthers(account, ClassifierType.OPINION);
-                model.addAttribute("allSentimentModels", allSentimentModels);
-                model.addAttribute("allSubjectivityModels", allSubjectivityModels);
+                Set<LanguageModel> allPolarityModels = languageModelService.findFromOthers(account, ClassifierType.POLARITY);
+                Set<LanguageModel> allOpinionModels = languageModelService.findFromOthers(account, ClassifierType.OPINION);
+                model.addAttribute("allPolarityModels", allPolarityModels);
+                model.addAttribute("allOpinionModels", allOpinionModels);
             }
         }
-        return "my-models";
+        return "models/my_models";
     }
 
     @RequestMapping(value = "create", method = RequestMethod.GET)
     public String create(Model model) {
-        model.addAttribute("modelForm", new AdapterModels());
-        return "create_model";
+        model.addAttribute("modelForm", new CreateLanguageModelForm());
+        return "models/create_model";
     }
 
     @RequestMapping(value = "create", method = RequestMethod.POST)
-    public String create(Model model, @ModelAttribute("modelForm") AdapterModels aModel,
+    public String create(Model model, @ModelAttribute("modelForm") CreateLanguageModelForm createModelForm,
                          BindingResult modelFormErrors, HttpServletRequest servletRequest,
                          Principal principal) {
-        Map<String,String> modelParameters = aModel.getModelParameters(servletRequest.getParameterMap());
-        List<String> positivesSubjectives = aModel.getPositivesSubjectives();
-        List<String> negativesSubjectives = aModel.getNegativesObjectives();
-        if (principal != null) {
-            Account account = accountService.findByUserName(principal.getName());
-            aModel.setOwner(account);
+        Map<String,String> modelParameters = createModelForm.getModelParameters(servletRequest.getParameterMap());
+
+        Account account = accountService.findByUserName(principal.getName());
+        LanguageModel languageModel = createModelForm.generateLanguageModel();
+        languageModel.setOwner(account);
+
+        if (createModelForm.getClassifierType() == ClassifierType.POLARITY) {
+            SentimentAdapter adapter = sentimentFactory.get(languageModel.getAdapterClass());
+            adapter.createModel(languageModel.getLocation(), modelParameters, createModelForm.buildDatasets());
         }
-        if (modelParameters.get("classifierType").equals("polarity")) {
-            aModel.setAdapterType(ClassifierType.POLARITY);
-            SentimentAdapter adapter = sentimentFactory.get(aModel.getAdapterClass());
-            adapter.createModel(aModel.getLocation(), modelParameters, positivesSubjectives, negativesSubjectives);
-        } else {
-            aModel.setAdapterType(ClassifierType.OPINION);
-            SubjectivityAdapter adapter = subjectivityFactory.get(aModel.getAdapterClass());
-            adapter.createModel(aModel.getLocation(), modelParameters, positivesSubjectives, negativesSubjectives);
+        else {
+            SubjectivityAdapter adapter = subjectivityFactory.get(languageModel.getAdapterClass());
+            adapter.createModel(languageModel.getLocation(), modelParameters, createModelForm.buildDatasets());
         }
-        adapterModelService.save(aModel);
-        return "create_model";
+
+        languageModelService.save(languageModel);
+        return "models/create_model";
     }
 
     @RequestMapping(value = "train/{id}", method = RequestMethod.GET)
     public String train(Model model, Principal principal, @PathVariable("id") Long modelID) {
-        AdapterModels adapterModel = adapterModelService.findOne(modelID);
+        LanguageModel languageModel = languageModelService.findOne(modelID);
         Account account = accountService.findByUserName(principal.getName());
-        if (!adapterModel.isTrainable() || (!account.isAdmin() && !adapterModel.getOwner().equals(account))) {
+        if (!languageModel.isTrainable() || (!account.isAdmin() && !languageModel.getOwner().equals(account))) {
             return "redirect:/denied";
         }
-        TrainParams trainParams = new TrainParams(adapterModel);
-        model.addAttribute("trainForm", trainParams);
-        return "train";
+        TrainModelForm trainForm = new TrainModelForm(languageModel);
+        model.addAttribute("trainForm", trainForm);
+        return "models/train_model";
     }
 
     @RequestMapping(value = "train/{id}", method = RequestMethod.POST)
     public String train(Model model, @PathVariable("id") Long modelId,
-                        @ModelAttribute("trainForm") TrainParams trainForm, BindingResult trainFormErrors) {
-        List<String> pos_subj;
-        List<String> neg_obj;
-
-        if (trainForm.getSourceClass().equals("FileDataset")) {
-            pos_subj = trainForm.sentenceList(trainForm.getPsFile());
-            neg_obj = trainForm.sentenceList(trainForm.getNoFile());
-        } else if(trainForm.getSourceClass().equals("TextDataset")) {
-            pos_subj = trainForm.sentenceList(trainForm.getPsText());
-            neg_obj = trainForm.sentenceList(trainForm.getNoText());
+                        @ModelAttribute("trainForm") TrainModelForm trainForm, BindingResult trainFormErrors) {
+        if (trainForm.getSourceClass().equals("es.uned.adapters.sources.Dataset")
+                || trainForm.getSourceClass().equals("TextDataset")) {
+            Map<Enum, List<String>> datasets = trainForm.buildDatasets();
+            if (trainForm.getClassifierType() == ClassifierType.POLARITY) {
+                SentimentAdapter sentimentAdapter = sentimentFactory.get(trainForm.getAdapterClass());
+                sentimentAdapter.trainModel(trainForm.getModelLocation(), datasets);
+            } else {
+                SubjectivityAdapter subjectivityAdapter = subjectivityFactory.get(trainForm.getAdapterClass());
+                subjectivityAdapter.trainModel(trainForm.getModelLocation(), datasets);
+            }
         } else {
             SourceAdapter sourceAdapter = sourceFactory.get(trainForm.getSourceClass());
-            Search search = new Search(trainForm);
-            // (quitado tras cambio en interface sourceAdapter) sourceAdapter.doSearch(search);
+            sourceAdapter.setOptions(trainForm);
+            Corpus corpus = new Corpus();
+            sourceAdapter.generateCorpus(corpus);
             model.addAttribute("trainForm", trainForm);
-            model.addAttribute("comments", search.getComments());
-            return "train_comments";
+            model.addAttribute("corpus", corpus);
+            return "models/train_from_comments";
         }
 
-        if (trainForm.getAdapterType() == ClassifierType.POLARITY) {
-            SentimentAdapter sentimentAdapter = sentimentFactory.get(trainForm.getAdapterClass());
-            sentimentAdapter.trainModel(trainForm.getModelLocation(), pos_subj, neg_obj);
-        } else {
-            SubjectivityAdapter subjectivityAdapter = subjectivityFactory.get(trainForm.getAdapterClass());
-            subjectivityAdapter.trainModel(trainForm.getModelLocation(), pos_subj, neg_obj);
-        }
-
-        return "my-models";
+        return "models/my_models";
     }
 
     @RequestMapping(value = "/switchModelOpen", method = RequestMethod.POST)
     public ResponseEntity<String> switchModelOpen(@RequestBody Long modelID, Principal principal) {
-        AdapterModels model = adapterModelService.findOne(modelID);
+        LanguageModel model = languageModelService.findOne(modelID);
         if (principal == null || model == null)
             return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
         Account account = accountService.findByUserName(principal.getName());
         if (model.getOwner() == account || account.isAdmin()) {
-            model.setOpen(!model.isOpen());
-            adapterModelService.save(model);
+            model.setPublic(!model.isPublic());
+            languageModelService.save(model);
             return new ResponseEntity<>("Ok", HttpStatus.OK);
         }
         return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
@@ -149,18 +145,31 @@ public class ModelsController {
 
     @RequestMapping(value = "/deleteModel", method = RequestMethod.POST)
     public ResponseEntity<String> deleteModel(@RequestBody Long modelID, Principal principal) {
-        AdapterModels model = adapterModelService.findOne(modelID);
+        LanguageModel model = languageModelService.findOne(modelID);
         if (principal == null || model == null)
             return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
         Account account = accountService.findByUserName(principal.getName());
         if (model.getOwner() == account || account.isAdmin()) {
             String adapterPath = null;
-            if (model.getAdapterType() == ClassifierType.POLARITY)
+            if (model.getClassifierType() == ClassifierType.POLARITY)
                 adapterPath = sentimentFactory.get(model.getAdapterClass()).get_adapter_path();
             else
                 adapterPath = subjectivityFactory.get(model.getAdapterClass()).get_adapter_path();
-            if (adapterModelService.delete(adapterPath, model))
+            if (languageModelService.delete(adapterPath, model))
                 return new ResponseEntity<>("Ok", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
+    }
+
+    @RequestMapping(value = "/countAnalysis", method = RequestMethod.POST)
+    public ResponseEntity<String> countAnalysis(@RequestBody Long modelID, Principal principal) {
+        LanguageModel model = languageModelService.findOne(modelID);
+        if (principal == null || model == null)
+            return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
+        Account account = accountService.findByUserName(principal.getName());
+        if (model.getOwner() == account || account.isAdmin()) {
+            int totalAnalysis = analysisService.countByLanguageModel(model);
+            return new ResponseEntity<>(String.valueOf(totalAnalysis), HttpStatus.OK);
         }
         return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
     }

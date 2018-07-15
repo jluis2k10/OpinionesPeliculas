@@ -9,12 +9,17 @@ import com.aliasi.lm.NGramBoundaryLM;
 import com.aliasi.lm.NGramProcessLM;
 import com.aliasi.util.AbstractExternalizable;
 import es.uned.adapters.ClassifierType;
+import es.uned.entities.Opinion;
+import es.uned.entities.Polarity;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,88 +48,124 @@ public abstract class CommonLingpipe {
         return baseClassifier;
     }
 
+    private Map<Enum, File> getFiles(File dir) {
+        Map<Enum, File> files;
+
+        if (get_adapter_type() == ClassifierType.POLARITY) {
+            files = new EnumMap(Polarity.class);
+            files.put(Polarity.POSITIVE, new File(dir.toString() + "/lm_pos.model"));
+            files.put(Polarity.NEGATIVE, new File(dir.toString() + "/lm_neg.model"));
+            if (Files.exists(Paths.get(dir.toString() + "/lm_neu.model")))
+                files.put(Polarity.NEUTRAL, new File(dir.toString() + "/lm_neu.model"));
+        }
+        else {
+            files = new EnumMap(Opinion.class);
+            files.put(Opinion.SUBJECTIVE, new File(dir.toString() + "/lm_subjective.model"));
+            files.put(Opinion.OBJECTIVE, new File(dir.toString() + "/lm_objective.model"));
+        }
+
+        return files;
+    }
+
     /**
      * Lingpipe no tiene modelos que se puedan re-entrenar. Lo que hay que hacer es serializar los "language models",
      * recrear el modelo con ellos y guardarlo todo.
      */
-    public void trainModel(String modelLocation, List<String> positivesOrSubjectives, List<String> negativesOrObjectives) {
-        ObjectHandler<CharSequence>[] lms = null;
-        String[] categories = new String[2];
-        if (get_adapter_type() == ClassifierType.POLARITY) {
-            categories[0] = "pos";
-            categories[1] = "neg";
-        } else {
-            categories[0] = "subjective";
-            categories[1] = "objective";
-        }
+    public void trainModel(String modelLocation, Map<Enum, List<String>> datasets) {
         Resource resource = resourceLoader.getResource(get_adapter_path().toString() + modelLocation);
         File dir = null;
-
         try {
             dir = resource.getFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        File posFile = new File(dir.toString() + "/lm_" + categories[0] + ".model");
-        File negFile = new File(dir.toString() + "/lm_" + categories[1] + ".model");
+
+        Map<Enum, File> files = getFiles(dir);
+
+        String[] categories = new String[files.size()];
+        if (get_adapter_type() == ClassifierType.POLARITY) {
+            categories[0] = "pos";
+            categories[1] = "neg";
+            if (files.containsKey(Polarity.NEUTRAL))
+                categories[2] = "neu";
+        } else {
+            categories[0] = "subjective";
+            categories[1] = "objective";
+        }
 
         // Determinar si el LM es NGramBoundary o NGramProcess
-        boolean isNGramProcess = true;
+        char boundaryChar = '\0';
         try {
-            BitInput bitInput = new BitInput(new BufferedInputStream(FileUtils.openInputStream(posFile)));
-            char boundaryChar = (char) (bitInput.readDelta()-1L);
-            if (boundaryChar == '\uFFFF') // Carácter unicode "prohibido" que se utiliza como frontera en el modelo
-                isNGramProcess = false;   // y que sólo debería aparecer en NGramBoundary
+            File first = files.get(Polarity.POSITIVE);
+            BitInput bitInput = new BitInput(new BufferedInputStream(FileUtils.openInputStream(first)));
+            boundaryChar = (char) (bitInput.readDelta()-1L);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        // '\uFFFF' carácter unicode "prohibido" que se utiliza como frontera en el modelo
+        // y que sólo debería aparecer en NGramBoundary
+        final boolean isNGramProcess = boundaryChar != '\uFFFF';
 
         // Cargar language models
-        try {
-            if (isNGramProcess) {
-                lms = new NGramProcessLM[2];
-                lms[0] = NGramProcessLM.readFrom(new BufferedInputStream(FileUtils.openInputStream(posFile)));
-                lms[1] = NGramProcessLM.readFrom(new BufferedInputStream(FileUtils.openInputStream(negFile)));
-            } else {
-                lms = new NGramBoundaryLM[2];
-                lms[0] = NGramBoundaryLM.readFrom(new BufferedInputStream(FileUtils.openInputStream(posFile)));
-                lms[1] = NGramBoundaryLM.readFrom(new BufferedInputStream(FileUtils.openInputStream(negFile)));
+        Map<Enum, ObjectHandler<CharSequence>> lms;
+        if (get_adapter_type() == ClassifierType.POLARITY)
+            lms = new EnumMap(Polarity.class);
+        else
+            lms = new EnumMap(Opinion.class);
+        files.forEach((key, file) -> {
+            try {
+                if (isNGramProcess)
+                    lms.put(key, NGramProcessLM.readFrom(new BufferedInputStream(FileUtils.openInputStream(file))));
+                else
+                    lms.put(key, NGramBoundaryLM.readFrom(new BufferedInputStream(FileUtils.openInputStream(file))));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
+        });
 
         // Entrenamos los language models con los nuevos datasets
-        for (String positive: positivesOrSubjectives) {
-            if (!positive.isEmpty() && isNGramProcess) {
-                ((NGramProcessLM)lms[0]).train(positive);
-            } else if (!positive.isEmpty() && !isNGramProcess) {
-                ((NGramBoundaryLM)lms[0]).train(positive);
-            }
+        datasets.forEach((key, dataset) -> {
+            dataset.stream()
+                    .filter(sentence -> null != sentence && !sentence.isEmpty())
+                    .forEach(sentence -> {
+                        if (isNGramProcess)
+                            ((NGramProcessLM) lms.get(key)).train(sentence);
+                        else
+                            ((NGramBoundaryLM) lms.get(key)).train(sentence);
+                    });
+        });
+
+        // Convertir mapa de languame models a array
+        ObjectHandler<CharSequence>[] lmsArray;
+        if (isNGramProcess)
+            lmsArray = new NGramProcessLM[lms.size()];
+        else
+            lmsArray = new NGramBoundaryLM[lms.size()];
+        if (get_adapter_type() == ClassifierType.POLARITY) {
+            lmsArray[0] = lms.get(Polarity.POSITIVE);
+            lmsArray[1] = lms.get(Polarity.NEGATIVE);
+            if (lms.containsKey(Polarity.NEUTRAL))
+                lmsArray[2] = lms.get(Polarity.NEUTRAL);
         }
-        for (String negative: negativesOrObjectives) {
-            if (!negative.isEmpty() && isNGramProcess) {
-                ((NGramProcessLM)lms[0]).train(negative);
-            } else if (!negative.isEmpty() && !isNGramProcess) {
-                ((NGramBoundaryLM)lms[0]).train(negative);
-            }
+        else {
+            lmsArray[0] = lms.get(Opinion.SUBJECTIVE);
+            lmsArray[1] = lms.get(Opinion.OBJECTIVE);
         }
 
         // Recrear modelo del clasificador a partir de los language models anteriores
-        DynamicLMClassifier<LanguageModel.Dynamic> classifier = new DynamicLMClassifier(categories, (LanguageModel.Dynamic[]) lms);
+        DynamicLMClassifier<LanguageModel.Dynamic> classifier = new DynamicLMClassifier(categories, (LanguageModel.Dynamic[]) lmsArray);
 
         // guardar modelos de lenguaje
-        for(int j = 0; j < lms.length; ++j) {
+        for(int j = 0; j < lmsArray.length; ++j) {
             try {
                 dir = resource.getFile();
                 File saveToFile = new File(dir.toString() + "/lm_" + categories[j] + ".model");
                 OutputStream fileOut = FileUtils.openOutputStream(saveToFile);
                 BufferedOutputStream bufOut = new BufferedOutputStream(fileOut);
                 if (isNGramProcess)
-                    ((NGramProcessLM)lms[j]).writeTo(bufOut);
+                    ((NGramProcessLM)lmsArray[j]).writeTo(bufOut);
                 else
-                    ((NGramBoundaryLM)lms[j]).writeTo(bufOut);
+                    ((NGramBoundaryLM)lmsArray[j]).writeTo(bufOut);
                 fileOut.close();
                 bufOut.close();
             } catch (IOException e) {
@@ -148,7 +189,7 @@ public abstract class CommonLingpipe {
 
     }
 
-    public void createModel(String modelLocation, Map<String,String> options, List<String> positivesOrSubjectives, List<String> negativesOrObjectives) {
+    public void createModel(String modelLocation, Map<String,String> options, Map<Enum, List<String>> datasets) {
         Resource resource = resourceLoader.getResource(get_adapter_path().toString());
         File dir = null;
         try {
@@ -157,17 +198,19 @@ public abstract class CommonLingpipe {
             e.printStackTrace();
         }
 
-        String[] categories = new String[2];
+        String[] categories = new String[datasets.size()];
         if (get_adapter_type() == ClassifierType.POLARITY) {
             categories[0] = "pos";
             categories[1] = "neg";
+            if (datasets.containsKey(Polarity.NEUTRAL))
+                categories[2] = "neu";
         } else {
             categories[0] = "subjective";
             categories[1] = "objective";
         }
 
         // Construir Language Model según las opciones
-        ObjectHandler<CharSequence>[] lms = null; // lms[0] -> positivos, lms[1] -> negativos
+        ObjectHandler<CharSequence>[] lms = null; // lms[0] -> positivos/subjetivos, lms[1] -> negativos/objetivos, lms[2] -> neutrales
         switch (options.get("LanguageModel")) {
             case "NGramProcessLM":
                 lms = new NGramProcessLM[categories.length];
@@ -208,11 +251,32 @@ public abstract class CommonLingpipe {
         }
 
         // Entrenar Language Models
-        // lms[0] es el LM para comentarios positivos y lms[1] el LM para los negativos
-        for (String positive: positivesOrSubjectives)
-            lms[0].handle(positive);
-        for (String negative: negativesOrObjectives)
-            lms[1].handle(negative);
+        if (get_adapter_type() == ClassifierType.POLARITY) {
+            for (String sentence : datasets.get(Polarity.POSITIVE)) {
+                if (null != sentence && !sentence.isEmpty())
+                    lms[0].handle(sentence);
+            }
+            for (String sentence : datasets.get(Polarity.NEGATIVE)) {
+                if (null != sentence && !sentence.isEmpty())
+                    lms[1].handle(sentence);
+            }
+            if (datasets.containsKey(Polarity.NEUTRAL)) {
+                for (String sentence : datasets.get(Polarity.NEUTRAL)) {
+                    if (null != sentence && !sentence.isEmpty())
+                        lms[2].handle(sentence);
+                }
+            }
+        }
+        else {
+            for (String sentence : datasets.get(Opinion.SUBJECTIVE)) {
+                if (null != sentence && !sentence.isEmpty())
+                    lms[0].handle(sentence);
+            }
+            for (String sentence : datasets.get(Opinion.OBJECTIVE)) {
+                if (null != sentence && !sentence.isEmpty())
+                    lms[1].handle(sentence);
+            }
+        }
 
         // Guardar Language Models
         for(int i = 0; i < lms.length; ++i) {

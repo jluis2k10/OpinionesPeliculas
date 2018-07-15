@@ -34,6 +34,9 @@ public class LanguageModel {
     @Column(name = "trainable")
     private boolean trainable = true;
 
+    @Column(name = "neutral_classification")
+    private boolean neutralClassification = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner")
     private Account owner;
@@ -100,6 +103,14 @@ public class LanguageModel {
         this.trainable = trainable;
     }
 
+    public boolean isNeutralClassification() {
+        return neutralClassification;
+    }
+
+    public void setNeutralClassification(boolean neutralClassification) {
+        this.neutralClassification = neutralClassification;
+    }
+
     public Account getOwner() {
         return owner;
     }
@@ -109,6 +120,10 @@ public class LanguageModel {
     }
 
     public boolean isPublic() {
+        return isPublic;
+    }
+
+    public boolean getIsPublic() {
         return isPublic;
     }
 

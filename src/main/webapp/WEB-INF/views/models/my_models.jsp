@@ -1,15 +1,15 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-<%@ include file="_header.jsp"%>
+<%@ include file="../_header.jsp"%>
 <h2>Mis modelos de análisis</h2>
 <div class="card">
     <div class="card-header">
         <ul class="nav nav-tabs card-header-tabs" role="tablist">
             <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#usentiment">Sentimiento</a></li>
-            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#usubjectivity">Subjetividad</a></li>
+            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#uopinion">Opinión</a></li>
             <sec:authorize access="hasRole('ADMIN')">
-                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#adminsentiment">Todos Sentimiento</a></li>
-                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#adminsubjectivity">Todos Subjetividad</a></li>
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#adminsentiment">Sentimiento (resto usuarios)</a></li>
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#adminopinion">Opinión (resto usuarios)</a></li>
             </sec:authorize>
         </ul>
     </div>
@@ -17,7 +17,7 @@
         <div class="tab-content">
             <div id="usentiment" class="tab-pane fade show active">
                 <c:choose>
-                    <c:when test="${not empty sentimentModels}">
+                    <c:when test="${not empty polarityModels}">
                         <table id="userSentimentModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
                             <thead>
                             <tr>
@@ -29,7 +29,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <c:forEach var="model" items="${sentimentModels}">
+                            <c:forEach var="model" items="${polarityModels}">
                                 <tr>
                                     <td>${model.id}</td>
                                     <td>${model.name}</td>
@@ -43,7 +43,7 @@
                                                 </a>
                                             </c:if>
                                             <c:choose>
-                                                <c:when test="${model.open}">
+                                                <c:when test="${model.isPublic}">
                                                     <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
@@ -70,9 +70,9 @@
                     </c:otherwise>
                 </c:choose>
             </div>
-            <div id="usubjectivity" class="tab-pane fade">
+            <div id="uopinion" class="tab-pane fade">
                 <c:choose>
-                    <c:when test="${not empty subjectivityModels}">
+                    <c:when test="${not empty opinionModels}">
                         <table id="userSubjectivityModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
                             <thead>
                             <tr>
@@ -84,7 +84,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <c:forEach var="model" items="${subjectivityModels}">
+                            <c:forEach var="model" items="${opinionModels}">
                                 <tr>
                                     <td>${model.id}</td>
                                     <td>${model.name}</td>
@@ -98,7 +98,7 @@
                                                 </a>
                                             </c:if>
                                             <c:choose>
-                                                <c:when test="${model.open}">
+                                                <c:when test="${model.isPublic}">
                                                     <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
@@ -121,14 +121,14 @@
                         </table>
                     </c:when>
                     <c:otherwise>
-                        <h3>Sin modelos para análisis de subjetividad</h3>
+                        <h3>Sin modelos para análisis de opinión</h3>
                     </c:otherwise>
                 </c:choose>
             </div>
             <sec:authorize access="hasRole('ADMIN')">
                 <div id="adminsentiment" class="tab-pane fade">
                     <c:choose>
-                        <c:when test="${not empty allSentimentModels}">
+                        <c:when test="${not empty allPolarityModels}">
                             <table id="allSentimentModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
                                 <thead>
                                 <tr>
@@ -141,7 +141,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <c:forEach var="model" items="${allSentimentModels}">
+                                <c:forEach var="model" items="${allPolarityModels}">
                                     <tr>
                                         <td>${model.id}</td>
                                         <td>${model.name}</td>
@@ -156,7 +156,7 @@
                                                     </a>
                                                 </c:if>
                                                 <c:choose>
-                                                    <c:when test="${model.open}">
+                                                    <c:when test="${model.isPublic}">
                                                         <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
@@ -183,9 +183,9 @@
                         </c:otherwise>
                     </c:choose>
                 </div>
-                <div id="adminsubjectivity" class="tab-pane fade">
+                <div id="adminopinion" class="tab-pane fade">
                     <c:choose>
-                        <c:when test="${not empty allSubjectivityModels}">
+                        <c:when test="${not empty allOpinionModels}">
                             <table id="allSubjectivityModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
                                 <thead>
                                 <tr>
@@ -198,7 +198,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <c:forEach var="model" items="${allSubjectivityModels}">
+                                <c:forEach var="model" items="${allOpinionModels}">
                                     <tr>
                                         <td>${model.id}</td>
                                         <td>${model.name}</td>
@@ -213,7 +213,7 @@
                                                     </a>
                                                 </c:if>
                                                 <c:choose>
-                                                    <c:when test="${model.open}">
+                                                    <c:when test="${model.isPublic}">
                                                         <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
@@ -236,7 +236,7 @@
                             </table>
                         </c:when>
                         <c:otherwise>
-                            <h3>Sin modelos para análisis de subjetividad</h3>
+                            <h3>Sin modelos para análisis de opinión</h3>
                         </c:otherwise>
                     </c:choose>
                 </div>
@@ -265,23 +265,16 @@
     </div>
 </div>
 
-<%@ include file="_js.jsp"%>
+<%@ include file="../_js.jsp"%>
 
-<link rel="stylesheet" href="/webjars/datatables/1.10.16/css/dataTables.bootstrap4.min.css" />
-<script type="text/javascript" src="/webjars/datatables/1.10.16/js/jquery.dataTables.min.js"></script>
-<script type="text/javascript" src="/webjars/datatables/1.10.16/js/dataTables.bootstrap4.min.js"></script>
-<script type="text/javascript" src="${path}/js/custom.js"></script>
+<link rel="stylesheet" href="${path}/webjars/datatables/1.10.16/css/dataTables.bootstrap4.min.css" />
+<script type="text/javascript" src="${path}/webjars/datatables/1.10.16/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="${path}/webjars/datatables/1.10.16/js/dataTables.bootstrap4.min.js"></script>
+<script type="text/javascript" src="${path}/js/common.js"></script>
 
 <script>
     var table = null;
     $(document).ready(function() {
-        /* Recuperar token csrf para incluirlo como cabecera en cada envío ajax */
-        var token = $("meta[name='_csrf']").attr("content");
-        var header = $("meta[name='_csrf_header']").attr("content");
-        $(document).ajaxSend(function(e, xhr, options) {
-            xhr.setRequestHeader(header, token);
-        });
-
         // Inicialización de modal con mensaje de confirmación de borrado
         $("#modal-confirm").modal({
             keyboard: true,
@@ -289,9 +282,8 @@
         });
 
         // Inicializar datatables
-        var localized = datatablesLocalization();
         table = $('.data-table').DataTable({
-            language: localized
+            language: datatablesLocalization()
         });
 
         /* Acción al esconderse el modal */
@@ -321,24 +313,53 @@
                 }
             })
             .fail(function () {
-                $span.removeClass().addClass($spanclass);
-                alertMsg("danger", "No se ha podido cambiar el estado del modelo indicado.");
+                showFlashMessage("danger", "No se ha podido cambiar el estado del modelo indicado.");
             });
     });
 
     /* Acción al hacer click en el botón de borrar modelo de en el listado de modelos de usuario */
     $(".delete-model").click(function (e) {
-        var modal = $('#modal-confirm').modal('toggle');
+        // Info sobre el modelo a eliminar
         $deleteBtn = $(e.target);
         $row = $deleteBtn.closest("tr");
-        $row.addClass("selected");
+        $modelID = $deleteBtn.data("modelid");
         $modelName = $row.find("td").eq(1).html();
-        modal.find(".modal-body").html("<p>¿Desea borrar el modelo <strong>" + $modelName + "</strong>? No hay vuelta atrás.</p>");
-        modal.find(".delete-confirm").data({
-            "modelid": $deleteBtn.data("modelid"),
-            "modelname": $modelName
-        });
+
+        // Deshabilitamos todos los botones para borrar modelos
+        $(".delete-model").prop("disabled", true);
+
+        // Marcamos la fila de la tabla que contiene el modelo seleccionado
+        $row.addClass("selected");
+
+        // Recuperar cuántos análisis utilizan el modelo seleccionado y lanzar el modal de confirmación
+        $.when(getTotalAnalysis($deleteBtn.data("modelid")))
+            .done(function (totalAnalysis) {
+                showModalConfirm($modelID, $modelName, parseInt(totalAnalysis));
+            })
+            .fail(function () {
+                showModalConfirm($modelID, $modelName, -1);
+            })
     });
+
+    // Mostrar modal pidiendo confirmación de borrado de modelo de lenguaje
+    function showModalConfirm(modelID, modelName, totalAnalysis) {
+        var modal = $('#modal-confirm').modal('toggle');
+        modal.find(".delete-confirm").data({
+            "modelid": modelID,
+            "modelname": modelName
+        });
+        var message = "";
+        if (totalAnalysis < 0) {
+            message = "<p><strong class='text-danger'>ATENCIÓN:</strong> Ocurrió un error recuperando el número de " +
+                "análisis que utilizan este modelo.</p>";
+        }
+        else {
+            message = "<p><strong>Este modelo se utiliza en " + totalAnalysis + " análisis.</strong> Al borrarlo se eliminarán también " +
+                "todos estos análisis.</p>";
+        }
+        message += "<p>¿Está seguro de que desea borrar el modelo <strong>" + modelName + "</strong>? No hay vuelta atrás.</p>";
+        modal.find(".modal-body").html(message);
+    }
 
     /* Acción al hacer click en el botón de confirmación de borrar modelo en el modal */
     $(".delete-confirm").click(function (e) {
@@ -350,12 +371,18 @@
             })
             .done(function () {
                 table.row(".selected").remove().draw(false);
-                alertMsg("success", "Modelo <strong>" + $deleteBtn.data("modelname") + "</strong> eliminado correctamente.");
+                showFlashMessage("success", "Modelo <strong>" + $deleteBtn.data("modelname") + "</strong> eliminado correctamente.");
             })
             .fail(function () {
-                table.row(".selected").removeClass("selected");
-                alertMsg("danger", "No se ha podido eliminar el modelo <strong>" + $deleteBtn.data("modelname") + "</strong>.");
+                $('tr.selected').removeClass('selected');
+                showFlashMessage("danger", "No se ha podido eliminar el modelo <strong>" + $deleteBtn.data("modelname") + "</strong>.");
             })
+    });
+
+    // Acción al ocultar modal de confirmación de borrado (reactivar botones y desmarcar fila)
+    $("#modal-confirm").on("hidden.bs.modal", function (e) {
+        $(".delete-model").prop("disabled", false);
+        $('tr.selected').removeClass('selected');
     });
 
     /* Petición AJAX POST para cambiar el estado (público/privado) de un modelo */
@@ -382,6 +409,17 @@
         }));
     }
 
+    function getTotalAnalysis(modelId) {
+        return Promise.resolve($.ajax({
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            url: ctx + "/models/countAnalysis",
+            data: JSON.stringify(modelId),
+            timeout: 5000
+        }));
+    }
+
 </script>
 
-<%@ include file="_footer.jsp"%>
+<%@ include file="../_footer.jsp"%>

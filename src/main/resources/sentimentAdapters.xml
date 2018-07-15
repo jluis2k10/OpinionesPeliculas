@@ -29,7 +29,7 @@
                         <option name="min" value="0.0" />
                     </parameter>
                 </option>
-                <option name="Maximum Absolute Scaler" value="MaxAbsScaler"/>
+                <option name="Maximum Absolute Scaler" value="MaxAbsScaler" />
                 <option name="Minimum Maximum Scaler" value="MinMaxScaler" />
                 <option name="Standard Scaler" value="StandardScaler" />
                 <description></description>
@@ -40,7 +40,14 @@
                         <option name="min" value="0.0" />
                     </parameter>
                 </option>
-                <option name="Mutual Information" value="MutualInformation" />
+                <option name="Mutual Information" value="MutualInformation">
+                    <parameter name="Rare Feature Threshold" type="number" id="MutualInformation_RareFeatureThreshold" default="5">
+                        <option name="min" value="1" />
+                    </parameter>
+                    <parameter name="Max. Features" type="number" id="MutualInformation_MaxFeatures" default="10000">
+                        <option name="min" value="1" />
+                    </parameter>
+                </option>
                 <description></description>
             </parameter>
             <parameter name="Text Extractor" type="select" id="TextExtractor">

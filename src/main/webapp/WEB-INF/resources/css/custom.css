@@ -82,10 +82,19 @@ p.separator {
 div.votes {
     width: 24px;
     margin-right: 15px;
+    color: #6c757d;
 }
 
 a.vote {
     cursor: pointer;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+a.vote.up, a.vote.down {
+    font-size: 1.6em;
 }
 
 select.pages-size {

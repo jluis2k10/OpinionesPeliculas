@@ -61,7 +61,7 @@
     var corpus = ${corpus.toJson(true, false, false).toString()};
     $(document).ready(function () {
         // Recuperar clasificadores disponibles
-        $.when(getOpinionClassifiers("${corpus.lang}"))
+        $.when(getOpinionClassifiers("${corpus.lang}", false))
             .done(function(_classifiers) {
                 classifiers = _classifiers;
                 if (classifiers.length > 0)

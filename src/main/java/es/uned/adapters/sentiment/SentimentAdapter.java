@@ -21,8 +21,8 @@ public interface SentimentAdapter {
 
     void analyze(Corpus corpus, Analysis analysis);
 
-    void trainModel(String modelLocation, List<String> positives, List<String> negatives);
+    void trainModel(String modelLocation, Map<Enum, List<String>> datasets);
 
-    void createModel(String modelLocation, Map<String,String> options, List<String> positives, List<String> negatives);
+    void createModel(String modelLocation, Map<String,String> options, Map<Enum, List<String>> datasets);
 
 }

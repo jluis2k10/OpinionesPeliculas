@@ -69,12 +69,38 @@ function getCorporaSources(lang) {
     }));
 }
 
-function getOpinionClassifiers(lang) {
+/**
+ * Añadir de forma manual dos fuentes de comentarios extra necesarias para entrenar
+ * un modelo de lenguaje: escribir comentarios.
+ */
+
+function generateExtraSources(sources) {
+    var textDataset = {
+        name:               "Escribir Datasets",
+        searchTermEnabled:  false,
+        adapterClass:       "TextDataset",
+        limit:              false,
+        sinceDate:          false,
+        untilDate:          false,
+        chooseLanguage:     false,
+        languages: {
+            Español:        "es",
+            Inglés:         "en"
+        },
+        imdbIDEnabled:      false,
+        fileUpload:         false,
+        textDataset:        true,
+        options:            []
+    };
+    sources.push(textDataset);
+}
+
+function getOpinionClassifiers(lang, creation) {
     return Promise.resolve($.ajax({
         type: "POST",
         data: JSON.stringify({
             lang: lang,
-            creation: false
+            creation: creation
         }),
         dataType: "json",
         contentType: "application/json; charset=UTF-8",
@@ -83,12 +109,12 @@ function getOpinionClassifiers(lang) {
     }));
 }
 
-function getPolarityClassifiers(lang) {
+function getPolarityClassifiers(lang, creation) {
     return Promise.resolve($.ajax({
         type: "POST",
         data: JSON.stringify({
             lang: lang,
-            creation: false
+            creation: creation
         }),
         dataType: "json",
         contentType: "application/json; charset=UTF-8",
@@ -132,23 +158,31 @@ function renderSourceOptions(source, corpusLang) {
     $("#source").val(source.name);                  // Añadimos el nombre de la fuente al campo oculto del formulario
     $("#sourceAdapter").val(source.adapterClass);   // Añadimos la clase del adaptador seleccionado
 
-    if (source.imdbIDEnabled) {
+    // Primero activamos o desactivamos el input para el término de búsdqueda en función del
+    // tipo de búsqueda que en el que estemos
+    if (source.searchTermEnabled) {
+        $("#term").removeAttr("readonly");
+    } else {
         $("#term").attr("readonly", "readonly");
+    }
+
+    if (source.imdbIDEnabled) {
         $(".imdbID-container").show();
         $("span.select2-container").width("100%");
     } else {
-        if (!source.fileUpload)
-            $("#term").removeAttr("readonly");
         $(".imdbID-container").hide();
     }
     if (source.fileUpload) {
         $(".file-container").show();
-        $("#term").attr("readonly", "readonly");
         $("#term").val("");
     } else {
-        if (!source.imdbIDEnabled)
-            $("#term").removeAttr("readonly");
         $(".file-container").hide();
+    }
+    if (source.textDataset) {
+        $(".text-dataset-container").show();
+        $("#term").val("");
+    } else {
+        $(".text-dataset-container").hide();
     }
     if (source.limit) {
         $(".limit-container").show();
@@ -869,8 +903,6 @@ function renderClassifierText(container, parameter) {
     outerDiv.appendTo(container);
 }
 
-
-
 /**
  * Localización españa de datatables
  * @returns {localización}
@@ -982,3 +1014,249 @@ if (typeof jQuery.fn.dataTableExt != 'undefined') {
         };
     }
 })();
+
+
+/*
+ *  FUNCIONES PARA GESTIÓN DE MODELOS DE LENGUAJE DE LOS ADAPTADORES
+ */
+
+// Construir Input Select con los clasificadores de polaridad o de subjetividad
+function constructClassifiersSelect() {
+    $.when(getClassifiers())
+        .done(function(_classifiers) {
+            var $adapterSelect = $("#adapterSelect");
+            $adapterSelect.empty();
+            $.each(_classifiers, function(index, classifier) {
+                $adapterSelect.append(new Option(classifier.name, classifier.class));
+            });
+            // Construir el formulario para los parámetros disponibles para la creación del modelo
+            populateClassifierParameters(getSelectedClassifier(_classifiers));
+            addListeners(_classifiers);
+        })
+        .fail(function () {
+            console.error("Error recuperando los clasificadores.");
+        })
+}
+
+/* Recuperar clasificadores de polaridad o de subjetividad disponibles */
+function getClassifiers() {
+    var lang = $('#language').val();
+    if ($("input[name='classifierType']:checked").val() === "POLARITY")
+        return getPolarityClassifiers(lang, true);
+    else if ($("input[name='classifierType']:checked").val() === "OPINION")
+        return getOpinionClassifiers(lang, true);
+}
+
+/* Obtener el clasificador seleccionado por el usuario */
+function getSelectedClassifier(classifiers) {
+    var adapterClass = $("#adapterSelect").val();
+    $("#adapterClass").val(adapterClass); // Aprovechamos para cambiar el valor en el input oculto del nuevo modelo
+    var selectedClassifier = $.grep(classifiers, function (classifier, index) {
+        return (classifier.class === adapterClass);
+    })[0];
+    return selectedClassifier;
+}
+
+/* Crear formulario con las opciones para construir un nuevo modelo del clasificador seleccionado */
+function populateClassifierParameters(classifier) {
+    $(".parameters-container").empty();
+    if (typeof classifier === 'undefined') return;
+
+    // Construir los parámetros disponibles para la creación de un nuevo modelo
+    $.each(classifier.model_creation_params, function (index, parameter) {
+        var $outerDiv = $('<div class="card mb-4 border-secondary bg-light"></div>');
+        var $bodyDiv = $('<div class="card-body"></div>');
+        var $title = $('<h5 class="card-title mb-4">' + parameter.name + '</h5>');
+        var $rowDiv = $('<div class="row"></div>');
+        var $parameterHTML = makeParameter(parameter, "root-parameter");
+
+        $parameterHTML.appendTo($rowDiv);
+        $title.appendTo($bodyDiv);
+        $rowDiv.appendTo($bodyDiv);
+        $bodyDiv.appendTo($outerDiv);
+        $outerDiv.appendTo($(".parameters-container"));
+        var $select = $outerDiv.find('select, input:checked');
+        attachOptionParameters($select, classifier);
+    })
+}
+
+// Añadir listeners para diferentes acciones
+function addListeners(classifiers) {
+    // Eliminamos listeners previos
+    $("input[name='classifierType']").off();
+    $("select[name='adapterSelect']").off();
+    $(".root-parameter").off();
+
+    // Listener cambiar el tipo de clasificador
+    $("input[name='classifierType']").on('change', function() {
+        constructClassifiersSelect();
+        if ($(this).val() === "POLARITY") {
+            $('.polarity-datasets').show();
+            $('.opinion-datasets').hide();
+        }
+        else if ($(this).val() === "OPINION") {
+            $('.polarity-datasets').hide();
+            $('.opinion-datasets').show();
+        }
+    });
+
+    // Listener seleccionar el clasificador
+    $("select[name='adapterSelect']").on('change', function() {
+        populateClassifierParameters(getSelectedClassifier(classifiers));
+    });
+
+    /* Acción al seleccionar una de las opciones de los parámetros para crear un nuevo modelo
+     * Podemos tener "subparámetros" para las opciones de los parámetros. */
+    $(".root-parameter").on('change', 'select, input:checked', function () {
+        attachOptionParameters($(this), getSelectedClassifier(classifiers));
+    });
+}
+
+/* Crear campos de formulario para cada parámetro opcional del clasificador */
+function makeParameter(parameter, cssClass) {
+    switch (parameter.type) {
+        case "select":
+            return makeSelectParameter(parameter, cssClass);
+        case "text":
+            return makeTextParameter(parameter, cssClass);
+        case "number":
+            return makeNumberParameter(parameter, cssClass);
+        case "double":
+            return makeDoubleParameter(parameter, cssClass);
+        case "radio":
+            return makeRadioParameter(parameter, cssClass);
+        default:
+            return null;
+    }
+}
+
+/* Crear formulario con parámetros opcionales del clasificador */
+function attachOptionParameters($select, classifier) {
+    var $rowDiv = $select.closest('div.row');
+    $rowDiv.find("div.option-parameter").remove();
+
+    var adapterParameter = $.grep(classifier.model_creation_params, function(parameter, index) {
+        return (parameter.id === $select.attr("id") || parameter.id === $select.attr("name"));
+    })[0];
+    var selectedOption = $.grep(adapterParameter.options, function(option, index) {
+        return (option.value === $select.val());
+    })[0];
+
+    if (selectedOption.parameters) {
+        $.each(selectedOption.parameters, function(index, parameter) {
+            var $parameterHTML = makeParameter(parameter, "option-parameter");
+            $parameterHTML.appendTo($rowDiv);
+        });
+    }
+}
+
+/* Crear opción de tipo Select */
+function makeSelectParameter(parameter, cssClass) {
+    var $innerDiv = $("<div></div>").attr("class", "col-3 form-group " + cssClass + "");
+    var $label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
+    var $select = $("<select></select>").attr({
+        id: parameter.id,
+        name: parameter.id,
+        class: "form-control parameter-options"
+    });
+    $.each(parameter.options, function (index, option) {
+        var $option = $("<option></option>").attr("value", option.value).text(option.name);
+        if (parameter.default === option.value)
+            $option.prop("selected", true);
+        $option.appendTo($select);
+    });
+    $label.appendTo($innerDiv);
+    $select.appendTo($innerDiv);
+    return $innerDiv;
+}
+
+/* Crear opción de tipo Campo de Texto */
+function makeTextParameter(parameter, cssClass) {
+    var $innerDiv = $("<div></div>").attr("class", "col-3 form-group " + cssClass + "");
+    var $label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
+    var $input = $("<input />").attr({
+        type: "text",
+        id: parameter.id,
+        name: parameter.id,
+        value: parameter.default,
+        class: "form-control parameter-options"
+    });
+    $label.appendTo($innerDiv);
+    $input.appendTo($innerDiv);
+    return $innerDiv;
+}
+
+/* Crear opción de tipo numérico entero */
+function makeNumberParameter(parameter, cssClass) {
+    var $innerDiv = $("<div></div>").attr("class", "col-3 form-group " + cssClass + "");
+    var $label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
+    var $input = $("<input />").attr({
+        type: 'number',
+        id: parameter.id,
+        name: parameter.id,
+        value: parameter.default,
+        step: '1',
+        class: 'form-control parameter-options',
+    });
+    $.each(parameter.options, function(index, option) {
+        if (option.name === "min")
+            $input.attr("min", option.value);
+        else if (option.name === "max")
+            $input.attr("max", option.value);
+    });
+    $label.appendTo($innerDiv);
+    $input.appendTo($innerDiv);
+    return $innerDiv;
+}
+
+/* Crear opción de tipo numérico doble (con decimales) */
+function makeDoubleParameter(parameter, cssClass) {
+    var $innerDiv = $("<div></div>").attr("class", "col-3 form-group " + cssClass + "");
+    var $label = $("<label></label>").attr("for", parameter.id).text(parameter.name);
+    var $input = $("<input />").attr({
+        type: 'number',
+        id: parameter.id,
+        name: parameter.id,
+        value: parameter.default,
+        step: '0.01',
+        class: 'form-control parameter-options'
+    });
+    $.each(parameter.options, function(index, option) {
+        if (option.name === "min")
+            $input.attr("min", option.value);
+        else if (option.name === "max")
+            $input.attr("max", option.value);
+    });
+    $label.appendTo($innerDiv);
+    $input.appendTo($innerDiv);
+    return $innerDiv;
+}
+
+/* Crear opción de tipo doble */
+function makeRadioParameter(parameter, cssClass) {
+    var $innerDiv = $("<div></div>").attr("class", "col-3 " + cssClass + "");
+    var $optionHeaderTitle = $("<p></p>").text(parameter.name);
+    $optionHeaderTitle.appendTo($innerDiv);
+    $.each(parameter.options, function (index, option) {
+        var $radioDiv = $("<div></div>").attr("class", "custom-control custom-radio custom-control-inline");
+        var $radioInput = $("<input>").attr({
+            type: "radio",
+            id: option.value,
+            name: parameter.id,
+            value: option.value,
+            class: "custom-control-input"
+        });
+        var $radioLabel = $("<label></label>").attr({
+            for: option.value,
+            class: "custom-control-label"
+        })
+        if (parameter.default === option.value) {
+            $radioInput.prop("checked", true);
+        }
+        $radioLabel.append(option.name);
+        $radioInput.appendTo($radioDiv);
+        $radioLabel.appendTo($radioDiv);
+        $radioDiv.appendTo($innerDiv);
+    });
+    return $innerDiv;
+}

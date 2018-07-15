@@ -58,7 +58,8 @@ public class Datumbox extends CommonDatumbox implements SentimentAdapter {
             commentRecord.setPolarityScore(Double.parseDouble(prob));
             commentRecord.setPositiveScore(sentiment.getYPredictedProbabilities().getDouble("positive"));
             commentRecord.setNegativeScore(sentiment.getYPredictedProbabilities().getDouble("negative"));
-            commentRecord.setNeutralScore(sentiment.getYPredictedProbabilities().getDouble("neutral"));
+            if (sentiment.getYPredictedProbabilities().containsKey("neutral"))
+                 commentRecord.setNeutralScore(sentiment.getYPredictedProbabilities().getDouble("neutral"));
 
             comment.addRecord(commentRecord);
             analysis.addRecord(commentRecord);
