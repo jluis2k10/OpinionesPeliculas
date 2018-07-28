@@ -10,14 +10,26 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- *
+ * Manejador para decidir qué hacer tras una operación exitosa de login.
  */
 public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
+    /**
+     * Constructor de la clase.
+     * @param defaultTargetUrl establece la redirección por defecto ({@link es.uned.config.SecurityConfig#successHandler()})
+     */
     public LoginSuccessHandler(String defaultTargetUrl) {
         setDefaultTargetUrl(defaultTargetUrl);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Establecemos la redirección a efectuar tras un login realizado con éxito en base al
+     * parámetro de sesión "<code>url_prior_login</code>", el cual se genera en
+     * {@link es.uned.controllers.AccountController#login(HttpServletRequest)} a
+     * partir de la página de la que se procede.
+     */
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws ServletException, IOException {

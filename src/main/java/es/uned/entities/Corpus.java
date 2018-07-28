@@ -12,7 +12,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
- *
+ * Entidad para el Corpus. Un corpus es un almacén de comentarios y de análisis sobre esos comentarios.
+ * Tabla CORPORA en la base de datos.
  */
 @Entity
 @Table(name = "Corpora")
@@ -57,10 +58,23 @@ public class Corpus {
     public Corpus() {
     }
 
+    /**
+     * Recalcula las puntuaciones medias obtenidas durante la ejecución de los análisis
+     * sobre los comentarios del corpus.
+     */
     public void refreshScores() {
         this.comments.forEach(comment -> comment.refreshScores());
     }
 
+    /**
+     * Convertir la entidad a un objeto en formato JSON
+     * @param withComments True si se debe incluir la lista de comentarios ({@link es.uned.entities.Comment})
+     *                     del corpus
+     * @param withAnalyses True si se debe incluir la lista de análisis ({@link es.uned.entities.Analysis})
+     *                     ejecutados sobre los comentarios del corpus
+     * @param withRecords  True si debe incluir la lista de records ({@link es.uned.entities.Record}) del corpus
+     * @return Entidad con formato JSON
+     */
     public ObjectNode toJson(boolean withComments, boolean withAnalyses, boolean withRecords) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode corpusNode = mapper.createObjectNode();
@@ -96,10 +110,9 @@ public class Corpus {
         }
         if (withAnalyses) {
             ArrayNode analysesArray = mapper.createArrayNode();
-            getAnalyses().forEach(analysis -> analysesArray.add(analysis.toJson(true)));
+            getAnalyses().forEach(analysis -> analysesArray.add(analysis.toJson(withRecords)));
             corpusNode.set("analyses", analysesArray);
         }
-
         return corpusNode;
     }
 
@@ -168,6 +181,11 @@ public class Corpus {
         return new LinkedList<Comment>(comments);
     }
 
+    /**
+     * Añade un nuevo {@link es.uned.entities.Comment} al corpus evitando duplicados. Asimismo añade
+     * este corpus al comentario para evitar inconsistencias en la base de datos
+     * @param comment Comentario a añadir
+     */
     public void addComment(Comment comment) {
         if (comments.contains(comment))
             return;
@@ -175,10 +193,20 @@ public class Corpus {
         comment.setCorpus(this);
     }
 
+    /**
+     * Añade una lista de {@link es.uned.entities.Comment} al corpus evitando duplicados y añadiendo este
+     * corpus a cada uno de los comentarios para evitar inconsistencias en la base de datos
+     * @param newComments Lista de comentarios a añadir
+     */
     public void addComments(List<Comment> newComments) {
         newComments.forEach(newComment -> addComment(newComment));
     }
 
+    /**
+     * Elimina un {@link es.uned.entities.Comment} del corpus, eliminaando también la asociación a este
+     * corpus en el comentario para evitar inconsistencias en la base de datos
+     * @param comment El comentario a eliminar
+     */
     public void removeComment(Comment comment) {
         if (!comments.contains(comment))
             return;
@@ -187,9 +215,14 @@ public class Corpus {
     }
 
     public Collection<Analysis> getAnalyses() {
-        return new LinkedList<Analysis>(analyses);
+        return new LinkedList<>(analyses);
     }
 
+    /**
+     * Añade un nuevo {@link es.uned.entities.Analysis} al corpus evitando duplicados. Asimismo añade
+     * este corpus al análisis para evitar inconsistencias en la base de datos
+     * @param analysis Análisis a añadir
+     */
     public void addAnalysis(Analysis analysis) {
         if (analyses.contains(analysis))
             return;
@@ -197,6 +230,20 @@ public class Corpus {
         analysis.setCorpus(this);
     }
 
+    /**
+     * Añade una lista de {@link es.uned.entities.Analysis} al corpus evitando duplicados y añadiendo este
+     * corpus a cada uno de los análisis para evitar inconsistencias en la base de datos
+     * @param analyses Lista de análisis a añadir
+     */
+    public void addAnalyses(List<Analysis> analyses) {
+        analyses.forEach(analysis -> addAnalysis(analysis));
+    }
+
+    /**
+     * Elimina un {@link es.uned.entities.Analysis} del corpus, eliminando también la asociación a este
+     * corpus en el análisis para evitar inconsistencias en la base de datos
+     * @param analysis El análisis a eliminar
+     */
     public void removeAnalysis(Analysis analysis) {
         if (!analyses.contains(analysis))
             return;
@@ -204,13 +251,9 @@ public class Corpus {
         analysis.setCorpus(null);
     }
 
-    public void addAnalyses(List<Analysis> analyses) {
-        analyses.forEach(analysis -> addAnalysis(analysis));
-    }
-
     /**
      * JSP necesita este método para acceder a la variable
-     * @return
+     * @return true si corpus es público, false en caso contrario
      */
     public boolean getIsPublic() {
         return isPublic;

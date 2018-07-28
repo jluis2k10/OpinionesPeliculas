@@ -19,20 +19,20 @@
         </Console>
 
         <!-- File Appender -->
-        <File name="File" fileName="c:/log/app.log">
+        <File name="File" fileName="target/report-logs/opiniones_app.log">
             <PatternLayout pattern="[%-5level] %d{dd/MM/yyyy HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
         </File>
 
     </Appenders>
     <Loggers>
         <!-- Log Spring -->
-        <Logger name="org.springframework" level="debug" additivity="false">
+        <Logger name="org.springframework" level="error" additivity="false">
             <AppenderRef ref="ConsoleOut" />
             <AppenderRef ref="ConsoleErr" />
         </Logger>
 
         <!-- Log everything in hibernate with level="info" -->
-        <Logger name="org.hibernate" level="info" additivity="false">
+        <Logger name="org.hibernate" level="error" additivity="false">
             <AppenderRef ref="ConsoleOut" />
             <AppenderRef ref="ConsoleErr" />
         </Logger>
@@ -52,7 +52,7 @@
         </Logger>
 
         <!-- Log custom packages -->
-        <Logger name="es.uned" level="debug" additivity="false">
+        <Logger name="es.uned" level="error" additivity="false">
             <AppenderRef ref="ConsoleOut" />
             <AppenderRef ref="ConsoleErr" />
             <AppenderRef ref="File" />

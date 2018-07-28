@@ -16,41 +16,61 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Fuente de comentarios a partir de un archivo o Dataset.
+ * Se recupera un comentario por línea del archivo.
  */
-// Debe estar nombrado para que la fábrica lo localice y pueda inyectarlo.
 @Component("es.uned.adapters.sources.Dataset")
 public class Dataset implements SourceAdapter {
 
+    /**
+     * Idioma del dataset
+     */
     private String lang;
+
+    /**
+     * Archivo con los comentarios
+     */
     private MultipartFile file;
 
+    /**
+     * {@inheritDoc}
+     * @param sourceForm Formulario con los parámetros opcionales
+     */
     @Override
     public void setOptions(SourceForm sourceForm) {
         this.lang = sourceForm.getLang();
         this.file = sourceForm.getFile();
     }
 
+    /**
+     * {@inheritDoc}
+     * @param corpus Corpus sobre el que se está trabajando
+     */
     @Override
     public void generateCorpus(Corpus corpus) {
         corpus.setLang(this.lang);
         addComments(corpus);
     }
 
+    /**
+     * {@inheritDoc}
+     * @param sourceForm Formulario con los parámetros opcionales
+     * @param corpus     Corpus sobre el que se está trabajando
+     * @return Número de nuevos comentarios añadidos al corpus
+     */
     @Override
     public int updateCorpus(SourceForm sourceForm, Corpus corpus) {
         setOptions(sourceForm);
-        Map<Integer, Comment> thisSourceComments = corpus.getComments().stream()
-                .filter(comment -> comment.getSource().equals("Dataset"))
-                .collect(Collectors.toMap(comment -> comment.getHash(), Function.identity(), (oldVal, newVal) -> oldVal, LinkedHashMap::new));
-
         int oldSize = corpus.getComments().size();
         addComments(corpus);
         corpus.setUpdated(LocalDateTime.now());
-
         return corpus.getComments().size() - oldSize;
     }
 
+    /**
+     * Añadir comentarios al corpus desde el archivo subido.
+     * @param corpus Corpus sobre el que se está trabajando
+     */
     private void addComments(Corpus corpus) {
         try {
             InputStream is = file.getInputStream();

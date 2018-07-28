@@ -1,5 +1,9 @@
 package es.uned.forms;
 
+/**
+ * Clase para respaldar el formulario de editar las propiedades
+ * de un Corpus.
+ */
 public class EditCorpusForm {
 
     private Long id;

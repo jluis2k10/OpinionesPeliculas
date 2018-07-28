@@ -47,7 +47,7 @@
 <script>
     var renderedTable;
     $(document).ready(function () {
-        $.when(getUserCorpora())
+        $.when(getUserCorpora(false, true, false))
             .done(function (_corpora) {
                 renderedTable = renderCorporaTable(_corpora);
             })

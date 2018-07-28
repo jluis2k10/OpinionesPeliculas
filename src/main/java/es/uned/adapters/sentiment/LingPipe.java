@@ -13,23 +13,34 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 /**
- *
+ * Adaptador que utiliza el clasificador/libreria Lingpipe para análisis de polaridad (sentimiento).
+ * @see <a href="http://alias-i.com/lingpipe/index.html">Lingpipe</a>
  */
 @Component("es.uned.adapters.sentiment.LingPipe")
 public class LingPipe extends CommonLingpipe implements SentimentAdapter {
 
+    @Autowired private ResourceLoader resourceLoader;
+    @Autowired private Tokenizer tokenizer;
+
+    /**
+     * Directorio específico para este adaptador
+     */
     private static final String ADAPTER_DIR = "/lingpipe";
 
-    @Autowired
-    private ResourceLoader resourceLoader;
-    @Autowired
-    private Tokenizer tokenizer;
-
+    /**
+     * {@inheritDoc}
+     * @return String con la ruta
+     */
     @Override
     public String get_adapter_path() {
         return "classpath:" + MODELS_DIR + ADAPTER_DIR + "/";
     }
 
+    /**
+     * {@inheritDoc}
+     * @param corpus   Corpus sobre el que se ejecutará el análisis
+     * @param analysis Análisis que se ejecutará y sus opciones
+     */
     @Override
     public void analyze(Corpus corpus, Analysis analysis) {
         // Opciones para tokenizer
@@ -61,6 +72,10 @@ public class LingPipe extends CommonLingpipe implements SentimentAdapter {
         corpus.addAnalysis(analysis);
     }
 
+    /**
+     * {@inheritDoc}
+     * @return Tipo de adaptador
+     */
     @Override
     public ClassifierType get_adapter_type() {
         return adapterType;

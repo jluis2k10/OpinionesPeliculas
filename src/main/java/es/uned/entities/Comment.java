@@ -16,7 +16,15 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
- *
+ * Entidad para comentarios. Modela los textos recuperados sobre los que se
+ * ejecutarán los diferentes análisis.
+ * <p>
+ * Contienen la puntuación media obtenida tras ejecutar análisis de opinión o
+ * polaridad sobre ellos, así como el tipo de Opinión ({@link es.uned.entities.Opinion}) o
+ * Sentimiento ({@link es.uned.entities.Polarity}) más probable en función de
+ * dichos análisis.
+ * <p>
+ * Tabla COMMENTS de la base de datos.
  */
 @Entity
 @Table(name = "comments")
@@ -78,6 +86,10 @@ public class Comment implements Comparable<Comment> {
     private Comment(){
     }
 
+    /**
+     * Constructor a partir del {@link Builder} (patrón Builder).
+     * @param builder Builder para el comentario
+     */
     private Comment(Builder builder) {
         setContent(builder.content);
         setSource(builder.source);
@@ -86,6 +98,16 @@ public class Comment implements Comparable<Comment> {
         setCorpus(builder.corpus);
     }
 
+    /**
+     * Añade un nuevo {@link es.uned.entities.Record} al comentario. Los records son el resultado
+     * de ejecuciones individuales de un análisis sobre el comentario. Con cada ejecución de un
+     * nuevo análisis sobre el comentario, hay que actulizar las puntuaciones medias de dicho
+     * comentario para evitar tener que hacerlo en tiempo real cuando se soliciten.
+     * <p>
+     * Además, añadimos también este comentario al propio record para no crear inconsistencias
+     * en la base de datos.
+     * @param record Record a añadir al comentario tras la ejecución de un análisis
+     */
     public void addRecord(Record record) {
         if (records.contains(record))
             return;
@@ -126,6 +148,16 @@ public class Comment implements Comparable<Comment> {
         record.setComment(this);
     }
 
+    /**
+     * Elimina un {@link es.uned.entities.Record} del comentario. Asimismo se elimina también el comentario
+     * del propio record para evitar inconsistencias en la base de datos.
+     * <p>
+     * Ojo! Tras esta operación hay que refrescar las puntuaciones medias del comentario mediante el método
+     * {@link #refreshScores()}. No se hace aquí directamente por motivos de eficiencia en caso de borrar
+     * varios records de forma simultánea (evitamos hacer cálculos innecesarios tras eliminar cada record
+     * haciendo una única llamada al método {@link #refreshScores()}
+     * @param record El record que se desea eliminar
+     */
     public void removeRecord(Record record) {
         if (!records.contains(record))
             return;
@@ -133,6 +165,12 @@ public class Comment implements Comparable<Comment> {
         records.remove(record);
     }
 
+    /**
+     * Encuentra el {@link es.uned.entities.Record} correspondiente al {@link es.uned.entities.Analysis}
+     * indicado.
+     * @param analysisID ID del análisis del record a encontrar
+     * @return el record encontrado
+     */
     public Record findRecord(Long analysisID) {
         if (records.size() == 0 || null == analysisID)
             return new Record();
@@ -142,6 +180,10 @@ public class Comment implements Comparable<Comment> {
                 .orElse(new Record());
     }
 
+    /**
+     * Actualiza/recalcula las puntuaciones medias del comentario en función de los análisis que
+     * se hayan ejecutado sobre él.
+     */
     public void refreshScores() {
         setPolarityScore(0L);
         setOpinionScore(0L);
@@ -193,6 +235,11 @@ public class Comment implements Comparable<Comment> {
         }
     }
 
+    /**
+     * Converir la entidad a un objeto en formato JSON
+     * @param withRecords True si se deben incluir los {@link es.uned.entities.Record} que contiene
+     * @return Entidad con formato JSON
+     */
     public ObjectNode toJson(boolean withRecords) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode commentNode = mapper.createObjectNode();
@@ -244,7 +291,6 @@ public class Comment implements Comparable<Comment> {
             else
                 commentNode.putNull("opinionRecords");
         }
-
         return commentNode;
     }
 
@@ -274,6 +320,13 @@ public class Comment implements Comparable<Comment> {
         return corpus;
     }
 
+    /**
+     * Especifica el {@link es.uned.entities.Corpus} al que corresponde este comentario. Se añade también el
+     * propio comentario al corpus indicado para evitar inconsistencias en la base de datos.
+     * <p>
+     * Si el corpus es null, se elimina este comentario del corpus.
+     * @param corpus El corpus al cual pertenece este comentario
+     */
     public void setCorpus(Corpus corpus) {
         if (sameAsFormer(corpus))
             return;
@@ -285,6 +338,11 @@ public class Comment implements Comparable<Comment> {
             corpus.addComment(this);
     }
 
+    /**
+     * Devuelve cierto si el {@link es.uned.entities.Corpus} de entrada es el mismo que el actual.
+     * @param newCorpus Nuevo corpus con el que se quiere asociar el comentario
+     * @return true si es el mismo que el actual, false en caso contrario
+     */
     public boolean sameAsFormer(Corpus newCorpus) {
         return corpus == null ? newCorpus == null : corpus.equals(newCorpus);
     }
@@ -317,6 +375,11 @@ public class Comment implements Comparable<Comment> {
         return content;
     }
 
+    /**
+     * Especificamos el texto de la entidad, es decir el comentario en sí mismo. Al mismo tiempo, calculamos
+     * el hash de dicho texto y actualizamos su valor en la propiedad {@link #hash} de la entidad.
+     * @param content Contenido (texto) del comentario
+     */
     public void setContent(String content) {
         this.content = content;
         HashCodeBuilder hashCodeBuilder = new HashCodeBuilder();
@@ -404,6 +467,10 @@ public class Comment implements Comparable<Comment> {
         return Objects.hash(getHash(), getSource(), getUrl(), getContent());
     }
 
+    /**
+     * Clase para construir un nuevo comentario de forma más versátil y fácil de leer.
+     * Clásico patrón Builder.
+     */
     @Component
     public static class Builder {
         private Corpus corpus;

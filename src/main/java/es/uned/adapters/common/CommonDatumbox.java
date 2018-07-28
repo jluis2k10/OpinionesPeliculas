@@ -31,14 +31,25 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Clase común para los clasificadores de la librería Datumbox
+ * Clase común para los clasificadores de la librería Datumbox.
+ * Los métodos {@link #trainModel(String, Map)} y {@link #createModel(String, Map, Map)}
+ * son comunes para los adaptadores de opinión y de sentimiento.
  */
 public abstract class CommonDatumbox  {
 
     @Autowired private ResourceLoader resourceLoader;
 
+    /**
+     * Devuelve la ruta completa hacia el directorio donde se guardan los modelos de lenguaje
+     * del clasificador
+     * @return String con la ruta
+     */
     public abstract String get_adapter_path();
 
+    /**
+     * Devuelve el tipo de adaptador
+     * @return Tipo de adaptador
+     */
     public abstract ClassifierType get_adapter_type();
 
     /**
@@ -71,6 +82,11 @@ public abstract class CommonDatumbox  {
         classifier.save(modelLocation);
     }
 
+    /**
+     * Entrenar modelo de lenguaje indicado
+     * @param modelLocation Ruta donde se encuentra el modelo de lenguaje a entrenar
+     * @param datasets      Listado con los datasets categorizados
+     */
     public void trainModel(String modelLocation, Map<Enum, List<String>> datasets) {
         RandomGenerator.setGlobalSeed(42L);
         Configuration configuration = defineConfiguration();
@@ -97,6 +113,14 @@ public abstract class CommonDatumbox  {
         saveModel(modelLocation, dataset, classifier);
     }
 
+    /**
+     * Crear un nuevo modelo de lenguaje
+     * @param modelLocation Ruta en la que guardar el modelo de lenguaje generado
+     * @param options       Opciones que indican al adaptador cómo se debe crear el nuevo modelo
+     *                      de lenguaje
+     * @param datasets      Listado de datasets categorizados con los que entrenar inicialmente
+     *                      el modelo de lenguaje
+     */
     public void createModel(String modelLocation, Map<String,String> options, Map<Enum, List<String>> datasets) {
         RandomGenerator.setGlobalSeed(42L);
         Configuration configuration = defineConfiguration();

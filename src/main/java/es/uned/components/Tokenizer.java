@@ -18,13 +18,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * Convertir un texto en una "cadena de tokens", homogeneizando signos de puntuación,
+ * espacios en blanco, etc. de modo que los diferentes clasificadores que analizan el
+ * texto partan de una misma base.
  *
+ * Puede ser utilizado para eliminar las stop-words de un texto
  */
 @Component
 public class Tokenizer {
 
-    @Autowired
-    private ResourceLoader resourceLoader;
+    @Autowired private ResourceLoader resourceLoader;
 
     private final static String EN_STOP_WORDS = "en_stopwords.txt";
     private final static String ES_STOP_WORDS = "es_stopwords.txt";
@@ -53,8 +56,8 @@ public class Tokenizer {
 
     /**
      * Credits: https://github.com/brendano/ark-tweet-nlp/blob/8bd4d8378e596e8127e4b700c89804720333ab8d/src/cmu/arktweetnlp/Twokenize.java
-     * @param text
-     * @return
+     * @param text Texto a "tokenizar"
+     * @return texto tokenizado
      */
     public String tokenize(String text) {
         // Escape HTML
@@ -126,6 +129,26 @@ public class Tokenizer {
         return StringUtils.join(zippedStr, " ");
     }
 
+    /**
+     * Elimina "palabras" vacías, es decir elimina posibles espacios en blanco
+     * @param master  Lista de palabras aceptadas (no vacías) hasta el momento
+     * @param smaller Lista de palabras a comprobar
+     * @return Lista de palabras aceptadas (no vacías)
+     */
+    private static List<String> addAllnonempty(List<String> master, List<String> smaller){
+        for (String s : smaller){
+            String strim = s.trim();
+            if (strim.length() > 0)
+                master.add(strim);
+        }
+        return master;
+    }
+
+    /**
+     * Elimina palabras del texto en base a un listado de palabras almacenado en disco.
+     * @param text Texto sobre el cual eliminar las palabras
+     * @return Texto con las palabras ya eliminadas
+     */
     private String deleteStopWords(String text) {
         String stopWordsRegEx = "";
         Resource stopWordsResource = null;
@@ -156,15 +179,12 @@ public class Tokenizer {
         return text.replaceAll(stopWordsRegEx, "");
     }
 
-    private static List<String> addAllnonempty(List<String> master, List<String> smaller){
-        for (String s : smaller){
-            String strim = s.trim();
-            if (strim.length() > 0)
-                master.add(strim);
-        }
-        return master;
-    }
-
+    /**
+     * Se utiliza como objeto con pares de enteros para trabajar sobre rangos o "trozos"
+     * dentro del texto, indicando el carácter de comienzo y el de final
+     * @param <T1>
+     * @param <T2>
+     */
     private static class Pair<T1, T2> {
         public T1 first;
         public T2 second;

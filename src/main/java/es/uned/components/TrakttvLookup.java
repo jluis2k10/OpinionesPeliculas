@@ -21,16 +21,22 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- *
+ * Interfaz de consultas hacia la API de Trak.tv
  */
 @Service
 public class TrakttvLookup {
 
-    @Inject
-    private Environment environment;
+    @Inject private Environment environment;
 
     private ObjectMapper mapper = new ObjectMapper();
 
+    /**
+     * Realiza una búsqueda por título en Trak.tv
+     * @param title Título parcial o completo de la película
+     * @param page  Página a mostrar (Trak.tv pagina los resultados)
+     * @return Objeto JSON con lista de los resultados, incluyendo el título completo
+     *         el año de estreno y su identificador IMDB
+     */
     public ObjectNode lookup(String title, String page) {
         ObjectNode result = mapper.createObjectNode();
         ArrayNode films = mapper.createArrayNode();
@@ -82,6 +88,11 @@ public class TrakttvLookup {
         return result;
     }
 
+    /**
+     * Devuelve el título de una película a partir de su identificador IMDB
+     * @param imdbID Identificador IMDB
+     * @return Título de la película correspondiente al identificador IMDB
+     */
     public String imdbToTitle(String imdbID) {
         String title = null;
         URI uri = null;
@@ -117,8 +128,6 @@ public class TrakttvLookup {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return title;
     }
-
 }

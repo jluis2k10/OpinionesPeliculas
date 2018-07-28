@@ -6,7 +6,18 @@ import javax.persistence.*;
 import java.util.Objects;
 
 /**
- *
+ * Entidad para modelar modelos de lenguaje.
+ * <p>
+ * Un modelo de lenguaje es una representación estadística, que asigna una determinada
+ * probabilidad a un grupo de palabras, permitiendo así clasificar un texto en base a
+ * unas categorías determinadas.
+ * <p>
+ * Los modelos como tal dependen de cada librería/algoritmo de clasificación utilizados
+ * y se encuentran serializados en el disco. Esta entidad es un mero contenedor de
+ * información que indica dónde se encuentra serializado (almacenado) el modelo y otras
+ * opciones relevantes para las librerías de clasificación y sus correspondientes adapadores.
+ * <p>
+ * Tabla LANGUAGE_MODELS en la base de datos.
  */
 @Entity
 @Table(name = "Language_Models")

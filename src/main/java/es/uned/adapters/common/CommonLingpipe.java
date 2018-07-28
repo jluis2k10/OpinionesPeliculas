@@ -24,18 +24,33 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * Clase común para los clasificadores de la librería Lingpipe.
+ * Los métodos {@link #trainModel(String, Map)} y {@link #createModel(String, Map, Map)}
+ * son comunes para los adaptadores de opinión y de sentimiento.
  */
 public abstract class CommonLingpipe {
 
-    @Autowired
-    private ResourceLoader resourceLoader;
+    @Autowired private ResourceLoader resourceLoader;
 
+    /**
+     * Devuelve la ruta completa hacia el directorio donde se guardan los modelos de lenguaje
+     * del clasificador
+     * @return String con la ruta
+     */
     public abstract String get_adapter_path();
 
+    /**
+     * Devuelve el tipo de adaptador
+     * @return Tipo de adaptador
+     */
     public abstract ClassifierType get_adapter_type();
 
-    public BaseClassifier<String> getBaseClassifier(Resource resource) {
+    /**
+     * Genera el clasificador a partir del archivo donde se ha guardado serializado.
+     * @param resource Ruta hasta el archivo
+     * @return Clasificador Lingpipe
+     */
+    protected BaseClassifier<String> getBaseClassifier(Resource resource) {
         BaseClassifier<String> baseClassifier = null;
         try {
             File modelFile = resource.getFile();
@@ -48,6 +63,11 @@ public abstract class CommonLingpipe {
         return baseClassifier;
     }
 
+    /**
+     * Devuelve listado con las rutas a los diferentes modelos de lenguaje guardados en disco.
+     * @param dir Directorio donde se encuentran almacenados los modelos de lenguaje serializados
+     * @return listado con las rutas
+     */
     private Map<Enum, File> getFiles(File dir) {
         Map<Enum, File> files;
 
@@ -68,8 +88,13 @@ public abstract class CommonLingpipe {
     }
 
     /**
-     * Lingpipe no tiene modelos que se puedan re-entrenar. Lo que hay que hacer es serializar los "language models",
-     * recrear el modelo con ellos y guardarlo todo.
+     * Entrenar modelo de lenguaje indicado.
+     * Lingpipe no trabaja con un único modelo de lenguaje que se pueda guardar y re-entrenar. Utiliza
+     * "clasificadores" que se generan a partir de los modelos de lenguaje, pero estos clasificadores no
+     * se pueden re-entrenar una vez creados y guardados. Lo que hay que hacer es de-serializar los
+     * modelos de lenguaje, entrenarlos y recrear el clasificador desde cero a partir de ellos.
+     * @param modelLocation Ruta donde se encuentra el modelo de lenguaje a entrenar
+     * @param datasets      Listado con los datasets categorizados
      */
     public void trainModel(String modelLocation, Map<Enum, List<String>> datasets) {
         Resource resource = resourceLoader.getResource(get_adapter_path().toString() + modelLocation);
@@ -124,7 +149,7 @@ public abstract class CommonLingpipe {
         });
 
         // Entrenamos los language models con los nuevos datasets
-        datasets.forEach((key, dataset) -> {
+        datasets.forEach((key, dataset) ->
             dataset.stream()
                     .filter(sentence -> null != sentence && !sentence.isEmpty())
                     .forEach(sentence -> {
@@ -132,8 +157,8 @@ public abstract class CommonLingpipe {
                             ((NGramProcessLM) lms.get(key)).train(sentence);
                         else
                             ((NGramBoundaryLM) lms.get(key)).train(sentence);
-                    });
-        });
+                    })
+        );
 
         // Convertir mapa de languame models a array
         ObjectHandler<CharSequence>[] lmsArray;
@@ -189,6 +214,16 @@ public abstract class CommonLingpipe {
 
     }
 
+    /**
+     * Crear un nuevo modelo de lenguaje.
+     * Similar a lo indicado en {@link #trainModel(String, Map)}, creamos y entrenamos los modelos de
+     * lenguaje, a partir de ellos el clasificador que utilizará Lingpipe y lo guardamos todo.
+     * @param modelLocation Ruta en la que guardar el modelo de lenguaje indicado
+     * @param options       Opciones que indican al adaptador cómo se debe crear el nuevo modelo
+     *                      de lenguaje
+     * @param datasets      Listado de datasets categorizados con los que entrenar inicialmente
+     *                      el modelo de lenguaje
+     */
     public void createModel(String modelLocation, Map<String,String> options, Map<Enum, List<String>> datasets) {
         Resource resource = resourceLoader.getResource(get_adapter_path().toString());
         File dir = null;

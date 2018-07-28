@@ -10,7 +10,7 @@ import org.springframework.social.twitter.connect.TwitterConnectionFactory;
 import javax.inject.Inject;
 
 /**
- *
+ * Configuración para Spring Social
  */
 @Configuration
 public class SocialConfig {

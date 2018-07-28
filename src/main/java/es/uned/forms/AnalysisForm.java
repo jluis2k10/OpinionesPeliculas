@@ -6,7 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Elementos del formulario para análisis.
+ * Elementos del formulario con los parámetros necesarios para ejecutar análisis sobre
+ * comentarios.
  */
 public class AnalysisForm {
 
@@ -24,6 +25,12 @@ public class AnalysisForm {
 
     private String classifierType;
 
+    /**
+     * Todos los campos del formulario generados de forma dinámica y dependientes de cada
+     * tipo de clasificador se almacenan en esta variable, en forma de mapa en el cual
+     * la clave es el nombre de la opción y el valor es la opción seleccionada por el usuario
+     * en el formulario.
+     */
     private Map<String, String> options = new HashMap<>();
 
     public AnalysisForm() {

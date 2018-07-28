@@ -15,6 +15,14 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Clase para respaldar el formulario de crear nuevo modelo de lenguaje.
+ * <p>
+ * Es un formulario dinámico que puede tener parámetros opcionales en función
+ * de la librería de clasificación para la que se está creando el modelo
+ * de lenguaje. Por lo tanto cuenta con métodos específicos para trabajar
+ * sobre este tipo de parámetros.
+ */
 public class CreateLanguageModelForm {
 
     private ClassifierType classifierType;
@@ -26,6 +34,7 @@ public class CreateLanguageModelForm {
     private String description;
     private String adapterClass;
     private boolean textDataset = true;
+
     private String positivesText;
     private String negativesText;
     private String neutralsText;
@@ -37,9 +46,21 @@ public class CreateLanguageModelForm {
     private MultipartFile subjectivesFile;
     private MultipartFile objectivesFile;
 
-    private final String PARAMS_KEYS = "(?:name|adapterClass|language|location|trainable|description|" +
+    /**
+     * Usamos esta cadena de texto para diferenciar los parámetros opcionales que aparecen en
+     * el formulario de los que no lo son. Toda variable cuyo nombre no encaje con este patrón
+     * se considerará un parámetro opcional (dinámico) del formulario.
+     */
+    private final String PARAMS_KEYS = "(?:classifierType|name|adapterClass|language|location|trainable|description|" +
             "isPublic|textDataset|\\w*Text\\b|\\w*File\\b)";
 
+    /**
+     * Devuelve un mapa con los parámetros dinámicos que aparecen en el formulario, en la forma de
+     * clave: nombre del parámetro, valor: valor del parámetro en el formulario.
+     * @param parameters Mapa con todos los parámetros que aparecen en el formulario, tanto los
+     *                   que son dinámicos como los que no.
+     * @return Mapa con sólo los parámetros dinámicos del formulario
+     */
     public Map<String,String> getModelParameters(Map<String,String[]> parameters) {
         Map<String,String> modelParameters = new HashMap<>();
         Pattern pattern = Pattern.compile(PARAMS_KEYS);
@@ -51,6 +72,12 @@ public class CreateLanguageModelForm {
         return modelParameters;
     }
 
+    /**
+     * Genera una instancia de {@link es.uned.entities.LanguageModel} a partir de los
+     * datos introducidos en los campos del formulario y que puede ser respaldada directamente
+     * en la base de datos.
+     * @return Instancia LanguageModel
+     */
     public LanguageModel generateLanguageModel() {
         LanguageModel lm = new LanguageModel();
         lm.setClassifierType(this.classifierType);
@@ -68,10 +95,27 @@ public class CreateLanguageModelForm {
         return lm;
     }
 
+    /**
+     * Crea un mapa con los textos que se utilzarán para entrenar el modelo de lenguaje,
+     * clasificado por las categorías.
+     * <p>
+     * Por ejemplo si el modelo de lenguaje es para un clasificador de análisis de
+     * opinión, se devolverá un mapa de la forma:
+     * <code>
+     *     mapa(Subjetivos, Textos subjetivos)
+     *     mapa(Objetivos, Textos objetivos)
+     * </code>
+     * @return Mapa con los textos que se utilizan para entrenar el modelo de lenguaje
+     */
     public Map<Enum, List<String>> buildDatasets() {
         return (classifierType == ClassifierType.POLARITY ? buildPolarityDatasets() : buildOpinionDatasets());
     }
 
+    /**
+     * Construir mapa con los textos que se utilizan para entrenar el modelo de lenguaje
+     * en clasificadores de polaridad.
+     * @return Mapa con los textos que se utilizan para entrenar el modelo de lenguaje
+     */
     private Map<Enum, List<String>> buildPolarityDatasets() {
         Map<Enum, List<String>> datasets = new EnumMap(Polarity.class);
         if (isTextDataset()) {
@@ -89,6 +133,11 @@ public class CreateLanguageModelForm {
         return datasets;
     }
 
+    /**
+     * Construir mapa con los textos que se utilizan para entrenar el modelo de lenguaje
+     * en clasificadores de polaridad.
+     * @return Mapa con los textos que se utilzian para entrenar el modelo de lenguaje
+     */
     private Map<Enum, List<String>> buildOpinionDatasets() {
         Map<Enum, List<String>> datasets = new EnumMap(Opinion.class);
         if (isTextDataset()) {
@@ -102,11 +151,24 @@ public class CreateLanguageModelForm {
         return datasets;
     }
 
-    private List<String> getSentences(String text) {
+    /**
+     * Devuelve una lista de cadenas de texto a partir de un texto cualquiera. Cada nueva línea
+     * del texto de entrada es un elemento más en la lista de salida.
+     * @param text Texto de entrada a convertir
+     * @return Lista con un elemento por cada nueva línea en el texto de entrada
+     */
+    private List<String>  getSentences(String text) {
         String[] lines = text.split("\\r?\\n");
         return Arrays.asList(lines);
     }
 
+    /**
+     * Lee el contenido de un archivo de texto y devuelve una lista de cadenas a partir del
+     * contenido del archivo, añadiendo un elemento a la lista de salida con cada nueva línea
+     * de texto en el archivo.
+     * @param file Archivo de texto a leer
+     * @return Lista con un elemento por cada nueva línea en el archivo de texto
+     */
     private List<String> getSentences(MultipartFile file) {
         List<String> sentences = new ArrayList<>();
         try {

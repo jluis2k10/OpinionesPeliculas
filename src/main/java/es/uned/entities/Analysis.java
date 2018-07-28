@@ -14,7 +14,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
- *
+ * Entidad para análisis. Modela un cierto análisis de clasificación ejecutado
+ * sobre un corpus.
+ * Tabla ANALYSIS en base de datos.
  */
 @Entity
 @Table(name = "analysis")
@@ -70,6 +72,16 @@ public class Analysis {
 
     public Analysis() {}
 
+    /**
+     * Los análisis son dinámicos. Contienen opciones diferentes en función del clasificador
+     * y del modelo de lenguaje que se utilice. Por lo tanto los formularios que se utilzian
+     * en las vistas de la capa de presentación también deben ser dinámicos, conteniendo
+     * campos diferentes para cada tipo de análisis disponible.
+     * <p>
+     * Con este constructor recogemos la información introducida en un formulario y la
+     * convertimos a una entidad análisis que puede ser respaldada en la base de datos.
+     * @param analysisForm Formulario de análisis con campos dinámicos
+     */
     public Analysis(AnalysisForm analysisForm) {
         if (analysisForm.getClassifierType().equals("polarity"))
             this.analysisType = ClassifierType.POLARITY;
@@ -84,6 +96,12 @@ public class Analysis {
         this.options = analysisForm.getOptions();
     }
 
+    /**
+     * Convertir la entidad a un objeto en formato JSON.
+     * @param withRecords True si se deben incluir los {@link es.uned.entities.Record} generados tras la ejecución
+     *                    del análisis. False en caso contrario.
+     * @return Entidad con formato JSON
+     */
     public ObjectNode toJson(boolean withRecords) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode analysisNode = mapper.createObjectNode();
@@ -125,7 +143,6 @@ public class Analysis {
         else {
             analysisNode.putNull("options");
         }
-
         return analysisNode;
     }
 
@@ -142,6 +159,13 @@ public class Analysis {
         return corpus;
     }
 
+    /**
+     * Especifica el {@link es.uned.entities.Corpus} sobre el cual se ejecuta este análisis.
+     * <p>
+     * Comprobamos si es el mismo que ya tenía o si hay que desvincular la asociación
+     * Corpus <-> Análisis para no crear inconsistencias en la base de datos.
+     * @param corpus Corpus con el que asociar el análisis
+     */
     public void setCorpus(Corpus corpus) {
         if (sameAsFormer(corpus))
             return;
@@ -153,6 +177,12 @@ public class Analysis {
             corpus.addAnalysis(this);
     }
 
+    /**
+     * Devuelve cierto si el corpus de entrada (nuevo corpus) es el mismo que el que tiene
+     * asociado actualmente.
+     * @param newCorpus Nuevo corpus con el que se quiere asociar el análisis
+     * @return true si es el mismo que el que ya tiene, false en caso contrario
+     */
     public boolean sameAsFormer(Corpus newCorpus) {
         return corpus == null ? newCorpus == null : corpus.equals(newCorpus);
     }
@@ -241,6 +271,12 @@ public class Analysis {
         return records;
     }
 
+    /**
+     * Añade un nuevo {@link es.uned.entities.Record} al análisis. Se comprueba si el record ya está
+     * presente y se vincula al mismo con este análisis para no generar inconsistencias con la base
+     * de datos.
+     * @param record Record a añadir al análisis
+     */
     public void addRecord(Record record) {
         if (records.contains(record))
             return;
@@ -248,6 +284,12 @@ public class Analysis {
         record.setAnalysis(this);
     }
 
+    /**
+     * Elimina un {@link es.uned.entities.Record} del análisis. Se elimina la asociación por ambos
+     * lados de la misma para no crear inconsistencias en la base de datos (es decir se elimina
+     * también el análisis del objeto Record).
+     * @param record Record a eliminar del análisis
+     */
     public void removeRecord(Record record) {
         if (!records.contains(record))
             return;
@@ -268,6 +310,7 @@ public class Analysis {
                 isDeleteStopWords() == analysis.isDeleteStopWords() &&
                 isOnlyOpinions() == analysis.isOnlyOpinions() &&
                 getAnalysisType() == analysis.getAnalysisType() &&
+                Objects.equals(getLanguageModel(), analysis.getLanguageModel()) &&
                 Objects.equals(getClassifier(), analysis.getClassifier()) &&
                 Objects.equals(getAdapterClass(), analysis.getAdapterClass()) &&
                 Objects.equals(getLang(), analysis.getLang()) &&
@@ -277,6 +320,6 @@ public class Analysis {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getAnalysisType(), getClassifier(), getAdapterClass(), getLang(), isDeleteStopWords(), isOnlyOpinions(), getOptions(), getRecords().size());
+        return Objects.hash(getId(), getAnalysisType(), getLanguageModel(), getClassifier(), getAdapterClass(), getLang(), isDeleteStopWords(), isOnlyOpinions(), getOptions(), getRecords().size());
     }
 }

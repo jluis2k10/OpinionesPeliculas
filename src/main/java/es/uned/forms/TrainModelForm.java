@@ -13,7 +13,8 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 /**
- *
+ * Clase para respaldar el formulario que se utiliza para entrenar un modelo
+ * de lenguaje ya existente.
  */
 public class TrainModelForm extends SourceForm {
 
@@ -36,6 +37,10 @@ public class TrainModelForm extends SourceForm {
 
     public TrainModelForm() {}
 
+    /**
+     * Constructor del formulario a partir de un modelo de lenguaje.
+     * @param model Modelo de lenguaje a partir del cual se construye este formulario
+     */
     public TrainModelForm(LanguageModel model) {
         setLang(model.getLanguage());
         this.classifierType = model.getClassifierType();
@@ -44,10 +49,20 @@ public class TrainModelForm extends SourceForm {
         this.neutralClassification = model.isNeutralClassification();
     }
 
+    /**
+     * Crea un mapa con los textos que se utilizarán para entrenar el modelo de lenguaje,
+     * clasificado por las categorías.
+     * @return Mapa con los textos que se utilizan para entrenar el modelo de lenguaje
+     */
     public Map<Enum, List<String>> buildDatasets() {
         return (classifierType == ClassifierType.POLARITY ? buildPolarityDatasets() : buildOpinionDatasets());
     }
 
+    /**
+     * Construir mapa con los textos que se utilizan para entrenar el modelo de lenguaje
+     * en clasificadores de polaridad.
+     * @return Mapa con los textos que se utilizan para entrenar el modelo de lenguaje
+     */
     private Map<Enum, List<String>> buildPolarityDatasets() {
         Map<Enum, List<String>> datasets = new EnumMap(Polarity.class);
 
@@ -67,6 +82,11 @@ public class TrainModelForm extends SourceForm {
         return datasets;
     }
 
+    /**
+     * Construir mapa con los textos que se utilizan para entrenar el modelo de lenguaje
+     * en clasificadores de polaridad.
+     * @return Mapa con los textos que se utilzian para entrenar el modelo de lenguaje
+     */
     private Map<Enum, List<String>> buildOpinionDatasets() {
         Map<Enum, List<String>> datasets = new EnumMap(Opinion.class);
 
@@ -82,6 +102,13 @@ public class TrainModelForm extends SourceForm {
         return datasets;
     }
 
+    /**
+     * Lee el contenido de un archivo de texto y devuelve una lista de cadenas a partir del
+     * contenido del archivo, añadiendo un elemento a la lista de salida con cada nueva línea
+     * de texto en el archivo.
+     * @param file Archivo de texto a leer
+     * @return Lista con un elemento por cada nueva línea en el archivo de texto
+     */
     private List<String> getSentences(MultipartFile file) {
         List<String> sentences = new ArrayList<>();
         try {
@@ -97,6 +124,12 @@ public class TrainModelForm extends SourceForm {
         return sentences;
     }
 
+    /**
+     * Devuelve una lista de cadenas de texto a partir de un texto cualquiera. Cada nueva línea
+     * del texto de entrada es un elemento más en la lista de salida.
+     * @param text Texto de entrada a convertir
+     * @return Lista con un elemento por cada nueva línea en el texto de entrada
+     */
     private List<String> getSentences(String text) {
         String[] lines = text.split("\\r?\\n");
         return new ArrayList<>(Arrays.asList(lines));

@@ -17,14 +17,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * Implementación de la interfaz {@link UserDetailsService} para dar servicio
+ * a operaciones sobre cuentas de usuario ({@link Account}).
+ * <p>
+ * Se necesita una implementación propia ya que cada proyecto Spring recupera
+ * las cuentas de usuario de forma diferente.
  */
 @Service("myUserDetailsService")
 public class MyUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private AccountRepo accountRepo;
+    @Autowired private AccountRepo accountRepo;
 
+    /**
+     * {@inheritDoc}
+     * @param username nombre de usuario
+     * @return Detalles de usuario
+     * @throws UsernameNotFoundException
+     */
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -35,6 +44,11 @@ public class MyUserDetailsService implements UserDetailsService {
                 true, true, true, getGrantedAuthorities(account));
     }
 
+    /**
+     * {@inheritDoc}
+     * @param account Cuenta de usuario
+     * @return lista con los roles (authorities) asociados a la cuenta dada
+     */
     private List<GrantedAuthority> getGrantedAuthorities(Account account) {
         List<GrantedAuthority> auths = new ArrayList<>();
         for (AccountRole accountRole : account.getRoles())

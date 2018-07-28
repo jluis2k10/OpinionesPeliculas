@@ -123,9 +123,16 @@ function getPolarityClassifiers(lang, creation) {
     }));
 }
 
-function getUserCorpora() {
+function getUserCorpora(withComments, withAnalyses, withRecords) {
     return Promise.resolve($.ajax({
-        type: "GET",
+        type: "POST",
+        data: JSON.stringify({
+            withComments: withComments,
+            withAnalyses: withAnalyses,
+            withRecords: withRecords
+        }),
+        dataType: "json",
+        contentType: "application/json; charset=UTF-8",
         url: ctx + "/api/user-corpora",
         timeout: 5000
     }))

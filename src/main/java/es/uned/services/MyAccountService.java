@@ -8,20 +8,21 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
- *
+ * Implementación de la interfaz {@link AccountService} para dar servicio
+ * a operaciones sobre cuentas de usuario ({@link Account}).
  */
 @Service
 public class MyAccountService implements AccountService {
 
-    @Autowired
-    private AccountRepo accountRepo;
+    @Autowired private AccountRepo accountRepo;
+    @Autowired private RoleRepo roleRepo;
 
-    @Autowired
-    private RoleRepo roleRepo;
+    @Autowired private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    @Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
-
+    /**
+     * {@inheritDoc}
+     * @param account Cuenta a persistir
+     */
     public void save(Account account) {
         // Si el password está vacío quiere decir que no se ha modificado y debemos mantener el existente
         if (account.getPassword() == null)
@@ -33,6 +34,11 @@ public class MyAccountService implements AccountService {
         accountRepo.save(account);
     }
 
+    /**
+     * {@inheritDoc}
+     * @param userName nombre de usuario a buscar
+     * @return Cuenta de usuario
+     */
     public Account findByUserName(String userName) {
         return accountRepo.findByUserName(userName);
     }

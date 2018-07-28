@@ -24,7 +24,7 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import javax.sql.DataSource;
 
 /**
- *
+ * Configuración de parámetros de seguridad/control de acceso
  */
 @Configuration
 @EnableWebSecurity
@@ -35,8 +35,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Qualifier("myUserDetailsService")
     UserDetailsService userDetailsService;
 
-    @Autowired
-    DataSource dataSource;
+    @Autowired DataSource dataSource;
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {

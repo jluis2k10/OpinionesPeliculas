@@ -187,7 +187,7 @@
         }
         else if ($(this).attr("value") === "get-comments") {
             showLoading("Recuperando comentarios desde " + $('.sources-dropdown').html());
-            $('#sourceForm').attr('action', "?action=get-comments").submit();
+            $('#sourceForm').submit();
         }
     });
 </script>

@@ -23,7 +23,7 @@
         </thead>
     </table>
 </div>
-<form:form method="post" modelAttribute="opinionForm" action="${path}/opinion-analysis">
+<form:form method="post" modelAttribute="opinionForm" action="${path}/corpora/add-opinion-analysis/${corpus.id}">
     <div class="list-group classifiers mb-5"></div>
     <div class="row">
         <div class="col-4">
@@ -104,7 +104,7 @@
         }
         else if ($(this).attr("value") === "analyse") {
             showLoading("Realizando análisis de Opinión");
-            $('#opinionForm').attr('action', "?action=analyse").submit();
+            $('#opinionForm').submit();
         }
     });
 </script>

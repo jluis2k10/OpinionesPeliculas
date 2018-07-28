@@ -6,7 +6,11 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- *
+ * Los {@link es.uned.entities.Record} tienen un identificador compuesto.
+ * Esta clase modela dicho identificador, el cual comprende por un lado el
+ * ID del {@link es.uned.entities.Analysis} que los genera y por otro el ID
+ * del {@link es.uned.entities.Comment} sobre el cual ha sido ejecutado el
+ * análisis.
  */
 @Embeddable
 public class RecordID implements Serializable {

@@ -8,7 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Encapsula el formulario para generar un Corpus desde alguna fuente de comentarios.
+ * Encapsula el formulario para generar un Corpus desde alguna fuente cualquiera
+ * de comentarios.
  */
 public class SourceForm {
 

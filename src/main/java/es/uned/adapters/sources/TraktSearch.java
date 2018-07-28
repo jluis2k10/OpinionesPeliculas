@@ -27,19 +27,33 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Fuente de comentarios a partir del sitio Trak.tv
+ * Se recuperan comentarios escritos por los usuarios en el sitio Trak.tv
  */
 @Component("es.uned.adapters.sources.TraktSearch")
 public class TraktSearch implements SourceAdapter {
 
-    @Inject
-    private Environment environment;
+    @Inject private Environment environment;
 
-    /* Opciones de búsqueda */
+    /**
+     * Identificador de esta fuente de comentarios (Trakt)
+     */
     private String source;
+
+    /**
+     * Número máximo de comentarios a recuperar
+     */
     private int limit;
+
+    /**
+     * Término de búsqueda (identificador IMDB)
+     */
     private String searchTerm;
 
+    /**
+     * {@inheritDoc}
+     * @param sourceForm Formulario con los parámetros opcionales
+     */
     @Override
     public void setOptions(SourceForm sourceForm) {
         this.source = sourceForm.getSource();
@@ -47,26 +61,37 @@ public class TraktSearch implements SourceAdapter {
         this.searchTerm = sourceForm.getTerm();
     }
 
+    /**
+     * {@inheritDoc}
+     * El idioma siempre será el inglés (de momento no hay comentarios en otros idiomas).
+     * @param corpus Corpus sobre el que se está trabajando
+     */
     @Override
     public void generateCorpus(Corpus corpus) {
         corpus.setLang("en");
         addComments(corpus);
     }
 
+    /**
+     * {@inheritDoc}
+     * @param sourceForm Formulario con los parámetros opcionales
+     * @param corpus     Corpus sobre el que se está trabajando
+     * @return Número de comentarios añadidos al corpus
+     */
     @Override
     public int updateCorpus(SourceForm sourceForm, Corpus corpus) {
         setOptions(sourceForm);
-        Map<Integer, Comment> thisSourceComments = corpus.getComments().stream()
-                .filter(comment -> comment.getSource().equals(source))
-                .collect(Collectors.toMap(comment -> comment.getHash(), Function.identity(), (oldVal, newVal) -> oldVal, LinkedHashMap::new));
-
         int oldSize = corpus.getComments().size();
         addComments(corpus);
         corpus.setUpdated(LocalDateTime.now());
-
         return corpus.getComments().size() - oldSize;
     }
 
+    /**
+     * Realiza una búsqueda consultando el API público de Trak.tv y añade los comentarios
+     * recuperados al corpus.
+     * @param corpus Corpus sobre el que se está trabajando
+     */
     private void addComments(Corpus corpus) {
         HttpClient httpClient = HttpClientBuilder.create().build();
         URI uri = null;

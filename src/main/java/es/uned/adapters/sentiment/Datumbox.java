@@ -12,24 +12,33 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- *
+ * Adaptador que utiliza el clasificador/librería Datumbox para análisis de polaridad (sentimiento).
+ * @see <a href="https://github.com/datumbox/datumbox-framework/">Datumbox Framework</a>
  */
 @Component("es.uned.adapters.sentiment.Datumbox")
 public class Datumbox extends CommonDatumbox implements SentimentAdapter {
 
+    @Autowired private Tokenizer tokenizer;
+
+    /**
+     * Directorio específico para este adaptador
+     */
     private static final String ADAPTER_DIR = "/datumbox";
 
-    @Autowired
-    private RecordsService recordsService;
-
-    @Autowired
-    private Tokenizer tokenizer;
-
+    /**
+     * {@inheritDoc}
+     * @return String con la ruta
+     */
     @Override
     public String get_adapter_path() {
         return "classpath:" + MODELS_DIR + ADAPTER_DIR + "/";
     }
 
+    /**
+     * {@inheritDoc}
+     * @param corpus   Corpus sobre el que se ejecutará el análisis
+     *      * @param analysis Análisis que se ejecutará y sus opciones
+     */
     @Override
     public void analyze(Corpus corpus, Analysis analysis) {
         // Cargar modelo desde archivo serializado
@@ -68,6 +77,10 @@ public class Datumbox extends CommonDatumbox implements SentimentAdapter {
         corpus.addAnalysis(analysis);
     }
 
+    /**
+     * {@inheritDoc}
+     * @return Tipo de adaptador
+     */
     @Override
     public ClassifierType get_adapter_type() {
         return adapterType;

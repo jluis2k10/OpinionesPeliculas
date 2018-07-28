@@ -49,7 +49,7 @@
 <script type="text/javascript" src="${path}/js/graphs.js"></script>
 
 <script>
-    var corpus = ${corpus.toJson(true, true, false).toString()};
+    var corpus = ${corpus.toJson(true, true, true).toString()};
     $(document).ready(function () {
         renderPieChart('pie', corpus.comments);
         renderBarChart('bar', corpus.comments);

@@ -3,7 +3,8 @@ package es.uned.entities;
 import javax.persistence.*;
 
 /**
- *
+ * Entidad para roles de usuario.
+ * Tabla ACCOUNT_ROLES en base de datos.
  */
 @Entity
 @Table(name = "Account_Roles")

@@ -10,7 +10,11 @@ import javax.persistence.*;
 import java.util.Objects;
 
 /**
- *
+ * Entidad para los Records. Un record contiene la información resultante de ejecutar
+ * un análisis ({@link es.uned.entities.Analysis}) (clasificación) sobre un comentario
+ * ({@link es.uned.entities.Comment}) determinado.
+ * <p>
+ * Tabla RECORDS en base de datos
  */
 @Entity
 @Table(name = "records")
@@ -60,6 +64,10 @@ public class Record {
     public Record() {
     }
 
+    /**
+     * Convertir la entidad a un objeto en formato JSON
+     * @return Entidad con formato JSON
+     */
     public ObjectNode toJson() {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode recordNode = mapper.createObjectNode();
@@ -78,16 +86,6 @@ public class Record {
         return recordNode;
     }
 
-    public void update(Record fromRecord) {
-        this.polarity = fromRecord.getPolarity();
-        this.opinion = fromRecord.getOpinion();
-        this.polarityScore = fromRecord.getPolarityScore();
-        this.positiveScore = fromRecord.getPositiveScore();
-        this.negativeScore = fromRecord.getNegativeScore();
-        this.neutralScore = fromRecord.getNeutralScore();
-        this.subjectiveScore = fromRecord.getSubjectiveScore();
-    }
-
     public RecordID getId() {
         return id;
     }
@@ -100,6 +98,12 @@ public class Record {
         return analysis;
     }
 
+    /**
+     * Especifica el {@link es.uned.entities.Analysis} que se ha ejecutado para crear
+     * este record. Se añade también el record a la lista de records del análisis para
+     * evitar inconsistencias en la base de datos.
+     * @param analysis Análisis que ha generado este record
+     */
     public void setAnalysis(Analysis analysis) {
         if (sameAsFormer(analysis))
             return;
@@ -112,6 +116,12 @@ public class Record {
             analysis.addRecord(this);
     }
 
+    /**
+     * Devuelve cierto si el {@link es.uned.entities.Analysis} de entrada es el mismo
+     * que el actual.
+     * @param newAnalysis Nuevo análisis con el que se quiere asociar este record
+     * @return true si es el mismo que el actual, false en caso contrario
+     */
     public boolean sameAsFormer(Analysis newAnalysis) {
         return analysis == null ? newAnalysis == null : analysis.equals(newAnalysis);
     }
@@ -120,6 +130,12 @@ public class Record {
         return comment;
     }
 
+    /**
+     * Especifica el {@link es.uned.entities.Comment} asociado a este record. Se añade
+     * también el record a la lista de records del comentario para evitar inconsistencias
+     * en la base de datos.
+     * @param comment Comentario asociado a este record
+     */
     public void setComment(Comment comment) {
         if (sameAsFormer(comment))
             return;
@@ -133,6 +149,12 @@ public class Record {
         this.commentHash = comment == null ? 0 : comment.getHash();
     }
 
+    /**
+     * Devuelve cierto si el {@link es.uned.entities.Comment} de entrada es el mismo
+     * que el actual.
+     * @param newComment Nuevo comentario con el que se quiere asociar este record
+     * @return true si el mismo que el actual, false en caso contrario
+     */
     public boolean sameAsFormer(Comment newComment) {
         return comment == null ? newComment == null : comment.equals(newComment);
     }

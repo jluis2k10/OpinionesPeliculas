@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- *
+ * Entidad para cuentas de usuario.
+ * Tabla ACCOUNTS en base de datos.
  */
 @Entity
 @Table(name = "Accounts")

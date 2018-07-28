@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
+ * Controlador para manejar los modelos de lenguaje.
  */
 @Controller
 @RequestMapping(value = "/models")
@@ -39,11 +39,16 @@ public class ModelsController {
     @Autowired private SourceAdapterFactory sourceFactory;
     @Autowired private SubjectivityAdapterFactory subjectivityFactory;
     @Autowired private SentimentAdapterFactory sentimentFactory;
-
     @Autowired private LanguageModelService languageModelService;
     @Autowired private AnalysisService analysisService;
     @Autowired private AccountService accountService;
 
+    /**
+     * Muestra el listado con los modelos de lenguaje disponibles
+     * @param model     Contenedor de datos para la vista
+     * @param principal Token de autenticación del usuario
+     * @return Página JSP
+     */
     @RequestMapping(value = "", method = RequestMethod.GET)
     public String myModels(Model model, Principal principal) {
         if (principal != null) {
@@ -62,16 +67,29 @@ public class ModelsController {
         return "models/my_models";
     }
 
+    /**
+     * Presenta el formulario para crear un nuevo modelo de lenguaje
+     * @param model Contenedor con datos para la vista
+     * @return Página JSP
+     */
     @RequestMapping(value = "create", method = RequestMethod.GET)
     public String create(Model model) {
         model.addAttribute("modelForm", new CreateLanguageModelForm());
         return "models/create_model";
     }
 
+    /**
+     * Recoge el formulario POST de crear un nuevo modelo de lenguaje.
+     * El formulario es dinámico, así que no podemos acoplarlo directamente a una clase y debemos
+     * recoger todos los parámetros POST enviados para procesarlos convenientemente.
+     * @param createModelForm Formulario con las opciones "estándar" seleccionadas
+     * @param servletRequest  Datos POST introducidos en la parte dinámica del formulario
+     * @param principal       Token de autenticación del usuario
+     * @return Página JSP
+     */
     @RequestMapping(value = "create", method = RequestMethod.POST)
-    public String create(Model model, @ModelAttribute("modelForm") CreateLanguageModelForm createModelForm,
-                         BindingResult modelFormErrors, HttpServletRequest servletRequest,
-                         Principal principal) {
+    public String create(@ModelAttribute("modelForm") CreateLanguageModelForm createModelForm,
+                         HttpServletRequest servletRequest, Principal principal) {
         Map<String,String> modelParameters = createModelForm.getModelParameters(servletRequest.getParameterMap());
 
         Account account = accountService.findByUserName(principal.getName());
@@ -91,6 +109,14 @@ public class ModelsController {
         return "models/create_model";
     }
 
+    /**
+     * Presenta el formulario que se utiliza para introducir los parámetros necesarios para entrenar
+     * un modelo de lenguaje determinado.
+     * @param model     Contenedor de datos para la vista
+     * @param principal Token de autenticación del usuario
+     * @param modelID   ID del modelo de lenguaje a entrenar
+     * @return Página JSP
+     */
     @RequestMapping(value = "train/{id}", method = RequestMethod.GET)
     public String train(Model model, Principal principal, @PathVariable("id") Long modelID) {
         LanguageModel languageModel = languageModelService.findOne(modelID);
@@ -103,6 +129,18 @@ public class ModelsController {
         return "models/train_model";
     }
 
+    /**
+     * Recoge el formulario POST de entrenar un modelo de lenguaje.
+     * Si la fuente de comentarios para entrenar el modelo de lenguaje no es directamente un dataset en
+     * forma de archivo o de texto, primero se recuperarán los comentarios de dicha fuente y luego se
+     * presentará la página con la interfaz necesaria para que el usuario decida la clasificación de cada
+     * uno de los comentarios recuperados.
+     * @param model           Contenedor con datos para la vista
+     * @param modelId         ID del modelo de lenguaje
+     * @param trainForm       Formulario con las opciones seleccionadas
+     * @param trainFormErrors Contenedor de errores en el formulario
+     * @return Página JSP
+     */
     @RequestMapping(value = "train/{id}", method = RequestMethod.POST)
     public String train(Model model, @PathVariable("id") Long modelId,
                         @ModelAttribute("trainForm") TrainModelForm trainForm, BindingResult trainFormErrors) {
@@ -116,7 +154,10 @@ public class ModelsController {
                 SubjectivityAdapter subjectivityAdapter = subjectivityFactory.get(trainForm.getAdapterClass());
                 subjectivityAdapter.trainModel(trainForm.getModelLocation(), datasets);
             }
-        } else {
+        }
+        // La fuente no es un dataset, recuperar comentarios y presentar la página para clasificar manualmente
+        // estos comentarios
+        else {
             SourceAdapter sourceAdapter = sourceFactory.get(trainForm.getSourceClass());
             sourceAdapter.setOptions(trainForm);
             Corpus corpus = new Corpus();
@@ -129,6 +170,12 @@ public class ModelsController {
         return "models/my_models";
     }
 
+    /**
+     * Atiende a la petición de hacer público/privado un modelo de lenguaje
+     * @param modelID   ID del modelo de lenguaje
+     * @param principal Token de autenticación del usuario
+     * @return Respuesta HTTP a la petición
+     */
     @RequestMapping(value = "/switchModelOpen", method = RequestMethod.POST)
     public ResponseEntity<String> switchModelOpen(@RequestBody Long modelID, Principal principal) {
         LanguageModel model = languageModelService.findOne(modelID);
@@ -143,6 +190,12 @@ public class ModelsController {
         return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
     }
 
+    /**
+     * Atiende a la petición de eliminar un modelo de lenguaje
+     * @param modelID   ID del modelo de lenguaje
+     * @param principal Toekn de autenticación del usuario
+     * @return Respuesta HTTP a la petición
+     */
     @RequestMapping(value = "/deleteModel", method = RequestMethod.POST)
     public ResponseEntity<String> deleteModel(@RequestBody Long modelID, Principal principal) {
         LanguageModel model = languageModelService.findOne(modelID);
@@ -161,6 +214,12 @@ public class ModelsController {
         return new ResponseEntity<>("Error", HttpStatus.FORBIDDEN);
     }
 
+    /**
+     * Devuelve el número de análisis en los que se utiliza el modelo de lenguaje indicado
+     * @param modelID   ID del modelo de lenguaje
+     * @param principal Token de autenticación del usuario
+     * @return Respuesta HTTP a la petición con información sobre el número de análisis
+     */
     @RequestMapping(value = "/countAnalysis", method = RequestMethod.POST)
     public ResponseEntity<String> countAnalysis(@RequestBody Long modelID, Principal principal) {
         LanguageModel model = languageModelService.findOne(modelID);

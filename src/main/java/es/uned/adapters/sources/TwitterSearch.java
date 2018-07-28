@@ -18,22 +18,42 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Fuente de comentarios a partir de tweets.
  */
-// Debe estar nombrado para que la fábrica lo localice y pueda inyectarlo.
 @Component("es.uned.adapters.sources.TwitterSearch")
 public class TwitterSearch implements SourceAdapter {
 
-    @Inject
-    private Environment environment;
+    @Inject private Environment environment;
 
-    /* Opciones de búsqueda */
+    /**
+     * Idioma de los comentarios a recuperar
+     */
     private String lang;
+
+    /**
+     * Identificador de esta fuente de comentarios (Twitter)
+     */
     private String source;
+
+    /**
+     * Número máximo de comentarios a recuperar
+     */
     private int limit;
+
+    /**
+     * Término de búsqueda
+     */
     private String searchTerm;
+
+    /**
+     * Fecha límite. Tweets escritos no más tarde que esta fecha
+     */
     private Date untilDate;
 
+    /**
+     * {@inheritDoc}
+     * @param sourceForm Formulario con los parámetros opcionales
+     */
     @Override
     public void setOptions(SourceForm sourceForm) {
         this.lang = sourceForm.getLang();
@@ -43,25 +63,36 @@ public class TwitterSearch implements SourceAdapter {
         this.untilDate = sourceForm.getUntilDate();
     }
 
+    /**
+     * {@inheritDoc}
+     * @param corpus Corpus sobre el que se está trabajando
+     */
     @Override
     public void generateCorpus(Corpus corpus) {
         corpus.setLang(lang);
         addComments(corpus);
     }
 
+    /**
+     * {@inheritDoc}
+     * @param sourceForm Formulario con los parámetros opcionales
+     * @param corpus     Corpus sobre el que se está trabajando
+     * @return Número de comentarios añadidos al corpus
+     */
     @Override
     public int updateCorpus(SourceForm sourceForm, Corpus corpus) {
         setOptions(sourceForm);
-        Map<Integer, Comment> thisSourceComments = corpus.getComments().stream()
-                .filter(comment -> comment.getSource().equals(source))
-                .collect(Collectors.toMap(comment -> comment.getHash(), Function.identity(), (oldVal, newVal) -> oldVal, LinkedHashMap::new));
-
         int oldSize = corpus.getComments().size();
         addComments(corpus);
         corpus.setUpdated(LocalDateTime.now());
         return corpus.getComments().size() - oldSize;
     }
 
+    /**
+     * Realiza una búsqueda utilizando el API público de Twitter y añade los resultados
+     * al corpus.
+     * @param corpus Corpus sobre el que se está trabajando
+     */
     private void addComments(Corpus corpus) {
         Twitter twitter = new TwitterTemplate(
                 environment.getProperty("twitter.consumerKey"),
