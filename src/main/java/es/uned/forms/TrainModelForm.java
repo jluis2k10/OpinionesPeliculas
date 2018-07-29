@@ -1,22 +1,20 @@
 package es.uned.forms;
 
 import es.uned.adapters.ClassifierType;
+import es.uned.components.DatasetsBuilder;
 import es.uned.entities.LanguageModel;
-import es.uned.entities.Opinion;
-import es.uned.entities.Polarity;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Clase para respaldar el formulario que se utiliza para entrenar un modelo
  * de lenguaje ya existente.
  */
 public class TrainModelForm extends SourceForm {
+
+    private DatasetsBuilder datasetsBuilder = new DatasetsBuilder();
 
     private String sourceClass;
     private ClassifierType classifierType;
@@ -55,84 +53,28 @@ public class TrainModelForm extends SourceForm {
      * @return Mapa con los textos que se utilizan para entrenar el modelo de lenguaje
      */
     public Map<Enum, List<String>> buildDatasets() {
-        return (classifierType == ClassifierType.POLARITY ? buildPolarityDatasets() : buildOpinionDatasets());
-    }
-
-    /**
-     * Construir mapa con los textos que se utilizan para entrenar el modelo de lenguaje
-     * en clasificadores de polaridad.
-     * @return Mapa con los textos que se utilizan para entrenar el modelo de lenguaje
-     */
-    private Map<Enum, List<String>> buildPolarityDatasets() {
-        Map<Enum, List<String>> datasets = new EnumMap(Polarity.class);
-
-        if ("es.uned.adapters.sources.Dataset".equals(this.sourceClass)) {
-            datasets.put(Polarity.POSITIVE, getSentences(this.positivesFile));
-            datasets.put(Polarity.NEGATIVE, getSentences(this.negativesFile));
+        if ("es.uned.adapters.sources.Dataset".equals(this.sourceClass) && classifierType == ClassifierType.POLARITY) {
+            datasetsBuilder.put("positives", this.positivesFile);
+            datasetsBuilder.put("negatives", this.negativesFile);
             if (isNeutralClassification())
-                datasets.put(Polarity.NEUTRAL, getSentences(this.neutralsFile));
+                datasetsBuilder.put("neutrals", this.neutralsFile);
         }
-        else if ("TextDataset".equals(this.sourceClass)) {
-            datasets.put(Polarity.POSITIVE, getSentences(this.positivesText));
-            datasets.put(Polarity.NEGATIVE, getSentences(this.negativesText));
+        else if ("TextDataset".equals(this.sourceClass) && classifierType == ClassifierType.POLARITY) {
+            datasetsBuilder.put("positives", this.positivesText);
+            datasetsBuilder.put("negatives", this.negativesText);
             if (isNeutralClassification())
-                datasets.put(Polarity.NEUTRAL, getSentences(this.neutralsText));
+                datasetsBuilder.put("neutrals", this.negativesText);
         }
-
-        return datasets;
-    }
-
-    /**
-     * Construir mapa con los textos que se utilizan para entrenar el modelo de lenguaje
-     * en clasificadores de polaridad.
-     * @return Mapa con los textos que se utilzian para entrenar el modelo de lenguaje
-     */
-    private Map<Enum, List<String>> buildOpinionDatasets() {
-        Map<Enum, List<String>> datasets = new EnumMap(Opinion.class);
-
-        if ("es.uned.adapters.sources.Dataset".equals(this.sourceClass)) {
-            datasets.put(Opinion.SUBJECTIVE, getSentences(subjectivesFile));
-            datasets.put(Opinion.OBJECTIVE, getSentences(objectivesFile));
+        else if ("es.uned.adapters.sources.Dataset".equals(this.sourceClass) && classifierType == ClassifierType.OPINION) {
+            datasetsBuilder.put("subjectives", this.subjectivesFile);
+            datasetsBuilder.put("objectives", this.objectivesFile);
         }
-        else if ("TextDataset".equals(this.sourceClass)) {
-            datasets.put(Opinion.SUBJECTIVE, getSentences(subjectivesText));
-            datasets.put(Opinion.OBJECTIVE, getSentences(objectivesText));
+        else if ("TextDataset".equals(this.sourceClass) && classifierType == ClassifierType.OPINION) {
+            datasetsBuilder.put("subjectives", this.subjectivesText);
+            datasetsBuilder.put("objectives", this.objectivesText);
         }
-
-        return datasets;
-    }
-
-    /**
-     * Lee el contenido de un archivo de texto y devuelve una lista de cadenas a partir del
-     * contenido del archivo, añadiendo un elemento a la lista de salida con cada nueva línea
-     * de texto en el archivo.
-     * @param file Archivo de texto a leer
-     * @return Lista con un elemento por cada nueva línea en el archivo de texto
-     */
-    private List<String> getSentences(MultipartFile file) {
-        List<String> sentences = new ArrayList<>();
-        try {
-            InputStream is = file.getInputStream();
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
-            String line;
-            while ((line = br.readLine()) != null) {
-                sentences.add(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return sentences;
-    }
-
-    /**
-     * Devuelve una lista de cadenas de texto a partir de un texto cualquiera. Cada nueva línea
-     * del texto de entrada es un elemento más en la lista de salida.
-     * @param text Texto de entrada a convertir
-     * @return Lista con un elemento por cada nueva línea en el texto de entrada
-     */
-    private List<String> getSentences(String text) {
-        String[] lines = text.split("\\r?\\n");
-        return new ArrayList<>(Arrays.asList(lines));
+        datasetsBuilder.setClassifierType(classifierType);
+        return datasetsBuilder.build();
     }
 
     public String getSourceClass() {
