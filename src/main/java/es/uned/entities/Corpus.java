@@ -3,6 +3,7 @@ package es.uned.entities;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import es.uned.adapters.ClassifierType;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -108,12 +109,21 @@ public class Corpus {
             commentsList.forEach(comment -> commentsArrayNode.add(comment.toJson(withRecords)));
             corpusNode.set("comments", commentsArrayNode);
         }
+        corpusNode.put("domain_analysis", hasDomainAnalysis());
         if (withAnalyses) {
             ArrayNode analysesArray = mapper.createArrayNode();
             getAnalyses().forEach(analysis -> analysesArray.add(analysis.toJson(withRecords)));
             corpusNode.set("analyses", analysesArray);
         }
         return corpusNode;
+    }
+
+    /**
+     * Devuelve cierto si ya se ha ejecutado algún análisis de dominio sobre el Corpus.
+     * @return true si el Corpus tiene algún análisis de dominio, false en caso contrario
+     */
+    public boolean hasDomainAnalysis() {
+        return getAnalyses().stream().anyMatch(analysis -> analysis.getAnalysisType() == ClassifierType.DOMAIN);
     }
 
     public void clearAll() {
@@ -226,6 +236,16 @@ public class Corpus {
     public void addAnalysis(Analysis analysis) {
         if (analyses.contains(analysis))
             return;
+
+        // Si ya existe un análisis de dominio, lo sustituimos
+        if (analysis.getAnalysisType() == ClassifierType.DOMAIN && this.hasDomainAnalysis()) {
+            Analysis oldAnalysis = getAnalyses().stream()
+                    .filter(an -> an.getAnalysisType() == ClassifierType.DOMAIN)
+                    .findFirst()
+                    .get();
+            this.removeAnalysis(oldAnalysis);
+        }
+
         analyses.add(analysis);
         analysis.setCorpus(this);
     }

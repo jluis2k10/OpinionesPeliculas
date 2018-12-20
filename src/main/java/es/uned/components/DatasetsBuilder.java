@@ -1,4 +1,3 @@
-
 package es.uned.components;
 
 import es.uned.adapters.ClassifierType;
@@ -13,24 +12,93 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 
+/**
+ * Crear datasets con el formato adecuado para ser utilizados durante los procesos de creación
+ * y entrenamiento de un clasificador.
+ * <p>
+ * @see es.uned.adapters.sentiment.SentimentAdapter#createModel(String, Map, Map)
+ * @see es.uned.adapters.sentiment.SentimentAdapter#trainModel(String, Map)
+ * @see es.uned.adapters.subjectivity.SubjectivityAdapter#createModel(String, Map, Map)
+ * @see es.uned.adapters.subjectivity.SubjectivityAdapter#trainModel(String, Map)
+ * @param <T> tipo de elementos a partir de los cuales generar los datasets ({@link String} o
+ *           {@link MultipartFile})
+ */
 @Component
 public class DatasetsBuilder<T> {
 
+    /**
+     * Dataset "en bruto" proviniente de los formularios de creación o entreno
+     * de modelos de lenguaje.
+     * <p>
+     * @see es.uned.forms.CreateLanguageModelForm
+     * @see es.uned.forms.TrainModelForm
+     */
     private Map<String, T> rawDataset = new HashMap<>();
+
+    /**
+     * Tipo de clasificador donde se utilizará el dataset.
+     */
     private ClassifierType classifierType;
 
+    /**
+     * Devuelve un elemento del mapa con el dataset "en bruto".
+     * @param key clave del mapa del dataset
+     * @return valor del dataset "en bruto"
+     */
     public T get(final String key) {
         return rawDataset.get(key);
     }
 
+    /**
+     * Inserta un nuevo elemento en el dataset "en bruto".
+     * @param key   clave para identificar la entrada en el dataset
+     * @param value elemento a insertar
+     */
     public void put(final String key, T value) {
         rawDataset.put(key, value);
     }
 
+    /**
+     * Define el tipo de clasificador que utilizará el dataset que se generará.
+     * @param classifierType tipo de clasificador
+     */
     public void setClassifierType (ClassifierType classifierType) {
         this.classifierType = classifierType;
     }
 
+    /**
+     * El formato de los datasets que acepta un clasificador es básicamente una lista
+     * de textos o Strings. Pero como los clasificadores clasifican por categorías,
+     * en vez de pasarles como entrada una lista de strings por cada categoría, les
+     * damos un mapa con tantos elementos como categorías y cuyos valores sean precisamente
+     * las listas de Strings.
+     * <p>
+     * Es decir, para clasificadores de polaridad, los datasets vendrán en la forma:
+     * <p>
+     * <table>
+     *     <thead>
+     *         <tr>
+     *             <th>Clave</th>
+     *             <th>Valor</th>
+     *         </tr>
+     *     </thead>
+     *     <tbody>
+     *         <tr>
+     *             <td>positivos</td>
+     *             <td>lista de frases</td>
+     *         </tr>
+     *         <tr>
+     *             <td>negativos</td>
+     *             <td>lista de frases</td>
+     *         </tr>
+     *         <tr>
+     *             <td>neutrales</td>
+     *             <td>lista de frases</td>
+     *         </tr>
+     *     </tbody>
+     * </table>
+     * @return mapa clasificado por categorías con los datasets que acepta el clasificador
+     */
     public Map<Enum, List<String>> build() {
         if (this.classifierType == ClassifierType.POLARITY)
             return buildPolarityDatasets();
@@ -38,6 +106,10 @@ public class DatasetsBuilder<T> {
             return buildOpinionDatasets();
     }
 
+    /**
+     * Construye el mapa con los datasets para clasificadores de polaridad.
+     * @return mapa clasificado por categorías con los datasets
+     */
     private Map<Enum, List<String>> buildPolarityDatasets() {
         Map<Enum, List<String>> datasets = new EnumMap(Polarity.class);
         datasets.put(Polarity.POSITIVE, getSentences(rawDataset.get("positives")));
@@ -47,6 +119,10 @@ public class DatasetsBuilder<T> {
         return datasets;
     }
 
+    /**
+     * Construye el mapa con los datasets para clasificadores de opinión.
+     * @return mapa clasificado por categorías con los datasets
+     */
     private Map<Enum, List<String>> buildOpinionDatasets() {
         Map<Enum, List<String>> datasets = new EnumMap(Opinion.class);
         datasets.put(Opinion.SUBJECTIVE, getSentences(rawDataset.get("subjectives")));
@@ -54,6 +130,13 @@ public class DatasetsBuilder<T> {
         return datasets;
     }
 
+    /**
+     * Recupera las frases (1 frase = 1 línea) contenidas en los archivos/textos de los
+     * datasets "en bruto", devolviendo una lista con todas las frases contenidas en
+     * ellos.
+     * @param rawDataset dataset en bruto de donde ir sacando las frases
+     * @return lista de frases o strings contenidas en el dataset "en bruto"
+     */
     private List<String> getSentences(T rawDataset) {
         if (rawDataset instanceof String)
             return getSentences((String) rawDataset);

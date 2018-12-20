@@ -115,7 +115,7 @@
                 <button type="submit" class="btn btn-primary btn-lg btn-block" value="get-comments"><i class="fas fa-comments"></i> Recuperar comentarios</button>
             </div>
             <div class="col-4">
-                <button type="submit" class="btn btn-secondary btn-lg btn-block" value="next" disabled="disabled">Siguiente <i class="fas fa-angle-right"></i> <small><em>Análisis de Opinión</em></small></button>
+                <button type="submit" class="btn btn-secondary btn-lg btn-block" value="next" disabled="disabled">Siguiente <i class="fas fa-angle-right"></i> <small><em>Análisis de Dominio</em></small></button>
             </div>
         </c:otherwise>
     </c:choose>
@@ -208,7 +208,7 @@
             $('#sourceForm').attr('action', "?action=get-comments").submit();
         }
         else if ($(this).attr("value") === "next") {
-            $('#sourceForm').attr('action', ctx + "/opinion-analysis").submit();
+            $('#sourceForm').attr('action', ctx + "/domain-analysis").submit();
         }
     });
 </script>

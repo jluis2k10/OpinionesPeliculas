@@ -248,6 +248,19 @@ function renderSharedChart(container, corpus) {
     });
 }
 
+function renderDomainChart(container, corpus) {
+    if (!corpus.domain_analysis)
+        return;
+    var domainSeries = getDomainSeries(corpus);
+    var domainChartConfig = getDomainChartConfig(domainSeries);
+    zingchart.render({
+        id: container,
+        data: domainChartConfig,
+        height: 300,
+        width: "100%"
+    });
+}
+
 function lineChartConfig(series, yAxisLabel) {
     var titleText = (yAxisLabel === 'Índice de Positividad') ? "ANÁLISIS DE SENTIMIENTO" : "ANÁLISIS DE OPINIÓN";
     return {
@@ -331,6 +344,52 @@ function lineChartConfig(series, yAxisLabel) {
     };
 }
 
+function getDomainChartConfig(series) {
+    return {
+        type: "bar",
+        title: {
+            text: "ANÁLISIS DE DOMINIO",
+            fontSize: 16,
+            fontColor: 'gray'
+        },
+        tooltip: {
+            text: '%t: %v comentarios',
+            textAlign: 'left'
+        },
+        scaleX: {
+            visible: false
+        },
+        scaleY: {
+            label: {
+                text: 'Comentarios totales',
+                fontSize: "14px"
+            }
+        },
+        plotarea: {
+            margin: 'dynamic 70'
+        },
+        legend: {
+            layout: 'x5',
+            marginTop: '35px',
+            overflow: 'page',
+            maxItems: 5,
+            align: 'center',
+            verticalAlign: 'top',
+            backgroundColor: 'none',
+            borderWidth: 0,
+            item: {
+                cursor: 'hand'
+            },
+            marker: {
+                type: 'circle',
+                borderWidth: 0,
+                cursor: 'hand'
+            }
+        },
+        series: series
+    }
+}
+
 function getAnalysesSeries(analyses, commentHashes) {
     var colorNames = Object.keys(window.chartColors);
     var series = [];
@@ -367,6 +426,30 @@ function getAnalysesSeries(analyses, commentHashes) {
                 serie.values.push(null);
         });
         series.push(serie);
+    });
+    return series;
+}
+
+function getDomainSeries(corpus) {
+    var colorNames = Object.keys(window.chartColors);
+    var series = [];
+    var commentsMap = new Map();
+    $.each(corpus.comments, function (i, comment) {
+        if (commentsMap.has(comment.domain))
+            commentsMap.set(comment.domain, commentsMap.get(comment.domain) + 1);
+        else
+            commentsMap.set(comment.domain, 1);
+    });
+    var i = 0;
+    commentsMap.forEach(function (value, domain) {
+        var color = window.chartColors[colorNames[i % colorNames.length]];
+        var serie = {
+            text: domain,
+            values: [value],
+            backgroundColor: color
+        };
+        series.push(serie);
+        i++;
     });
     return series;
 }

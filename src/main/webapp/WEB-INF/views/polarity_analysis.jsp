@@ -14,7 +14,6 @@
         <tr>
             <th>Fuente</th>
             <th>Comentario</th>
-            <th>Opinión</th>
             <th>Polaridad</th>
             <th>Fecha</th>
         </tr>
@@ -66,7 +65,7 @@
             .done(function(_classifiers) {
                 classifiers = _classifiers;
                 if (classifiers.length > 0)
-                    renderClassifierForm(classifiers, 0);
+                    renderClassifierForm(classifiers, true, 0);
                 else
                     $(".classifiers").append(
                         $('<div>', {
@@ -87,13 +86,6 @@
                 {data: "source", width: "90px"},
                 {data: "content"},
                 {data: function (comment) {
-                        if (comment.opinion === "Subjective")
-                            return '<strong class="text-success">Sí</strong>';
-                        else if (comment.opinion === "Objective")
-                            return '<strong class="text-danger">No</strong>';
-                        return 'N/A';
-                    }, width: "80px"},
-                {data: function (comment) {
                         if (comment.polarity === "Positive")
                             return '<strong class="text-success">Pos.</strong>';
                         else if (comment.polarity === "Negative")
@@ -105,9 +97,9 @@
                 {data: "date", width: "100px"}
             ],
             columnDefs: [
-                {type: 'date-euro', targets: 4}
+                {type: 'date-euro', targets: 3}
             ],
-            "order": [[4, 'desc']]
+            "order": [[3, 'desc']]
         });
 
         // Collapsible para formulario de análisis
@@ -124,7 +116,7 @@
 
     // Listener para los botones de añadir/eliminar clasificador
     $('.classifiers').on('click', '.add-classifier', function () {
-        renderClassifierForm(classifiers, index++);
+        renderClassifierForm(classifiers, true, index++);
     });
     $('.classifiers').on('click', '.remove-classifier', function () {
         $(this).closest('.classifier-item').remove();

@@ -2,9 +2,11 @@ package es.uned.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import es.uned.adapters.DomainAdapterFactory;
 import es.uned.adapters.SentimentAdapterFactory;
 import es.uned.adapters.SourceAdapterFactory;
 import es.uned.adapters.SubjectivityAdapterFactory;
+import es.uned.adapters.domain.DomainAdapter;
 import es.uned.adapters.sentiment.SentimentAdapter;
 import es.uned.adapters.sources.SourceAdapter;
 import es.uned.adapters.subjectivity.SubjectivityAdapter;
@@ -50,6 +52,7 @@ public class MainController {
     @Autowired private SourceAdapterFactory sourceFactory;
     @Autowired private SubjectivityAdapterFactory subjectivityFactory;
     @Autowired private SentimentAdapterFactory sentimentFactory;
+    @Autowired private DomainAdapterFactory domainFactory;
     @Autowired private AccountService accountService;
     @Autowired private CorpusService corpusService;
     @Autowired private SourceFormValidator sourceFormValidator;
@@ -123,7 +126,51 @@ public class MainController {
     }
 
     /**
-     * 2ª fase: ejecutar análisis de opinión.
+     * 2ª fase: ejecutar análisis de dominio.
+     * Presenta el formulario mediante el cual se eligen las opciones para ejecutar un nuevo o
+     * nuevos análisis de dominio o recoge el POST de dicho formulario.
+     * @param analysisFormList  Lista de formulario/s con información sobre los análisis a ejecutar
+     * @param action            Parámetro "action" de la URL
+     * @param request           Información sobre la petición HTTP a este controlador
+     * @param corpus            Entidad Corpus sobre la que se está trabajando
+     * @param model             Contenedor de datos para la vista
+     * @return Página JSP o redirección a otra fase
+     */
+    @RequestMapping(value = "/domain-analysis", method = RequestMethod.POST)
+    public String domainAnalysis(@ModelAttribute("domainForm") AnalysisFormList analysisFormList,
+                                 @RequestParam(value = "action", required = false) String action,
+                                 HttpServletRequest request, @ModelAttribute("corpus") Corpus corpus,
+                                 Model model)
+    {
+        // Acceso desde la fase de recuperar comentarios o desde la fase de ejecutar análisis de opinión
+        if (action == null) {
+            model.addAttribute("domainForm", new AnalysisFormList());
+            return "domain_analysis";
+        }
+        // Se ha clickado el botón de retroceder, volvemos a la portada
+        else if (action.equals("back")) {
+            request.setAttribute(View.RESPONSE_STATUS_ATTRIBUTE, HttpStatus.TEMPORARY_REDIRECT);
+            return "redirect:/";
+        }
+        if (analysisFormList.isExecute()) {
+            AnalysisForm analysisForm = analysisFormList.getFirst();
+            DomainAdapter domainAdapter = domainFactory.get(analysisForm.getAdapterClass());
+            domainAdapter.analyze(corpus, new Analysis(analysisForm));
+        }
+        // Ejecutar análisis seleccionados sin avanzar a la fase de análisis de polaridad
+        if (action.equals("analyse")) {
+            return "domain_analysis";
+        }
+        // Ejecutar análisis seleccionados y avanzar a la fase de análisis de polaridad
+        else if (action.equals("next")) {
+            request.setAttribute(View.RESPONSE_STATUS_ATTRIBUTE, HttpStatus.TEMPORARY_REDIRECT);
+            return "redirect:/opinion-analysis";
+        }
+        return "redirect:/denied";
+    }
+
+    /**
+     * 3ª fase: ejecutar análisis de opinión.
      * Presenta el formulario mediante el cual se eligen las opciones para ejecutar un nuevo o
      * nuevos análisis de opinión o recoge el POST de dicho formulario.
      * @param analysisFormList Lista de formulario/s con información sobre los análisis a ejecutar
@@ -139,15 +186,16 @@ public class MainController {
                                   HttpServletRequest request, @ModelAttribute("corpus") Corpus corpus,
                                   Model model)
     {
-        // Acceso desde la fase de recuperar comentarios o desde la fase de ejecutar análisis de polaridad
+        // Acceso desde la fase de recuperar comentarios o desde la fase de ejecutar análisis de dominio o desde
+        // la fase de ejecutar análisis de polaridad
         if (action == null) {
             model.addAttribute("opinionForm", new AnalysisFormList());
             return "opinion_analysis";
         }
-        // Se ha clickado en el botón de retroceder, volvemos a la portada
+        // Se ha clickado en el botón de retroceder, volvemos a la fase de análisis de dominio
         else if (action.equals("back")) {
             request.setAttribute(View.RESPONSE_STATUS_ATTRIBUTE, HttpStatus.TEMPORARY_REDIRECT);
-            return "redirect:/";
+            return "redirect:/domain-analysis";
         }
         // Ejecutar análisis seleccionados sin avanzar a la fase de análisis de polaridad
         else if (action.equals("analyse")) {
@@ -176,7 +224,7 @@ public class MainController {
     }
 
     /**
-     * 3ª fase: ejecutar análisis de polaridad.
+     * 4ª fase: ejecutar análisis de polaridad.
      * Presenta el formulario mediante el cual se eligen las opciones para ejecutar un nuevo o
      * nuevos análisis de polaridad o recoge el POST de dicho formulario.
      * @param analysisFormList Lista de formulario/s con información sobre los análisis a ejecutar

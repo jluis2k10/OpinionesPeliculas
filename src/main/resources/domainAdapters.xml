@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<adapters>
+
+    <adapter id="D01" name="Datumbox" class="es.uned.adapters.domain.Datumbox" models="true" lang="es,en" model_creation="true">
+        <description><![CDATA[Descripción adaptador]]></description>
+        <model_creation_parameters>
+            <parameter name="Numerical Scaler" type="select" id="NumericalScaler" default="Ninguno">
+                <option name="Ninguno" value="Ninguno" />
+                <option name="Binary Scaler" value="BinaryScaler">
+                    <parameter name="Threshold" type="double" id="BinaryScaler_Threshold" default="0.0">
+                        <option name="min" value="0.0" />
+                    </parameter>
+                </option>
+                <option name="Maximum Absolute Scaler" value="MaxAbsScaler" />
+                <option name="Minimum Maximum Scaler" value="MinMaxScaler" />
+                <option name="Standard Scaler" value="StandardScaler" />
+                <description></description>
+            </parameter>
+            <parameter name="Feature Selector" type="select" id="FeatureSelector">
+                <option name="Chisquare Select" value="ChisquareSelect">
+                    <parameter name="A Level" type="double" id="ChisquareSelect_ALevel" default="0.05">
+                        <option name="min" value="0.0" />
+                    </parameter>
+                </option>
+                <option name="Mutual Information" value="MutualInformation">
+                    <parameter name="Rare Feature Threshold" type="number" id="MutualInformation_RareFeatureThreshold" default="5">
+                        <option name="min" value="1" />
+                    </parameter>
+                    <parameter name="Max. Features" type="number" id="MutualInformation_MaxFeatures" default="10000">
+                        <option name="min" value="1" />
+                    </parameter>
+                </option>
+                <description></description>
+            </parameter>
+            <parameter name="Text Extractor" type="select" id="TextExtractor">
+                <option name="Ngrams" value="Ngrams">
+                    <parameter name="Examination Window Length" type="number" id="Ngrams_ExaminationWindowLength" default="3">
+                        <option name="min" value="1" />
+                    </parameter>
+                    <parameter name="Maximum Combinations" type="number" id="Ngrams_MaxCombinations" default="3">
+                        <option name="min" value="1" />
+                    </parameter>
+                    <parameter name="Maximum Distance Between Keywords" type="number" id="Ngrams_MaxDistanceBetweenKwds" default="0">
+                        <option name="min" value="0" />
+                    </parameter>
+                    <parameter name="Minimum Word Length" type="number" id="Ngrams_MinWordLength" default="1">
+                        <option name="min" value="1" />
+                    </parameter>
+                    <parameter name="Minimum Word Occurrence" type="number" id="Ngrams_MinWordOccurrence" default="1">
+                        <option name="min" value="1" />
+                    </parameter>
+                </option>
+                <option name="Unique Word Sequence" value="UniqueWordSequence" />
+                <option name="Word Sequence" value="WordSequence" />
+                <description></description>
+            </parameter>
+            <parameter name="Modeler Training" type="select" id="ModelerTraining">
+                <option name="Bernoulli Naive Bayes" value="BernoulliNaiveBayes" />
+                <option name="Binarized Naive Bayes" value="BinarizedNaiveBayes" />
+                <option name="Maximum Entropy" value="MaximumEntropy">
+                    <parameter name="Total Iterations" type="number" id="MaximumEntropy_TotalIterations" default="100">
+                        <option name="min" value="1" />
+                    </parameter>
+                </option>
+                <option name="Multinomial Naive Bayes" value="MultinomialNaiveBayes" />
+                <option name="Ordinal Regression" value="OrdinalRegression">
+                    <parameter name="Total Iterations" type="number" id="OrdinalRegression_TotalIterations" default="100">
+                        <option name="min" value="1" />
+                    </parameter>
+                    <parameter name="Learning Rate" type="double" id="OrdinalRegression_LearningRate" default="0.1">
+                        <option name="min" value="0.0" />
+                    </parameter>
+                    <parameter name="L2" type="double" id="OrdinalRegression_L2" default="0.0">
+                        <option name="min" value="0.0" />
+                    </parameter>
+                </option>
+                <option name="Soft Maximum Regression" value="SoftMaxRegression">
+                    <parameter name="Total Iterations" type="number" id="SoftMaxRegression_TotalIterations" default="100">
+                        <option name="min" value="1" />
+                    </parameter>
+                    <parameter name="Learning Rate" type="double" id="SoftMaxRegression_LearningRate" default="0.1">
+                        <option name="min" value="0.0" />
+                    </parameter>
+                    <parameter name="L1" type="double" id="SoftMaxRegression_L1" default="0.0">
+                        <option name="min" value="0.0" />
+                    </parameter>
+                    <parameter name="L2" type="double" id="SoftMaxRegression_L2" default="0.0">
+                        <option name="min" value="0.0" />
+                    </parameter>
+                </option>
+                <description></description>
+            </parameter>
+        </model_creation_parameters>
+    </adapter>
+
+</adapters>

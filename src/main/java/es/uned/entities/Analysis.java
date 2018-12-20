@@ -87,6 +87,8 @@ public class Analysis {
             this.analysisType = ClassifierType.POLARITY;
         else if (analysisForm.getClassifierType().equals("opinion"))
             this.analysisType = ClassifierType.OPINION;
+        else if (analysisForm.getClassifierType().equals("domain"))
+            this.analysisType = ClassifierType.DOMAIN;
         this.classifier = analysisForm.getClassifierName();
         this.adapterClass = analysisForm.getAdapterClass();
         this.languageModel = analysisForm.getLanguageModel();
@@ -119,6 +121,8 @@ public class Analysis {
             analysisNode.put("type", "opinion");
         else if (getAnalysisType() == ClassifierType.POLARITY)
             analysisNode.put("type", "polarity");
+        else if (getAnalysisType() == ClassifierType.DOMAIN)
+            analysisNode.put("type", "domain");
         analysisNode.put("classifier", getClassifier());
         if (getLanguageModel() != null)
             analysisNode.put("language_model", getLanguageModel().getName());

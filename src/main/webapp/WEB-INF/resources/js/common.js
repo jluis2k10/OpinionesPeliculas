@@ -37,6 +37,11 @@ function hideLoading() {
     $('p.loader').remove();
 }
 
+/**
+ * Muestra un mensaje deshechable en la parte superior de la página.
+ * @param msgType tipo del mensaje (primary, success, danger, warning)
+ * @param message texto del mensaje
+ */
 function showFlashMessage(msgType, message) {
     $('<div>', {
         class: "alert alert-" + msgType + " alert-dismissible fade show",
@@ -70,8 +75,12 @@ function getCorporaSources(lang) {
 }
 
 /**
- * Añadir de forma manual dos fuentes de comentarios extra necesarias para entrenar
- * un modelo de lenguaje: escribir comentarios.
+ * A la hora de entrenar un clasificador podemos hacerlo desde fuentes de comentarios
+ * extra que no aparecen definidas en el archivo xml de configuración para fuentes de
+ * comentario. Por ejemplo escribiendo directamente los datasets en campos de texto
+ * de un formulario o a partir de otros corpus existentes en el sistema.
+ * Con este método añadimos estas fuentes extra para que se muestren en el formulario
+ * de entrenar un clasificador.
  */
 
 function generateExtraSources(sources) {
@@ -95,6 +104,13 @@ function generateExtraSources(sources) {
     sources.push(textDataset);
 }
 
+/**
+ * Recuperar clasificadores de opinión.
+ * @param lang     idioma que debe soportar el clasificador
+ * @param creation true si se deben incluir los parámetros utilizados para la creación de
+ *                 un nuevo modelo de lenguaje sobre el clasificador, false en caso contrario
+ * @returns {Promise<void>}
+ */
 function getOpinionClassifiers(lang, creation) {
     return Promise.resolve($.ajax({
         type: "POST",
@@ -109,6 +125,13 @@ function getOpinionClassifiers(lang, creation) {
     }));
 }
 
+/**
+ * Recuperar clasificadores de polaridad.
+ * @param lang     idioma que debe soportar el clasificador
+ * @param creation true si se deben incluir los parámetros utilizados para la creación de
+ *                 un nuevo modelo de lenguaje sobre el clasificador, false en caso contrario
+ * @returns {Promise<void>}
+ */
 function getPolarityClassifiers(lang, creation) {
     return Promise.resolve($.ajax({
         type: "POST",
@@ -123,6 +146,35 @@ function getPolarityClassifiers(lang, creation) {
     }));
 }
 
+/**
+ * Recuperar clasificadores de dominio.
+ * @param lang     idioma que debe soportar el clasificador
+ * @param creation true si se deben incluir los parámetros utilizados para la creación de
+ *                 un nuevo modelo de lenguaje sobre el clasificador, false en caso contrario
+ * @returns {Promise<void>}
+ */
+function getDomainClassifiers(lang, creation) {
+    return Promise.resolve($.ajax({
+        type: "POST",
+        data: JSON.stringify({
+            lang: lang,
+            creation: creation
+        }),
+        dataType: "json",
+        contentType: "application/json; charset=UTF-8",
+        url: ctx + "/api/classifiers/domain",
+        timeout: 5000
+    }));
+}
+
+
+/**
+ * Recuperar todos los corpus generados por el usuario.
+ * @param withComments true si deben recuperarse también los comentarios del corpus, false en caso contrario
+ * @param withAnalyses true si deben recuperarse también los análisis ejecutados sobre el corpus, false en caso contrario
+ * @param withRecords  true si deben recuperarse también los records de cada comentario/análisis, false en caso contrario
+ * @returns {Promise<void>}
+ */
 function getUserCorpora(withComments, withAnalyses, withRecords) {
     return Promise.resolve($.ajax({
         type: "POST",
@@ -141,7 +193,8 @@ function getUserCorpora(withComments, withAnalyses, withRecords) {
 
 /**
  * Construir el botón con las diferentes fuentes de comentarios para un Corpus.
- * @param sources Fuentes de comentarios para un Corpus
+ * @param sources    Fuentes de comentarios para un Corpus
+ * @param corpusLang idioma seleccionado (no todas las fuentes aceptan los mismos idiomas)
  */
 function renderSourcesButton(sources, corpusLang) {
     $.each(sources, function (index, source) {
@@ -156,8 +209,8 @@ function renderSourcesButton(sources, corpusLang) {
 /**
  * Construir el formulario con las opciones disponibles para la fuente de comentarios
  * seleccionada.
- * @param e Elemento seleccionado.
- * @param sources Fuentes de comentarios para un Corpus
+ * @param source     Fuente de comentarios seleccionada
+ * @param corpusLang idioma seleccionado
  */
 function renderSourceOptions(source, corpusLang) {
     $(".option-container").remove();                // Eliminar opciones extra previas si existen
@@ -247,10 +300,208 @@ function renderSourceOptions(source, corpusLang) {
                     break;
             }
         });
-    };
+    }
 }
 
-function renderClassifierForm(classifiers, index) {
+/**
+ * Construir Text Input en formulario de fuentes para comentarios disponibles.
+ * option.id será la clave del HashMap en Spring.
+ * @param container Elemento contenedor del input
+ * @param option Valores sobre la opción (clave -> valor)
+ */
+function renderText(container, option) {
+    var optionDiv = $('<div>', {
+        class: "col-3 option-container form-group"
+    }).append(
+        $('<label>', {
+            for: option.id,
+            text: option.name
+        }),
+        $('<input>', {
+            type: 'text',
+            id: "options'"+option.id+"'",
+            class: 'form-control',
+            name: "options['"+option.id+"']",
+            value: option.default
+        })
+    );
+    optionDiv.appendTo(container);
+}
+
+/**
+ * Construir Number Input en formulario de fuentes para comentarios disponibles
+ * option.id será la clave del HashMap en Spring
+ * @param container Elemento contenedor del input
+ * @param option Valores sobre la opción (clave -> valor)
+ */
+function renderNumber(container, option) {
+    var optionDiv = $('<div>', {
+        class: "col-3 option-container form-group"
+    }).append(
+        $('<label>', {
+            for: option.id,
+            text: option.name
+        })
+    );
+
+    var input = $('<input>', {
+        type: 'number',
+        id: "options'"+option.id+"'",
+        class: 'form-control',
+        name: "options['"+option.id+"']",
+        value: option.default
+    });
+    input.appendTo(optionDiv);
+
+    $.each(option.options, function(index, option) {
+        if (option.name === "min")
+            input.attr("min", option.value);
+        else if (option.name === "max")
+            input.attr("max", option.value);
+    });
+
+    optionDiv.appendTo(container);
+}
+
+/**
+ * Construir Select Input en formulario de fuentes para comentarios disponibles
+ * option.id será la clave del HashMap en Spring
+ * @param container Elemento contenedor del input
+ * @param option Valores sobre la opción (clave -> valor)
+ */
+function renderSelect(container, option) {
+    var optionDiv = $('<div>', {
+        class: "col-3 option-container form-group"
+    }).append(
+        $('<label>', {
+            for: option.id,
+            text: option.name
+        })
+    );
+
+    var select = $("<select></select>").attr({
+        id: "options'"+option.id+"'",
+        class: "form-control",
+        name: "options['"+option.id+"']"
+    });
+    select.appendTo(optionDiv);
+
+    $.each(option.options, function (index, option) {
+        var opt = $("<option></option>").attr("value", option.value).text(option.name);
+        opt.appendTo(select);
+    });
+
+    optionDiv.appendTo(container);
+}
+
+/**
+ * Construir Radio Input en formulario de fuentes para comentarios disponibles
+ * option.id será la clave del HashMap en Spring
+ * @param container Elemento contenedor del input
+ * @param option Valores sobre la opción (clave -> valor)
+ */
+function renderRadio(container, option) {
+    var optionDiv = $('<div>', {
+        class: "col-3 option-container"
+    }).append(
+        $('<p>', {
+            text: option.name
+        })
+    );
+
+    $.each(option.options, function (index, opt) {
+        var innerDiv = $("<div></div>").addClass("custom-control custom-radio custom-control-inline");
+        var input = $("<input />").attr({
+            id: "options'"+option.id+"'"+opt.name,
+            name: "options['"+option.id+"']",
+            value: opt.value,
+            type: "radio",
+            class: "custom-control-input"
+        });
+        var label = $("<label></label>").attr({
+            for: "options'"+option.id+"'"+opt.name,
+            class: "custom-control-label"
+        }).text(opt.name);
+        if (option.default === opt.value)
+            input.attr("checked", "checked");
+        input.appendTo(innerDiv);
+        label.appendTo(innerDiv);
+        innerDiv.appendTo(optionDiv);
+    });
+
+    optionDiv.appendTo(container);
+}
+
+/**
+ * Construir Select para elegir ID de película en IMDB. Es un selector dinámico,
+ * vamos recuperando y mostrando resultados a medida que introducimos el texto.
+ * Se utiliza la librería Select2 (https://select2.org/)
+ */
+function renderIMDBSelect() {
+    $('.imdb-select').select2({
+        theme: "bootstrap",
+        placeholder: "Título de película",
+        language: "es",
+        ajax: {
+            url: ctx + "/api/imdb-lookup",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return {
+                    q: params.term,
+                    page: params.page
+                };
+            },
+            processResults: function(data, params) {
+                params.page = params.page || 1;
+                // Eliminamos de los resultados los que no tengan imdbID
+                for (var i=0; i<data.films.length; i++) {
+                    if (!data.films[i].imdbID)
+                        data.films.splice(i, 1);
+                }
+                // select2 necesita atributos id y text en el objeto que maneja
+                var select2Data = $.map(data.films, function (obj) {
+                    obj.id = obj.id || obj.imdbID;
+                    obj.text = obj.text || obj.title;
+                    return obj;
+                });
+                return {
+                    results: select2Data,
+                    pagination: {
+                        more: (params.page * 10) < data.total_count
+                    }
+                };
+            },
+            cache: true
+        },
+        escapeMarkup: function(markup) {
+            return markup;
+        },
+        minimumInputLength: 1,
+        templateResult: function(result) {
+            if (result.loading) return result.text;
+            return result.text + " (" + result.year + ")";
+        },
+        templateSelection: function(result) {
+            return result.title || result.text;
+        }
+    });
+}
+
+/**
+ * Construye y muestra en la página los elementos del formulario de clasificadores disponibles
+ * para ejecutar un análisis. Al tratarse de un formulario con elementos dinámicos (podemos
+ * seleccionar tantos clasificadores como queramos), debemos indicar un identificador único
+ * para clasificador del formulario.
+ * Básicamente consiste en crear un nuevo div e insertarle un elemento select que contenga
+ * todos los clasificadores disponibles. Renderizar los parámetros que se pueden utilzar en
+ * cada uno de los diferentes clasificadores se realiza en una función separada.
+ * @param classifiers clasificadores disponibles
+ * @param multiple    indica si se aceptan varios análisis sobre el corpus
+ * @param index       identificador único para cada elemento (cada vez que añadimos un clasificador
+ *                    se incrementa en 1 el valor)
+ */
+function renderClassifierForm(classifiers, multiple, index) {
     var listItem = $('<div>', {
         class: "list-group-item flex-column align-items-start classifier-item",
         data: {id: index}
@@ -265,18 +516,22 @@ function renderClassifierForm(classifiers, index) {
         ),
         $('<div>', {
             class: "row classifier-container"
-        }),
-        $('<button>', {
-            type: "button",
-            class: "btn remove-classifier btn-sm btn-danger mr-2",
-            html: "<i class='fas fa-times mr-1'></i> Eliminar análisis"
-        }),
-        $('<button>', {
-            type: "button",
-            class: "btn add-classifier btn-sm btn-success",
-            html: "<i class='fas fa-plus mr-1'></i> Añadir análisis"
         })
     );
+    if (multiple) {
+        listItem.append(
+            $('<button>', {
+                type: "button",
+                class: "btn remove-classifier btn-sm btn-danger mr-2",
+                html: "<i class='fas fa-times mr-1'></i> Eliminar análisis"
+            }),
+            $('<button>', {
+                type: "button",
+                class: "btn add-classifier btn-sm btn-success",
+                html: "<i class='fas fa-plus mr-1'></i> Añadir análisis"
+            })
+        )
+    }
     var innerDiv = $('<div>', {class: 'form-group col-3'});
     var label = $('<label></label>')
         .attr('for', "analysis'" + index + "'.adapterClass")
@@ -300,11 +555,37 @@ function renderClassifierForm(classifiers, index) {
     renderClassifierOptions(selectedAdapter, classifiers);
 }
 
-function renderClassifierOptions(selectedAdpter, classifiers) {
-    var container = selectedAdpter.closest('.classifier-container');
+/**
+ * Añadir el listener necesario con el evento que se ejecutará cuando el usuario seleccione
+ * uno de los clasificadores disponibles para realizar un análisis sobre los comentarios del
+ * corpus.
+ * @param select      elemento select del formulario donde se muestran los clasificadores disponibles
+ * @param classifiers objeto json con todos los clasificadores disponibles y sus parámetros/opciones
+ *                    de ejecución
+ */
+function addClassifierSelectListener(select, classifiers) {
+    $(select).change(function() {
+        var selected = $(this).find("option:selected");
+        $(selected.closest('.classifier-container')).children('.classifier-option').remove();
+        renderClassifierOptions(selected, classifiers);
+    })
+}
+
+/**
+ * Crea y muestra en la página las opciones del clasificador seleccionado por el usuario.
+ * Todos los clasificadores tienen unas opciones comunes o estándar y además pueden
+ * contener ciertos parámetros con opciones extra propias de cada clasificador. Todos
+ * estos parámetros vienen definidos por el xml de configuración.
+ * @param selectedClassifier clasificador seleccionado por el usuario en el formulario
+ * @param classifiers        todos los clasificadores disponibles con cada uno de sus parámetros
+ *                           con opciones para configurar su comportamiento durante la ejecución
+ *                           del análisis
+ */
+function renderClassifierOptions(selectedClassifier, classifiers) {
+    var container = selectedClassifier.closest('.classifier-container');
     var index = $(container).closest('.classifier-item').data("id");
     var classifier = $.grep(classifiers, function (c) {
-        return c.class === selectedAdpter.val();
+        return c.class === selectedClassifier.val();
     })[0];
 
     // El clasificador tiene modelos de lenguaje, mostrar select con ellos
@@ -474,340 +755,6 @@ function renderClassifierOptions(selectedAdpter, classifiers) {
     }).appendTo(container);
 }
 
-function addClassifierSelectListener(select, classifiers) {
-    $(select).change(function() {
-        var selected = $(this).find("option:selected");
-        $(selected.closest('.classifier-container')).children('.classifier-option').remove();
-        renderClassifierOptions(selected, classifiers);
-    })
-}
-
-// Paginación de resultados
-function myPagination(size, corpus, container, showDetails) {
-    $("#comments-pagination").pagination({
-        dataSource: corpus,
-        locator: 'comments',
-        pageSize: size,
-        callback: function (comments, pagination) {
-            formatComments(comments, container, pagination, showDetails);
-            generateReadMore();
-        },
-        ulClassName: "pagination justify-content-end"
-    });
-}
-
-function formatComments(comments, $container, pagination, showDetails) {
-    $container.empty();
-    comments.forEach(function (comment, i) {
-        var commentIndex = (pagination.pageNumber - 1) * pagination.pageSize + i + 1;
-        var $listItem = $('<li></li>').addClass('list-group-item flex-column align-items-start');
-
-        // Cabecera del item (fuente y fecha)
-        var $headerDiv = $('<div>', {
-            class: "d-flex justify-content-between"
-        }).appendTo($listItem);
-        var $sourceContent = $('<small>', {
-            class: "mb-2 text-muted",
-            html: "<strong>#" + commentIndex + "</strong> " + comment.source
-        }).appendTo($headerDiv);
-        if (comment.url != null) {
-            $('<a>', {
-                href: comment.url,
-                class: "ml-3",
-                target: "_blank",
-                html: comment.url + '<i class="fas fa-external-link-alt ml-1"></i>'
-            }).appendTo($sourceContent);
-        }
-        $('<small>', {
-            class: "text-muted",
-            html: comment.date
-        }).appendTo($headerDiv);
-
-        // Cuerpo del item (comentario)
-        $('<p>', {
-            class: "card-text mb-2 readmore",
-            html: comment.content.replace(/(\r\n|\n|\r)/g, "<br />")
-        }).appendTo($listItem);
-
-        // Pie del item (medias de los análisis realizados sobre el comentario)
-        var sentiment = "N/A";
-        var cssClass;
-        var sentimentIcon = '<i class="far fa-question-circle"></i> ';
-        var sentimentScore = '';
-
-        // Sentimiento promedio del análisis
-        if (comment.polarity === "Positive") {
-            sentiment = "Positivo "
-            cssClass = "text-success";
-            sentimentIcon = '<i class="far fa-thumbs-up"></i> ';
-            sentimentScore = '(' + (parseFloat(comment.polarityScore) * 100).toFixed(2) + '%)';
-        }
-        else if (comment.polarity === "Negative") {
-            sentiment = "Negativo ";
-            cssClass = "text-danger";
-            sentimentIcon = '<i class="far fa-thumbs-down"></i> ';
-            sentimentScore = '(' + (parseFloat(comment.polarityScore) * 100).toFixed(2) + '%)';
-        } else if (comment.polarity === "Neutral") {
-            sentiment = "Neutral ";
-            cssClass = "";
-            sentimentIcon = '<i class="far fa-meh"></i> ';
-            sentimentScore = '(' + (parseFloat(comment.polarityScore) * 100).toFixed(2) + '%)';
-        }
-        $('<small>', {
-            class: cssClass,
-            html: '<strong>' + sentimentIcon + sentiment + '</strong>' + sentimentScore
-        }).appendTo($listItem);
-
-        // Opinión media del análisis
-        if (comment.opinion != null && comment.opinion === "Subjective") {
-            $('<small>', {
-                html: ' &ndash; <strong>Subjetivo</strong> ' + '(' + (parseFloat(comment.opinionScore) * 100).toFixed(2) + '%)'
-            }).appendTo($listItem);
-        }
-        else if (comment.opinion != null && comment.opinion === "Objective") {
-            $('<small>', {
-                html: ' &ndash; <strong>Objetivo</strong> ' + '(' + ((1 - parseFloat(comment.opinionScore)) * 100).toFixed(2) + '%)'
-            }).appendTo($listItem);
-        }
-
-        // Añadir información con los detalles de cada análisis ejecutado
-        if (showDetails) {
-            var details =  $('<a>', {
-                href: "#",
-                class: "ml-2 analysis-popover",
-                data: {toggle: "popover"},
-                title: "Detalles del Análisis",
-                html: '<i class="fas fa-info-circle"></i>'
-            });
-            $(details)
-                .popover({
-                    content: function () {
-                        var res = "";
-                        if (comment.sentimentRecords != null && comment.sentimentRecords.length > 0) {
-                            res += '<p><strong>Sentimiento:</strong><br/>';
-                            comment.sentimentRecords.forEach(function(record, j) {
-                                res += record.classifier + ": " + record.record.polarity + " (";
-                                res += Math.round10(record.record.score * 100, -2) + "%)<br/>";
-                            })
-                            res += '</p>';
-                        }
-                        if (comment.opinionRecords != null && comment.opinionRecords.length > 0) {
-                            res += '<p><strong>Opinión:</strong><br/>';
-                            comment.opinionRecords.forEach(function(record, j) {
-                                res += record.classifier + ": " + record.record.opinion + " (";
-                                if (record.record.opinion === "Subjective")
-                                    res += Math.round10(record.record.subjectiveScore * 100, -2) + "%)<br/>";
-                                else
-                                    res += Math.round10(100 - record.record.subjectiveScore * 100, -2) + "%)<br/>";
-                            })
-                            res += '</p>';
-                        }
-                        return res;
-                    },
-                    html: true,
-                    trigger: "focus",
-                    container: '#comments-list',
-                    template: '<div class="popover popover-details" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>'
-                });
-            $(details).appendTo($listItem);
-        }
-
-        $listItem.appendTo($container);
-    });
-}
-
-function generateReadMore() {
-    $("p.readmore").readmore({
-        speed: 75,
-        moreLink: '<a href="#" class="readmore results" title="Leer más"><i class="far fa-plus-square fa-lg"></i></a>"',
-        lessLink: '<a href="#" class="readmore results" title="Leer menos"><i class="far fa-minus-square fa-lg"></i></a>"',
-    });
-}
-
-/**
- * Construir Text Input.
- * option.id será la clave del HashMap en Spring.
- * @param container Elemento contenedor del input
- * @param option Valores sobre la opción (clave -> valor)
- */
-function renderText(container, option) {
-    var optionDiv = $('<div>', {
-        class: "col-3 option-container form-group"
-    }).append(
-        $('<label>', {
-            for: option.id,
-            text: option.name
-        }),
-        $('<input>', {
-            type: 'text',
-            id: "options'"+option.id+"'",
-            class: 'form-control',
-            name: "options['"+option.id+"']",
-            value: option.default
-        })
-    );
-    optionDiv.appendTo(container);
-}
-
-/**
- * Construir Number Input.
- * option.id será la clave del HashMap en Spring
- * @param container Elemento contenedor del input
- * @param option Valores sobre la opción (clave -> valor)
- */
-function renderNumber(container, option) {
-    var optionDiv = $('<div>', {
-        class: "col-3 option-container form-group"
-    }).append(
-        $('<label>', {
-            for: option.id,
-            text: option.name
-        })
-    );
-
-    var input = $('<input>', {
-        type: 'number',
-        id: "options'"+option.id+"'",
-        class: 'form-control',
-        name: "options['"+option.id+"']",
-        value: option.default
-    });
-    input.appendTo(optionDiv);
-
-    $.each(option.options, function(index, option) {
-        if (option.name === "min")
-            input.attr("min", option.value);
-        else if (option.name === "max")
-            input.attr("max", option.value);
-    });
-
-    optionDiv.appendTo(container);
-}
-
-/**
- * Construir Select Input.
- * option.id será la clave del HashMap en Spring
- * @param container Elemento contenedor del input
- * @param option Valores sobre la opción (clave -> valor)
- */
-function renderSelect(container, option) {
-    var optionDiv = $('<div>', {
-        class: "col-3 option-container form-group"
-    }).append(
-        $('<label>', {
-            for: option.id,
-            text: option.name
-        })
-    );
-
-    var select = $("<select></select>").attr({
-        id: "options'"+option.id+"'",
-        class: "form-control",
-        name: "options['"+option.id+"']"
-    });
-    select.appendTo(optionDiv);
-
-    $.each(option.options, function (index, option) {
-        var opt = $("<option></option>").attr("value", option.value).text(option.name);
-        opt.appendTo(select);
-    });
-
-    optionDiv.appendTo(container);
-}
-
-/**
- * Construir Radio Input.
- * option.id será la clave del HashMap en Spring
- * @param container Elemento contenedor del input
- * @param option Valores sobre la opción (clave -> valor)
- */
-function renderRadio(container, option) {
-    var optionDiv = $('<div>', {
-        class: "col-3 option-container"
-    }).append(
-        $('<p>', {
-            text: option.name
-        })
-    );
-
-    $.each(option.options, function (index, opt) {
-        var innerDiv = $("<div></div>").addClass("custom-control custom-radio custom-control-inline");
-        var input = $("<input />").attr({
-            id: "options'"+option.id+"'"+opt.name,
-            name: "options['"+option.id+"']",
-            value: opt.value,
-            type: "radio",
-            class: "custom-control-input"
-        });
-        var label = $("<label></label>").attr({
-            for: "options'"+option.id+"'"+opt.name,
-            class: "custom-control-label"
-        }).text(opt.name);
-        if (option.default === opt.value)
-            input.attr("checked", "checked");
-        input.appendTo(innerDiv);
-        label.appendTo(innerDiv);
-        innerDiv.appendTo(optionDiv);
-    });
-
-    optionDiv.appendTo(container);
-}
-
-/**
- * Construir Select para elegir ID de película en IMDB
- * con Select2 (https://select2.org/)
- */
-function renderIMDBSelect() {
-    $('.imdb-select').select2({
-        theme: "bootstrap",
-        placeholder: "Título de película",
-        language: "es",
-        ajax: {
-            url: ctx + "/api/imdb-lookup",
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return {
-                    q: params.term,
-                    page: params.page
-                };
-            },
-            processResults: function(data, params) {
-                params.page = params.page || 1;
-                // Eliminamos de los resultados los que no tengan imdbID
-                for (var i=0; i<data.films.length; i++) {
-                    if (!data.films[i].imdbID)
-                        data.films.splice(i, 1);
-                }
-                // select2 necesita atributos id y text en el objeto que maneja
-                var select2Data = $.map(data.films, function (obj) {
-                    obj.id = obj.id || obj.imdbID;
-                    obj.text = obj.text || obj.title;
-                    return obj;
-                });
-                return {
-                    results: select2Data,
-                    pagination: {
-                        more: (params.page * 10) < data.total_count
-                    }
-                };
-            },
-            cache: true
-        },
-        escapeMarkup: function(markup) {
-            return markup;
-        },
-        minimumInputLength: 1,
-        templateResult: function(result) {
-            if (result.loading) return result.text;
-            return result.text + " (" + result.year + ")";
-        },
-        templateSelection: function(result) {
-            return result.title || result.text;
-        }
-    });
-}
-
 function renderClassifierRadio(container, parameter) {
     var index = $(container).closest('.classifier-item').data("id");
     var outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
@@ -889,6 +836,12 @@ function renderClassifierNumber(container, parameter) {
     outerDiv.appendTo(container);
 }
 
+/**
+ * Construir Text Input en formulario de análisis (clasificadores) a ejecutar.
+ * parameter.id será la clave del HashMap en Spring.
+ * @param container Elemento contenedor del input
+ * @param parameter Valores sobre la opción (clave -> valor)
+ */
 function renderClassifierText(container, parameter) {
     var index = $(container).closest('.classifier-item').data("id");
     var outerDiv = $('<div>', {class: 'form-group col-3 classifier-option'});
@@ -908,6 +861,177 @@ function renderClassifierText(container, parameter) {
     );
 
     outerDiv.appendTo(container);
+}
+
+/**
+ * Paginación de resultados. Los comentarios recuperados se muestran paginados en la página.
+ * Utilizamos la librería pagination.js (http://pagination.js.org/)
+ * @param size        tamaño de la página, cantidad de comentarios a mostrar en cada página
+ * @param corpus      corpus que contiene los comentarios a mostrar
+ * @param container   elemento (div) donde se mostrarán los comentarios
+ * @param showDetails true si se deben mostrar los detalles de los resultados de los análisis
+ *                    ejecutados sobre el comentario, false en caso contrario
+ */
+function myPagination(size, corpus, container, showDetails) {
+    $("#comments-pagination").pagination({
+        dataSource: corpus,
+        locator: 'comments',
+        pageSize: size,
+        callback: function (comments, pagination) {
+            formatComments(comments, container, pagination, showDetails);
+            generateReadMore();
+        },
+        ulClassName: "pagination justify-content-end"
+    });
+}
+
+/**
+ * Dar formato/estilo a cada uno de los comentarios del corpus que se muestran en las páginas.
+ * @param comments    lista de comentarios a mostrar
+ * @param $container  elemento (div) donde se mostrarán los comentarios
+ * @param pagination  objeto pagination de la librería pagination.js
+ * @param showDetails true si se deben mostrar los detalles de los resultados de los análisis
+ *                    ejecutados sobre el comentario, false en caso contrario
+ */
+function formatComments(comments, $container, pagination, showDetails) {
+    $container.empty();
+    comments.forEach(function (comment, i) {
+        var commentIndex = (pagination.pageNumber - 1) * pagination.pageSize + i + 1;
+        var $listItem = $('<li></li>').addClass('list-group-item flex-column align-items-start');
+
+        // Cabecera del item (fuente y fecha)
+        var $headerDiv = $('<div>', {
+            class: "d-flex justify-content-between"
+        }).appendTo($listItem);
+        var $sourceContent = $('<small>', {
+            class: "mb-2 text-muted",
+            html: "<strong>#" + commentIndex + "</strong> " + comment.source
+        }).appendTo($headerDiv);
+        if (comment.url != null) {
+            $('<a>', {
+                href: comment.url,
+                class: "ml-3",
+                target: "_blank",
+                html: comment.url + '<i class="fas fa-external-link-alt ml-1"></i>'
+            }).appendTo($sourceContent);
+        }
+        $('<small>', {
+            class: "text-muted",
+            html: comment.date
+        }).appendTo($headerDiv);
+
+        // Cuerpo del item (comentario)
+        $('<p>', {
+            class: "card-text mb-2 readmore",
+            html: comment.content.replace(/(\r\n|\n|\r)/g, "<br />")
+        }).appendTo($listItem);
+
+        // Pie del item (medias de los análisis realizados sobre el comentario)
+        var sentiment = "N/A";
+        var cssClass;
+        var sentimentIcon = '<i class="far fa-question-circle"></i> ';
+        var sentimentScore = '';
+
+        // Sentimiento promedio del análisis
+        if (comment.polarity === "Positive") {
+            sentiment = "Positivo "
+            cssClass = "text-success";
+            sentimentIcon = '<i class="far fa-thumbs-up"></i> ';
+            sentimentScore = '(' + (parseFloat(comment.polarityScore) * 100).toFixed(2) + '%)';
+        }
+        else if (comment.polarity === "Negative") {
+            sentiment = "Negativo ";
+            cssClass = "text-danger";
+            sentimentIcon = '<i class="far fa-thumbs-down"></i> ';
+            sentimentScore = '(' + (parseFloat(comment.polarityScore) * 100).toFixed(2) + '%)';
+        } else if (comment.polarity === "Neutral") {
+            sentiment = "Neutral ";
+            cssClass = "";
+            sentimentIcon = '<i class="far fa-meh"></i> ';
+            sentimentScore = '(' + (parseFloat(comment.polarityScore) * 100).toFixed(2) + '%)';
+        }
+        $('<small>', {
+            class: cssClass,
+            html: '<strong>' + sentimentIcon + sentiment + '</strong>' + sentimentScore
+        }).appendTo($listItem);
+
+        // Opinión media del análisis
+        if (comment.opinion != null && comment.opinion === "Subjective") {
+            $('<small>', {
+                html: ' &ndash; <strong>Subjetivo</strong> ' + '(' + (parseFloat(comment.opinionScore) * 100).toFixed(2) + '%)'
+            }).appendTo($listItem);
+        }
+        else if (comment.opinion != null && comment.opinion === "Objective") {
+            $('<small>', {
+                html: ' &ndash; <strong>Objetivo</strong> ' + '(' + ((1 - parseFloat(comment.opinionScore)) * 100).toFixed(2) + '%)'
+            }).appendTo($listItem);
+        }
+
+        // Dominio del comentario
+        if (comment.domain != null) {
+            $('<small>', {
+                html: ' &ndash; <strong>' + comment.domain + '</strong> (' + ((1 - parseFloat(comment.domainScore)) * 100).toFixed(2) + '%)'
+            }).appendTo($listItem)
+        }
+
+        // Añadir información con los detalles de cada análisis ejecutado
+        if (showDetails) {
+            var details =  $('<a>', {
+                href: "#",
+                class: "ml-2 analysis-popover",
+                data: {toggle: "popover"},
+                title: "Detalles del Análisis",
+                html: '<i class="fas fa-info-circle"></i>'
+            });
+            $(details)
+                .popover({
+                    content: function () {
+                        var res = "";
+                        if (comment.sentimentRecords != null && comment.sentimentRecords.length > 0) {
+                            res += '<p><strong>Sentimiento:</strong><br/>';
+                            comment.sentimentRecords.forEach(function(record, j) {
+                                res += record.classifier + ": " + record.record.polarity + " (";
+                                res += Math.round10(record.record.score * 100, -2) + "%)<br/>";
+                            })
+                            res += '</p>';
+                        }
+                        if (comment.opinionRecords != null && comment.opinionRecords.length > 0) {
+                            res += '<p><strong>Opinión:</strong><br/>';
+                            comment.opinionRecords.forEach(function(record, j) {
+                                res += record.classifier + ": " + record.record.opinion + " (";
+                                if (record.record.opinion === "Subjective")
+                                    res += Math.round10(record.record.subjectiveScore * 100, -2) + "%)<br/>";
+                                else
+                                    res += Math.round10(100 - record.record.subjectiveScore * 100, -2) + "%)<br/>";
+                            })
+                            res += '</p>';
+                        }
+                        return res;
+                    },
+                    html: true,
+                    trigger: "focus",
+                    container: '#comments-list',
+                    template: '<div class="popover popover-details" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>'
+                });
+            $(details).appendTo($listItem);
+        }
+
+        $listItem.appendTo($container);
+    });
+}
+
+/**
+ * Generar y mostrar el icono de "leer más" en los comentarios. Al renderizar un comentario se muestran
+ * como mucho 3 líneas de su contenido (para evitar que posibles comentarios con mucho texto ocupen mucho
+ * espacio en la página). Utilizamos este botón para indicar que queremos ver/ocultar el comentario
+ * completo.
+ */
+function generateReadMore() {
+    $("p.readmore").readmore({
+        speed: 75,
+        moreLink: '<a href="#" class="readmore results" title="Leer más"><i class="far fa-plus-square fa-lg"></i></a>"',
+        lessLink: '<a href="#" class="readmore results" title="Leer menos"><i class="far fa-minus-square fa-lg"></i></a>"',
+    });
 }
 
 /**

@@ -79,6 +79,12 @@ public class Comment implements Comparable<Comment> {
     @Column(name = "opinion_score", columnDefinition = "double")
     private double opinionScore;
 
+    @Column(name = "domain")
+    private String domain;
+
+    @Column(name = "domain_score", columnDefinition = "double")
+    private double domainScore;
+
     @OneToMany(orphanRemoval = true)
     @JoinColumn(name = "comment_id")
     private Collection<Record> records = new LinkedList<>();
@@ -266,6 +272,11 @@ public class Comment implements Comparable<Comment> {
         commentNode.put("positivityScore", getPositivityScore());
         commentNode.put("negativityScore", getNegativityScore());
         commentNode.put("neutralityScore", getNeutralityScore());
+        if (getDomain() != null && !getDomain().isEmpty())
+            commentNode.put("domain", getDomain());
+        else
+            commentNode.putNull("domain");
+        commentNode.put("domainScore", getDomainScore());
 
         if (withRecords) {
             ArrayNode sentimentRecordsArray = mapper.createArrayNode();
@@ -441,6 +452,22 @@ public class Comment implements Comparable<Comment> {
 
     public void setNeutralityScore(double neutralityScore) {
         this.neutralityScore = neutralityScore;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public double getDomainScore() {
+        return domainScore;
+    }
+
+    public void setDomainScore(double domainScore) {
+        this.domainScore = domainScore;
     }
 
     public Collection<Record> getRecords() {

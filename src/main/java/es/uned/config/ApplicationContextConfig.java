@@ -1,5 +1,6 @@
 package es.uned.config;
 
+import es.uned.adapters.DomainAdapterFactory;
 import es.uned.adapters.SentimentAdapterFactory;
 import es.uned.adapters.SourceAdapterFactory;
 import es.uned.adapters.SubjectivityAdapterFactory;
@@ -66,6 +67,13 @@ public class ApplicationContextConfig {
     public ServiceLocatorFactoryBean svcLocSubjectivityAdapterFactory() {
         ServiceLocatorFactoryBean svcLoc = new ServiceLocatorFactoryBean();
         svcLoc.setServiceLocatorInterface(SubjectivityAdapterFactory.class);
+        return svcLoc;
+    }
+
+    @Bean
+    public ServiceLocatorFactoryBean svcLocDomainAdapterFactory() {
+        ServiceLocatorFactoryBean svcLoc = new ServiceLocatorFactoryBean();
+        svcLoc.setServiceLocatorInterface(DomainAdapterFactory.class);
         return svcLoc;
     }
 

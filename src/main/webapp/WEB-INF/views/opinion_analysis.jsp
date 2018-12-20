@@ -3,7 +3,7 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ include file="_header.jsp"%>
 <h4 class="mb-3">
-    <a href="#" id="goBack" title="Generar Corpus"><i class="fas fa-chevron-left"></i></a> Análisis de Opinión
+    <a href="#" id="goBack" title="Análisis de Dominio"><i class="fas fa-chevron-left"></i></a> Análisis de Opinión
     <small class="text-muted">
         <a href="#corpus-wrapper" data-toggle="collapse" aria-controls="corpus-wrapper" aria-expanded="false">[Mostrar/Ocultar]</a> Corpus (${corpus.comments.size()} comentarios, ${corpus.lang})
     </small>
@@ -65,7 +65,7 @@
             .done(function(_classifiers) {
                 classifiers = _classifiers;
                 if (classifiers.length > 0)
-                    renderClassifierForm(classifiers, 0);
+                    renderClassifierForm(classifiers, true, 0);
                 else
                     $(".classifiers").append(
                         $('<div>', {
@@ -114,7 +114,7 @@
 
     // Listener para los botones de añadir/eliminar clasificador
     $('.classifiers').on('click', '.add-classifier', function () {
-        renderClassifierForm(classifiers, index++);
+        renderClassifierForm(classifiers, true, index++);
     });
     $('.classifiers').on('click', '.remove-classifier', function () {
         $(this).closest('.classifier-item').remove();

@@ -15,7 +15,12 @@ public enum ClassifierType {
     /**
      * Clasificador de opinión
      */
-    OPINION("Opinion");
+    OPINION("Opinion"),
+
+    /**
+     * Clasificador de dominio
+     */
+    DOMAIN("Domain");
 
     String classifierType;
 

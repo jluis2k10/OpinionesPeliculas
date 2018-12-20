@@ -4,12 +4,15 @@
 <h4>
     <a href="#" id="goBack" title="Análisis de Opinión"><i class="fas fa-chevron-left"></i></a> Resultados del análisis
     <small class="text-muted">
-        <a href="#sharedChart" data-toggle="collapse" aria-controls="sharedChart" aria-expanded="true">[Mostrar/Ocultar]</a>
+        <a href="#charts" data-toggle="collapse" aria-controls="sharedChart" aria-expanded="true">[Mostrar/Ocultar]</a>
     </small>
 </h4>
 
 <!-- Gráficas -->
-<div id="sharedChart" class="row collapse show mb-4"></div>
+<div id="charts" class="row collapse show mb-4">
+    <div id="sharedChart" class="col-12 mb-4"></div>
+    <div id="domainChart" class="col-12"></div>
+</div>
 
 <!-- Comentarios -->
 <div class="row">
@@ -60,6 +63,7 @@
     $(document).ready(function () {
         myPagination(5, corpus, $("#comments-list"), false);
         renderSharedChart('sharedChart', corpus);
+        renderDomainChart('domainChart', corpus);
     });
 
     // Listener para el botón de "volver"

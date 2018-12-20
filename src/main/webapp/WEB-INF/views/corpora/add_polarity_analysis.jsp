@@ -53,7 +53,7 @@
             .done(function(_classifiers) {
                 classifiers = _classifiers;
                 if (classifiers.length > 0)
-                    renderClassifierForm(classifiers, 0);
+                    renderClassifierForm(classifiers, true, 0);
                 else
                     $(".classifiers").append(
                         $('<div>', {
@@ -100,7 +100,7 @@
 
     // Listener para los botones de añadir/eliminar clasificador
     $('.classifiers').on('click', '.add-classifier', function () {
-        renderClassifierForm(classifiers, index++);
+        renderClassifierForm(classifiers, true, index++);
     });
     $('.classifiers').on('click', '.remove-classifier', function () {
         $(this).closest('.classifier-item').remove();

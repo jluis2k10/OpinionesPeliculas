@@ -29,6 +29,10 @@ public class AnalysisFormList {
 
     private List analysis = ShrinkableList.decorate(new ArrayList(), FactoryUtils.instantiateFactory(AnalysisForm.class));
 
+    public AnalysisForm getFirst() {
+        return (AnalysisForm) analysis.get(0);
+    }
+
     public boolean isExecute() {
         return execute;
     }

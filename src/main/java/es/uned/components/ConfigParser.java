@@ -56,6 +56,11 @@ public class ConfigParser {
     private static final String OPINION_XML = "/subjectivityAdapters.xml";
 
     /**
+     * Archivo XML con información sobre los adaptadores para análisis de dominio.
+     */
+    private static final String DOMAIN_XML = "/domainAdapters.xml";
+
+    /**
      * Devuelve objeto JSON con el listado de los adaptadores disponibles para recuperar comentarios
      * de diferentes fuentes y sus opciones.
      * @param selectedLang Idioma seleccionado
@@ -110,6 +115,8 @@ public class ConfigParser {
             adapters = readXML(OPINION_XML);
         else if (classifierType.equals("polarity"))
             adapters = readXML(POLARITY_XML);
+        else if (classifierType.equals("domain"))
+            adapters = readXML(DOMAIN_XML);
 
         for (int i = 0; i < adapters.getLength(); i++) {
             Node adapter = adapters.item(i);
