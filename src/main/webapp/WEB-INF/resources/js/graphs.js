@@ -1,3 +1,16 @@
+/* Definimos colores para gráficas */
+window.chartColors = {
+    red: 'rgb(255, 99, 132)',
+    orange: 'rgb(255, 159, 64)',
+    yellow: 'rgb(255, 205, 86)',
+    green: 'rgb(75, 192, 192)',
+    blue: 'rgb(54, 162, 235)',
+    purple: 'rgb(153, 102, 255)',
+    grey: 'rgb(201, 203, 207)'
+};
+
+zingchart.MODULESDIR = "/js/zingchart/modules/";
+
 zingchart.defineModule('toolbar-zoom', 'plugin', function(chartJson){
     /* Create a reference to the "toolbar-zoom" object */
     var optionsObj = chartJson["toolbar-zoom"];
@@ -454,29 +467,243 @@ function getDomainSeries(corpus) {
     return series;
 }
 
-function renderPieChart(containerID, comments) {
-    var pieSeries = getPieSeries(comments);
+function renderGlobalChart(containerID, comments) {
+    var series = getGlobalChartSeries(comments);
+    var polaritySeries = series.splice(0, 4);
+    var opinionSeries = series;
+    console.log(polaritySeries);
+    console.log(opinionSeries);
+
+    var myConfig = {
+        layout: '1x2',
+        graphset: [
+            {
+                type: 'pie',
+                backgroundColor: 'none',
+                x: '0%',
+                y: '0%',
+                scaleR: {
+                    refAngle: 180 // relativo a los 90 grados del punto inicial
+                },
+                legend: {
+                    x: '105%',
+                    y: '60%',
+                    borderWidth: 1,
+                    borderColor: 'gray',
+                    borderRadius: '5px',
+                    header: {
+                        text: "Opinión",
+                        fontFamily: 'Georgia',
+                        fontSize: 12,
+                        fontcolor: '#3333cc',
+                        fontWeight: 'normal'
+                    },
+                    marker: {
+                        type: 'circle'
+                    },
+                    toggleAction: 'remove',
+                    minimize: false,
+                    icon: {
+                        lineColor: '#9999ff'
+                    },
+                    maxItems: 4,
+                    overflow: 'scroll'
+                },
+                plot: {
+                    slice: '70%',
+                    tooltip: {
+                        text: "%t: %v (%npv%)",
+                        fontColor: 'black',
+                        fontFamily: 'Arial',
+                        textAlpha: 1,
+                        backgroundColor: 'white',
+                        alpha: 0.7,
+                        borderWidth: 1,
+                        borderColor: '#cccccc',
+                        lineStyle: 'dotted',
+                        borderRadius: '10px',
+                        padding: '10%',
+                        placement: 'node:center',
+                    },
+                    valueBox: {
+                        placement: 'in',
+                        text: '%npv %',
+                        fontSize: '15px',
+                        textAlpha: 1,
+                        rules: [
+                            {
+                                rule: '%v === 0',
+                                text: ''
+                            }
+                        ]
+                    }
+                },
+                series: opinionSeries
+            },
+            {
+                type: 'pie',
+                title: {
+                    text: "VISIÓN GENERAL",
+                    fontSize: 16,
+                    fontColor: 'gray',
+                    x: '50%'
+                },
+                backgroundColor: 'none',
+                x: '0%',
+                y: '0%',
+                scale: {
+                    sizeFactor: 0.6
+                },
+                scaleR: {
+                    refAngle: 180
+                },
+                legend: {
+                    x: '105%',
+                    y: '15%',
+                    borderWidth: 1,
+                    borderColor: 'gray',
+                    borderRadius: '5px',
+                    header: {
+                        text: "Polaridad",
+                        fontFamily: 'Georgia',
+                        fontSize: 12,
+                        fontcolor: '#3333cc',
+                        fontWeight: 'normal'
+                    },
+                    marker: {
+                        type: 'circle'
+                    },
+                    toggleAction: 'remove',
+                    minimize: false,
+                    icon: {
+                        lineColor: '#9999ff'
+                    },
+                    maxItems: 4,
+                    overflow: 'scroll'
+                },
+                plot: {
+                    tooltip: {
+                        text: "%t: %v (%npv%)",
+                        fontColor: 'black',
+                        fontFamily: 'Arial',
+                        textAlpha: 1,
+                        backgroundColor: 'white',
+                        alpha: 0.7,
+                        borderWidth: 1,
+                        borderColor: '#cccccc',
+                        lineStyle: 'dotted',
+                        borderRadius: '10px',
+                        padding: '10%',
+                        placement: 'node:center',
+                    },
+                    valueBox: {
+                        placement: 'in',
+                        text: '%npv %',
+                        fontSize: '15px',
+                        textAlpha: 1,
+                        rules: [
+                            {
+                                rule: '%v === 0',
+                                text: ''
+                            }
+                        ]
+                    }
+                },
+                series: polaritySeries
+            },
+        ]
+    };
+
+    zingchart.loadModules('patterns');
+    zingchart.render({
+        id: containerID,
+        data: myConfig,
+        height: 300,
+        width: '100%'
+    });
+}
+
+function getGlobalChartSeries(comments) {
+    var positives = 0, negatives = 0, neutrals = 0, subjectives = 0, objectives = 0;
+    $.each(comments, function (i, comment) {
+        if (comment.polarity === "Positive")
+            positives++;
+        else if (comment.polarity === "Negative")
+            negatives++;
+        else if (comment.polarity == "Neutral")
+            neutrals++;
+        if (comment.opinion === "Objective")
+            objectives++;
+        else if (comment.opinion == "Subjective")
+            subjectives++;
+    });
+    var polarityRest = comments.length - (positives + negatives + neutrals);
+    var opinionRest = comments.length - (subjectives + objectives);
+    return [
+        {
+            values: [positives > 0 ? positives : null],
+            backgroundColor: window.chartColors['green'],
+            text: "Positivos"
+        },
+        {
+            values: [negatives > 0 ? negatives : null],
+            backgroundColor: window.chartColors['red'],
+            text: "Negativos"
+        },
+        {
+            values: [neutrals > 0 ? neutrals : null],
+            backgroundColor: window.chartColors['yellow'],
+            text: "Neutrales"
+        },
+        {
+            values: [polarityRest > 0 ? polarityRest : null],
+            backgroundColor: window.chartColors['grey'],
+            text: "Sin analizar"
+        },
+        {
+            values: [subjectives > 0 ? subjectives : null],
+            backgroundColor: window.chartColors['green'],
+            backgroundImage: 'PATTERN_SHADE_25',
+            text: "Subjetivos"
+        },
+        {
+            values: [objectives > 0 ? objectives : null],
+            backgroundColor: window.chartColors['red'],
+            backgroundImage: 'PATTERN_SHADE_25',
+            text: "Objetivos"
+        },
+        {
+            values: [opinionRest > 0 ? opinionRest : null],
+            backgroundColor: window.chartColors['grey'],
+            backgroundImage: 'PATTERN_SHADE_25',
+            text: "Sin analizar"
+        }
+    ]
+}
+
+function renderDomainPieChart(containerID, comments) {
+    var domainSeries = getDomainSeries(comments);
     var myConfig = {
         type: 'pie',
         title: {
-            text: "ANÁLISIS DE SENTIMIENTO",
+            text: 'ANÁLISIS DE DOMINIO',
             fontSize: 16,
             fontColor: 'gray'
         },
-        scaleR:{
-            refAngle: 180 //relative to the starting 90 degree position.
+        scaleR: {
+            refAngle: 180
         },
         legend: {
             x: '65%',
             y: '25%',
             borderWidth: 1,
-            borderColor: 'gray',
+            borderColro: 'gray',
             borderRadius: '5px',
             header: {
-                text: "Leyenda",
+                text: "Dominio",
                 fontFamily: 'Georgia',
                 fontSize: 12,
-                fontcolor: '#3333cc',
+                fontColor: '#3333cc',
                 fontWeight: 'normal'
             },
             marker: {
@@ -487,12 +714,12 @@ function renderPieChart(containerID, comments) {
             icon: {
                 lineColor: '#9999ff'
             },
-            maxItems: 8,
+            maxItems: 7,
             overflow: 'scroll'
         },
         plot: {
             tooltip: {
-                text: "%t: %v (%npv%)",
+                text: "%t: %v comentarios",
                 fontColor: 'black',
                 fontFamily: 'Arial',
                 textAlpha: 1,
@@ -506,7 +733,7 @@ function renderPieChart(containerID, comments) {
                 placement: 'node:center',
             },
             valueBox: {
-                placement: 'in',
+                placement: 'out',
                 text: '%npv %',
                 fontSize: '15px',
                 textAlpha: 1,
@@ -522,182 +749,17 @@ function renderPieChart(containerID, comments) {
             marginRight: '30%',
             marginTop: '15%'
         },
-        series: pieSeries
+        series: domainSeries
     };
 
     zingchart.render({
-        id : containerID,
-        data : myConfig,
+        id: containerID,
+        data: myConfig,
         height: 300,
         width: '100%'
-    });
+    })
 }
 
-function getPieSeries(comments) {
-    var positives = $.grep(comments, function (comment, index) {
-        return comment.polarity === "Positive";
-    }).length;
-    var negatives = $.grep(comments, function(comment, index) {
-        return comment.polarity === "Negative";
-    }).length;
-    var neutrals = $.grep(comments, function(comment, index) {
-        return comment.polarity === "Neutral";
-    }).length;
-    return [
-        {
-            values: [positives],
-            backgroundColor: window.chartColors['green'],
-            text: "Positivos"
-        },
-        {
-            values: [negatives],
-            backgroundColor: window.chartColors['red'],
-            text: "Negativos"
-        },
-        {
-            values: [neutrals],
-            backgroundColor: window.chartColors['grey'],
-            text: "Neutrales"
-        }
-    ];
-}
-
-function renderBarChart(containerID, comments) {
-    var barSeries = getBarSeries(comments);
-    var myConfig = {
-        type: 'hbar',
-        title: {
-            text: "VISIÓN GLOBAL",
-            fontSize: 16,
-            fontColor: 'gray'
-        },
-        plot: {
-            stacked: true
-        },
-        plotarea: {
-            marginLeft: 'dynamic'
-        },
-        legend: {
-            x: '75%',
-            y: '5%',
-            minimize: true,
-            icon: {
-                lineColor: "gray"
-            },
-            borderWidth: 1,
-            borderColor: 'gray',
-            borderRadius: '5px',
-            header: {
-                text: "Leyenda",
-                fontFamily: 'Georgia',
-                fontSize: 12,
-                fontcolor: '#3333cc',
-                fontWeight: 'normal'
-            },
-            marker: {
-                type: 'circle'
-            },
-            toggleAction: 'remove'
-        },
-        scaleX: {
-            label: {
-                text: 'Sentimiento',
-                fontSize: 14,
-                fontColor: 'gray',
-                fontWeight: 'bold'
-            },
-            labels: ['Positivos', 'Negativos', 'Neutrales', 'N/A']
-        },
-        scaleY: {
-            label: {
-                text: 'Número de Comentarios',
-                fontSize: 14,
-                fontColor: 'gray',
-                fontWeight: 'bold'
-            }
-        },
-        series: barSeries
-    };
-
-    zingchart.render({
-        id : containerID,
-        data : myConfig,
-        height: 300,
-        width: '100%'
-    });
-}
-
-function getBarSeries(comments) {
-    var subjectives = $.grep(comments, function (comment) {
-        return comment.opinion === 'Subjective';
-    });
-    var objectives = $.grep(comments, function (comment) {
-        return comment.opinion === 'Objective';
-    });
-    var undetermined = $.grep(comments, function (comment) {
-        return comment.opinion == null;
-    });
-    var subjectivesSerie = [
-        nullIfZero($.grep(subjectives, function (subjective) {
-            return subjective.polarity === 'Positive';
-        }).length),
-        nullIfZero($.grep(subjectives, function (subjective) {
-            return subjective.polarity === 'Negative';
-        }).length),
-        nullIfZero($.grep(subjectives, function (subjective) {
-            return subjective.polarity === 'Neutral';
-        }).length),
-        nullIfZero($.grep(subjectives, function (subjective) {
-            return subjective.polarity == null;
-        }).length)
-    ];
-    var objectivesSerie = [
-        nullIfZero($.grep(objectives, function (objective) {
-            return objective.polarity === 'Positive';
-        }).length),
-        nullIfZero($.grep(objectives, function (objective) {
-            return objective.polarity === 'Negative';
-        }).length),
-        nullIfZero($.grep(objectives, function (objective) {
-            return objective.polarity === 'Neutral';
-        }).length),
-        nullIfZero($.grep(objectives, function (objective) {
-            return objective.polarity == null;
-        }).length),
-    ]
-    var undeterminedSerie = [
-        nullIfZero($.grep(undetermined, function (undet) {
-            return undet.polarity === 'Positive';
-        }).length),
-        nullIfZero($.grep(undetermined, function (undet) {
-            return undet.polarity === 'Negative';
-        }).length),
-        nullIfZero($.grep(undetermined, function (undet) {
-            return undet.polarity === 'Neutral';
-        }).length),
-        nullIfZero($.grep(undetermined, function (undet) {
-            return undet.polarity == null;
-        }).length)
-    ]
-
-    return [
-        {
-            values: subjectivesSerie,
-            backgroundColor: window.chartColors['green'],
-            text: "Subjetivos"
-        },
-        {
-            values: objectivesSerie,
-            backgroundColor: window.chartColors['red'],
-            text: "Objetivos"
-        },
-        {
-            backgroundColor: undeterminedSerie,
-            backgroundColor: window.chartColors['grey'],
-            text: "Sin analizar"
-        }
-    ]
-}
 
 function renderTimeEvoChart(containerID, comments) {
     var series = getTimeSeries(comments);

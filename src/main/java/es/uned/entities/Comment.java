@@ -196,8 +196,6 @@ public class Comment implements Comparable<Comment> {
         setPositivityScore(0L);
         setNegativityScore(0L);
         setNeutralityScore(0L);
-        setPolarity(null);
-        setOpinion(null);
 
         long totalOpinionAnalyses = getRecords().stream()
                 .filter(record -> record.getAnalysis().getAnalysisType() == ClassifierType.OPINION)
@@ -222,20 +220,20 @@ public class Comment implements Comparable<Comment> {
         this.negativityScore = this.negativityScore / totalPolarityAnalyses;
         this.neutralityScore = this.neutralityScore / totalPolarityAnalyses;
 
-        if (this.opinionScore >= 0.5)
+        if (null != getOpinion() && this.opinionScore >= 0.5)
             setOpinion(Opinion.SUBJECTIVE);
-        else
+        else if (null != getOpinion() && this.opinionScore < 0.5)
             setOpinion(Opinion.OBJECTIVE);
 
-        if (this.positivityScore >= this.negativityScore && this.positivityScore >= this.neutralityScore) {
+        if (null != getPolarity() && this.positivityScore >= this.negativityScore && this.positivityScore >= this.neutralityScore) {
             setPolarity(Polarity.POSITIVE);
             this.polarityScore = this.positivityScore;
         }
-        else if (this.negativityScore > this.positivityScore && this.negativityScore >= this.neutralityScore) {
+        else if (null != getPolarity() && this.negativityScore > this.positivityScore && this.negativityScore >= this.neutralityScore) {
             setPolarity(Polarity.NEGATIVE);
             this.polarityScore = this.negativityScore;
         }
-        else if (this.neutralityScore > this.positivityScore && this.neutralityScore > this.negativityScore) {
+        else if (null != getPolarity() && this.neutralityScore > this.positivityScore && this.neutralityScore > this.negativityScore) {
             setPolarity(Polarity.NEUTRAL);
             this.polarityScore = this.neutralityScore;
         }

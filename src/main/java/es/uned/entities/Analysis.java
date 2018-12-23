@@ -129,7 +129,10 @@ public class Analysis {
         else
             analysisNode.putNull("language_model");
         analysisNode.put("lang", getLang());
-        analysisNode.put("total_records", getRecords().size());
+        if (getAnalysisType() == ClassifierType.DOMAIN)
+            analysisNode.put("total_records", getCorpus().countDomainAnalyses());
+        else
+            analysisNode.put("total_records", getRecords().size());
         if (withRecords) {
             ArrayNode recordsArray = mapper.createArrayNode();
             getRecords().forEach(record -> recordsArray.add(record.toJson()));

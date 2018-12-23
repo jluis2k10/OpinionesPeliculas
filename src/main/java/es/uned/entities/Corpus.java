@@ -126,6 +126,13 @@ public class Corpus {
         return getAnalyses().stream().anyMatch(analysis -> analysis.getAnalysisType() == ClassifierType.DOMAIN);
     }
 
+    public int countDomainAnalyses() {
+        return Math.toIntExact(comments.stream()
+                .filter(comment -> null != comment.getDomain() && !comment.getDomain().isEmpty())
+                .count()
+        );
+    }
+
     public void clearAll() {
         analyses.clear();
         comments.clear();

@@ -3,10 +3,8 @@ package es.uned.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import es.uned.adapters.ClassifierType;
-import es.uned.adapters.SentimentAdapterFactory;
-import es.uned.adapters.SourceAdapterFactory;
-import es.uned.adapters.SubjectivityAdapterFactory;
+import es.uned.adapters.*;
+import es.uned.adapters.domain.DomainAdapter;
 import es.uned.adapters.sentiment.SentimentAdapter;
 import es.uned.adapters.sources.SourceAdapter;
 import es.uned.adapters.subjectivity.SubjectivityAdapter;
@@ -49,6 +47,7 @@ public class CorporaController {
     @Autowired private AccountService accountService;
     @Autowired private SentimentAdapterFactory sentimentFactory;
     @Autowired private SubjectivityAdapterFactory subjectivityFactory;
+    @Autowired private DomainAdapterFactory domainFactory;
     @Autowired private SourceAdapterFactory sourceFactory;
     @Autowired private SourceFormValidator formValidator;
 
@@ -262,6 +261,45 @@ public class CorporaController {
         return "corpora/add_polarity_analysis";
     }
 
+    @RequestMapping(value = "/add-domain-analysis/{corpusID}", method = RequestMethod.GET)
+    public String addDomainAnalysis(@PathVariable(name = "corpusID") Long corpusID, Principal principal, Model model) {
+        Corpus corpus = corpusService.findOneFetchAll(corpusID);
+        Account account = accountService.findByUserName(principal.getName());
+        if (corpus == null || !corpus.getOwner().equals(account))
+            return "redirect:/denied";
+        model.addAttribute("corpus", corpus);
+        model.addAttribute("domainForm", new AnalysisFormList());
+        if (corpus.hasDomainAnalysis()) {
+            Map<String, String> flashMsg = new HashMap<>() {{
+                put("warning", "ATENCIÓN: este Corpus ya cuenta con un análisis de dominio.<br />" +
+                        "Ejecutar un nuevo análisis de dominio <strong>eliminará los resultados del análisis actual</strong>.");
+            }};
+            model.addAttribute("flashMessage", flashMsg);
+        }
+        return "corpora/add_domain_analysis";
+    }
+
+    @RequestMapping(value = "/add-domain-analysis/{corpusID}", method = RequestMethod.POST)
+    public String addDomainAnalysis(@ModelAttribute("corpus") Corpus corpus, Model model, Principal principal,
+                                    @ModelAttribute("domainForm") AnalysisFormList analysisFormList) {
+        Account account = accountService.findByUserName(principal.getName());
+        if (!corpus.getOwner().equals(account))
+            return "redirect:/denied";
+
+        AnalysisForm analysisForm = analysisFormList.getFirst();
+        DomainAdapter domainAdapter = domainFactory.get(analysisForm.getAdapterClass());
+        domainAdapter.analyze(corpus, new Analysis(analysisForm));
+        Map<String, String> flashMsg = new HashMap<>() {{
+            put("primary", "Ejecutado <string>1</strong> análisis de dominio sobre el corpus.");
+        }};
+        if (corpus.hasDomainAnalysis()) {
+            flashMsg.put("warning", "ATENCIÓN: este Corpus ya cuenta con un análisis de dominio.<br />" +
+                    "Ejecutar un nuevo análisis de dominio <strong>eliminará los resultados del análisis actual</strong>.");
+        }
+        model.addAttribute("flashMessage", flashMsg);
+        return "corpora/add_domain_analysis";
+    }
+
     /**
      * Devuelve una entidad Corpus en formato JSON
      * @param principal Token de autenticación del usuario
@@ -388,6 +426,10 @@ public class CorporaController {
         else if (analysis.getAnalysisType() == ClassifierType.OPINION) {
             SubjectivityAdapter subjectivityAdapter = subjectivityFactory.get(analysis.getAdapterClass());
             subjectivityAdapter.analyze(analysis.getCorpus(), analysis);
+        }
+        else if (analysis.getAnalysisType() == ClassifierType.DOMAIN) {
+            DomainAdapter domainAdapter = domainFactory.get(analysis.getAdapterClass());
+            domainAdapter.analyze(analysis.getCorpus(), analysis);
         }
 
         analysis.getCorpus().refreshScores();

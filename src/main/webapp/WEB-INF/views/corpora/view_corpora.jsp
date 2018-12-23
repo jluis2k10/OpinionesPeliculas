@@ -176,10 +176,15 @@
             type: "button",
             html: "Nuevo/s Análisis de Opinión"
         })).append($('<a>', {
-            class: "btn btn-primary btn-sm",
+            class: "btn btn-primary btn-sm mr-2",
             href: "${path}/corpora/add-polarity-analysis/" + corpus.id,
             type: "button",
             html: "Nuevo/s Análisis de Polaridad"
+        })).append($('<a>', {
+            class: "btn btn-primary btn-sm",
+            href: "${path}/corpora/add-domain-analysis/" + corpus.id,
+            type: "button",
+            html: "Nuevo Análisis de Dominio"
         })).prop('outerHTML');
         var description = (typeof corpus.description != 'undefined') ? corpus.description : '';
         var details = '<dl class="row px-4 mb-2">' +
@@ -243,6 +248,13 @@
                         return (analysis.updated != null) ? analysis.updated : analysis.created;
                     }
                 },
+                {
+                    data: null,
+                    defaultContent: "?",
+                    "render": function (analysis) {
+                        return analysis.total_records + "/" + corpus.total_comments;
+                    }
+                },
                 {data: "total_records"},
                 {
                     orderable: false,
@@ -271,7 +283,11 @@
     }
 
     function renderAnalysisDetails(analysis) {
-        var analysisType = (analysis.type === "polarity") ? "Polaridad " : "Opinión ";
+        var analysisType = "Polaridad ";
+        if (analysis.type === "opinion")
+            analysisType = "Opinión ";
+        else if (analysis.type === "domain")
+            analysisType = "Dominio ";
         var detailsIcon = $('<a>', {
             href: "#",
             class: "details-popover",

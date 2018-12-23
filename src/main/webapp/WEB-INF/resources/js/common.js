@@ -8,17 +8,6 @@ $(document).ajaxSend(function (e, xhr, options) {
     xhr.setRequestHeader(header, token);
 });
 
-/* Definimos colores para gráficas */
-window.chartColors = {
-    red: 'rgb(255, 99, 132)',
-    orange: 'rgb(255, 159, 64)',
-    yellow: 'rgb(255, 205, 86)',
-    green: 'rgb(75, 192, 192)',
-    blue: 'rgb(54, 162, 235)',
-    purple: 'rgb(153, 102, 255)',
-    grey: 'rgb(201, 203, 207)'
-};
-
 /**
  * Muestra el cover/modal de "Cargando" con el mensaje indicado.
  * @param msg El mensaje a mostrar
@@ -895,6 +884,13 @@ function myPagination(size, corpus, container, showDetails) {
  */
 function formatComments(comments, $container, pagination, showDetails) {
     $container.empty();
+    var domainAnalysis = "";
+    if (corpus.domain_analysis) {
+        $.each(corpus.analyses, function (i, analysis) {
+            if (analysis.type === "domain")
+                domainAnalysis = analysis.classifier + " (" + analysis.language_model + ")";
+        });
+    }
     comments.forEach(function (comment, i) {
         var commentIndex = (pagination.pageNumber - 1) * pagination.pageSize + i + 1;
         var $listItem = $('<li></li>').addClass('list-group-item flex-column align-items-start');
@@ -1005,6 +1001,10 @@ function formatComments(comments, $container, pagination, showDetails) {
                                     res += Math.round10(100 - record.record.subjectiveScore * 100, -2) + "%)<br/>";
                             })
                             res += '</p>';
+                        }
+                        if (comment.domain != null) {
+                            res += '<p><strong>Dominio:</strong><br/>';
+                            res += domainAnalysis;
                         }
                         return res;
                     },
