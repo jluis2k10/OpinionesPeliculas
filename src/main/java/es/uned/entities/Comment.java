@@ -186,6 +186,11 @@ public class Comment implements Comparable<Comment> {
                 .orElse(new Record());
     }
 
+    public void clearDomainAnalysis() {
+        setDomain(null);
+        setDomainScore(0.0);
+    }
+
     /**
      * Actualiza/recalcula las puntuaciones medias del comentario en función de los análisis que
      * se hayan ejecutado sobre él.
@@ -196,6 +201,8 @@ public class Comment implements Comparable<Comment> {
         setPositivityScore(0L);
         setNegativityScore(0L);
         setNeutralityScore(0L);
+        setPolarity(null);
+        setOpinion(null);
 
         long totalOpinionAnalyses = getRecords().stream()
                 .filter(record -> record.getAnalysis().getAnalysisType() == ClassifierType.OPINION)
@@ -220,20 +227,20 @@ public class Comment implements Comparable<Comment> {
         this.negativityScore = this.negativityScore / totalPolarityAnalyses;
         this.neutralityScore = this.neutralityScore / totalPolarityAnalyses;
 
-        if (null != getOpinion() && this.opinionScore >= 0.5)
+        if (this.opinionScore >= 0.5)
             setOpinion(Opinion.SUBJECTIVE);
-        else if (null != getOpinion() && this.opinionScore < 0.5)
+        else if (this.opinionScore < 0.5 && this.opinionScore != 0)
             setOpinion(Opinion.OBJECTIVE);
 
-        if (null != getPolarity() && this.positivityScore >= this.negativityScore && this.positivityScore >= this.neutralityScore) {
+        if (this.positivityScore >= this.negativityScore && this.positivityScore >= this.neutralityScore && this.positivityScore != 0) {
             setPolarity(Polarity.POSITIVE);
             this.polarityScore = this.positivityScore;
         }
-        else if (null != getPolarity() && this.negativityScore > this.positivityScore && this.negativityScore >= this.neutralityScore) {
+        else if (this.negativityScore > this.positivityScore && this.negativityScore >= this.neutralityScore) {
             setPolarity(Polarity.NEGATIVE);
             this.polarityScore = this.negativityScore;
         }
-        else if (null != getPolarity() && this.neutralityScore > this.positivityScore && this.neutralityScore > this.negativityScore) {
+        else if (this.neutralityScore > this.positivityScore && this.neutralityScore > this.negativityScore) {
             setPolarity(Polarity.NEUTRAL);
             this.polarityScore = this.neutralityScore;
         }

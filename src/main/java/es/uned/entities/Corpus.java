@@ -48,7 +48,7 @@ public class Corpus {
     @Column(name = "public", nullable = false)
     private boolean isPublic = false;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.LAZY, cascade={CascadeType.ALL}, orphanRemoval = true)
     @JoinColumn(name = "corpus_id")
     private Collection<Analysis> analyses = new LinkedList<>();
 
@@ -131,6 +131,10 @@ public class Corpus {
                 .filter(comment -> null != comment.getDomain() && !comment.getDomain().isEmpty())
                 .count()
         );
+    }
+
+    public void clearDomainAnalysisResults() {
+        comments.stream().forEach(comment -> comment.clearDomainAnalysis());
     }
 
     public void clearAll() {

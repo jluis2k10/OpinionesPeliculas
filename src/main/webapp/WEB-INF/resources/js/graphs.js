@@ -1,3 +1,12 @@
+function check_empty(array) {
+    var empty = true;
+    $.each(array, function (i, obj) {
+        empty = empty && $.isEmptyObject(obj);
+    });
+    return empty;
+}
+
+
 /* Definimos colores para gráficas */
 window.chartColors = {
     red: 'rgb(255, 99, 132)',
@@ -212,32 +221,30 @@ function renderSharedChart(container, corpus) {
     var polarityChartConfig = lineChartConfig(polaritySeries, "Índice de Positividad");
     var sharedChartConfig;
     var graphHeight = 350;
-    if (polaritySeries.length > 0 && opinionSeries.length > 0) {
+    if (!check_empty(polaritySeries) && !check_empty(opinionSeries)) {
         sharedChartConfig = {
             layout: "2x1",
             graphset: [polarityChartConfig, opinionChartConfig]
         };
         graphHeight = 700;
     }
-    else if (polaritySeries.length > 0 && opinionSeries.length == 0) {
+    else if (!check_empty(polaritySeries) && check_empty(opinionSeries)) {
         sharedChartConfig = {
             layout: "1x1",
             graphset: [polarityChartConfig]
         };
     }
-    else if (polaritySeries.length == 0 && opinionSeries.length > 0) {
+    else if (check_empty(polaritySeries) && !check_empty(opinionSeries)) {
         sharedChartConfig = {
             layout: "1x1",
             graphset: [opinionChartConfig]
         };
     }
     else {
-        $(container).append($('<div>', {
-            class: "col-12 alert alert-warning",
-            role: "alert",
-            html: "No se han ejecutado análisis para el Corpus."
-        }));
-        return;
+        sharedChartConfig = {
+            layout: "1x1",
+            graphset: [polarityChartConfig]
+        };
     }
     zingchart.render({
         id: container,
@@ -283,6 +290,10 @@ function lineChartConfig(series, yAxisLabel) {
             fontColor: 'gray',
             adjustLayout: true
         },
+        noData:{
+            text: "Datos no disponibles",
+            backgroundColor: 'white'
+        },
         'toolbar-zoom': {
             'background-color': '#FFFFFF #D0D7E1',
             'border-color': '#ACAFB6',
@@ -293,6 +304,7 @@ function lineChartConfig(series, yAxisLabel) {
             shared: true
         },
         legend: {
+            visible: !check_empty(series),
             layout: 'x3',
             overflow: 'scroll',
             maxItems: 3,
@@ -360,6 +372,10 @@ function lineChartConfig(series, yAxisLabel) {
 function getDomainChartConfig(series) {
     return {
         type: "bar",
+        noData:{
+            text: "Datos no disponibles",
+            visible: true
+        },
         title: {
             text: "ANÁLISIS DE DOMINIO",
             fontSize: 16,
@@ -440,7 +456,9 @@ function getAnalysesSeries(analyses, commentHashes) {
         });
         series.push(serie);
     });
-    return series;
+    if (series.length > 0)
+        return series;
+    return [{}];
 }
 
 function getDomainSeries(corpus) {
@@ -454,11 +472,14 @@ function getDomainSeries(corpus) {
             commentsMap.set(comment.domain, 1);
     });
     var i = 0;
+    // No hay análisis de dominio, devolvemos array vacío
+    if (commentsMap.size === 1 && commentsMap.has(null))
+        return [];
     commentsMap.forEach(function (value, domain) {
         var color = window.chartColors[colorNames[i % colorNames.length]];
         var serie = {
             text: domain,
-            values: [value],
+            values: [domain != null ? value : null],
             backgroundColor: color
         };
         series.push(serie);
@@ -471,14 +492,17 @@ function renderGlobalChart(containerID, comments) {
     var series = getGlobalChartSeries(comments);
     var polaritySeries = series.splice(0, 4);
     var opinionSeries = series;
-    console.log(polaritySeries);
-    console.log(opinionSeries);
 
     var myConfig = {
         layout: '1x2',
         graphset: [
             {
                 type: 'pie',
+                noData:{
+                    text: "Datos no disponibles",
+                    visible: check_empty(polaritySeries),
+                    backgroundColor: 'white'
+                },
                 backgroundColor: 'none',
                 x: '0%',
                 y: '0%',
@@ -486,6 +510,7 @@ function renderGlobalChart(containerID, comments) {
                     refAngle: 180 // relativo a los 90 grados del punto inicial
                 },
                 legend: {
+                    visible: !check_empty(opinionSeries),
                     x: '105%',
                     y: '60%',
                     borderWidth: 1,
@@ -542,6 +567,11 @@ function renderGlobalChart(containerID, comments) {
             },
             {
                 type: 'pie',
+                noData:{
+                    text: "Datos no disponibles",
+                    visible: check_empty(opinionSeries),
+                    backgroundColor: 'white'
+                },
                 title: {
                     text: "VISIÓN GENERAL",
                     fontSize: 16,
@@ -558,6 +588,7 @@ function renderGlobalChart(containerID, comments) {
                     refAngle: 180
                 },
                 legend: {
+                    visible: !check_empty(polaritySeries),
                     x: '105%',
                     y: '15%',
                     borderWidth: 1,
@@ -639,52 +670,73 @@ function getGlobalChartSeries(comments) {
     });
     var polarityRest = comments.length - (positives + negatives + neutrals);
     var opinionRest = comments.length - (subjectives + objectives);
-    return [
-        {
-            values: [positives > 0 ? positives : null],
-            backgroundColor: window.chartColors['green'],
-            text: "Positivos"
-        },
-        {
-            values: [negatives > 0 ? negatives : null],
-            backgroundColor: window.chartColors['red'],
-            text: "Negativos"
-        },
-        {
-            values: [neutrals > 0 ? neutrals : null],
-            backgroundColor: window.chartColors['yellow'],
-            text: "Neutrales"
-        },
-        {
-            values: [polarityRest > 0 ? polarityRest : null],
-            backgroundColor: window.chartColors['grey'],
-            text: "Sin analizar"
-        },
-        {
-            values: [subjectives > 0 ? subjectives : null],
-            backgroundColor: window.chartColors['green'],
-            backgroundImage: 'PATTERN_SHADE_25',
-            text: "Subjetivos"
-        },
-        {
-            values: [objectives > 0 ? objectives : null],
-            backgroundColor: window.chartColors['red'],
-            backgroundImage: 'PATTERN_SHADE_25',
-            text: "Objetivos"
-        },
-        {
-            values: [opinionRest > 0 ? opinionRest : null],
-            backgroundColor: window.chartColors['grey'],
-            backgroundImage: 'PATTERN_SHADE_25',
-            text: "Sin analizar"
-        }
-    ]
+
+    var polaritySeries, opinionSeries;
+    if (positives === 0 && negatives === 0 && neutrals === 0) {
+        polaritySeries = [{}, {}, {}, {}];
+    }
+    else {
+        polaritySeries = [
+            {
+                values: [positives > 0 ? positives : null],
+                backgroundColor: window.chartColors['green'],
+                text: "Positivos"
+            },
+            {
+                values: [negatives > 0 ? negatives : null],
+                backgroundColor: window.chartColors['red'],
+                text: "Negativos"
+            },
+            {
+                values: [neutrals > 0 ? neutrals : null],
+                backgroundColor: window.chartColors['yellow'],
+                text: "Neutrales"
+            },
+            {
+                values: [polarityRest > 0 ? polarityRest : null],
+                backgroundColor: window.chartColors['grey'],
+                text: "Sin analizar"
+            }
+        ]
+    }
+    if (subjectives === 0 && objectives === 0) {
+        opinionSeries = [{}, {}, {}]
+    }
+    else {
+        opinionSeries = [
+            {
+                values: [subjectives > 0 ? subjectives : null],
+                backgroundColor: window.chartColors['green'],
+                backgroundImage: 'PATTERN_SHADE_25',
+                text: "Subjetivos"
+            },
+            {
+                values: [objectives > 0 ? objectives : null],
+                backgroundColor: window.chartColors['red'],
+                backgroundImage: 'PATTERN_SHADE_25',
+                text: "Objetivos"
+            },
+            {
+                values: [opinionRest > 0 ? opinionRest : null],
+                backgroundColor: window.chartColors['grey'],
+                backgroundImage: 'PATTERN_SHADE_25',
+                text: "Sin analizar"
+            }
+        ]
+    }
+    return polaritySeries.concat(opinionSeries);
 }
 
 function renderDomainPieChart(containerID, comments) {
     var domainSeries = getDomainSeries(comments);
+    var showLegend = !check_empty(domainSeries);
     var myConfig = {
         type: 'pie',
+        noData:{
+            text: "Datos no disponibles",
+            visible: true,
+            backgroundColor: 'none'
+        },
         title: {
             text: 'ANÁLISIS DE DOMINIO',
             fontSize: 16,
@@ -694,6 +746,7 @@ function renderDomainPieChart(containerID, comments) {
             refAngle: 180
         },
         legend: {
+            visible: showLegend,
             x: '65%',
             y: '25%',
             borderWidth: 1,
@@ -752,12 +805,13 @@ function renderDomainPieChart(containerID, comments) {
         series: domainSeries
     };
 
-    zingchart.render({
+    var chart = zingchart.render({
         id: containerID,
         data: myConfig,
         height: 300,
         width: '100%'
-    })
+    });
+    //console.log(chart);
 }
 
 
@@ -769,6 +823,10 @@ function renderTimeEvoChart(containerID, comments) {
             expanded: false
         },
         type: 'mixed',
+        noData:{
+            text: "Datos no disponibles",
+            visible: true
+        },
         'toolbar-zoom': {
             'background-color': '#FFFFFF #D0D7E1',
             'border-color': '#ACAFB6'
@@ -992,6 +1050,10 @@ function renderScatterChart(containerID, corpus) {
     });
     var myConfig = {
         type: "scatter",
+        noData:{
+            text: "Datos no disponibles",
+            visible: true
+        },
         title: {
             text: "DISPERSIÓN SENTIMIENTO/SUBJETIVIDAD",
             fontSize: 16,

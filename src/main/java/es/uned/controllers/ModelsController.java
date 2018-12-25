@@ -1,9 +1,6 @@
 package es.uned.controllers;
 
-import es.uned.adapters.ClassifierType;
-import es.uned.adapters.SentimentAdapterFactory;
-import es.uned.adapters.SourceAdapterFactory;
-import es.uned.adapters.SubjectivityAdapterFactory;
+import es.uned.adapters.*;
 import es.uned.adapters.sentiment.SentimentAdapter;
 import es.uned.adapters.sources.SourceAdapter;
 import es.uned.adapters.subjectivity.SubjectivityAdapter;
@@ -39,6 +36,7 @@ public class ModelsController {
     @Autowired private SourceAdapterFactory sourceFactory;
     @Autowired private SubjectivityAdapterFactory subjectivityFactory;
     @Autowired private SentimentAdapterFactory sentimentFactory;
+    @Autowired private DomainAdapterFactory domainFactory;
     @Autowired private LanguageModelService languageModelService;
     @Autowired private AnalysisService analysisService;
     @Autowired private AccountService accountService;
@@ -55,13 +53,17 @@ public class ModelsController {
             Account account = accountService.findByUserName(principal.getName());
             Set<LanguageModel> userPolarityModels = languageModelService.findUserModels(account, ClassifierType.POLARITY);
             Set<LanguageModel> userOpinionModels = languageModelService.findUserModels(account, ClassifierType.OPINION);
+            Set<LanguageModel> userDomainModels = languageModelService.findUserModels(account, ClassifierType.DOMAIN);
             model.addAttribute("polarityModels", userPolarityModels);
             model.addAttribute("opinionModels", userOpinionModels);
+            model.addAttribute("domainModels", userDomainModels);
             if (account.isAdmin()) {
                 Set<LanguageModel> allPolarityModels = languageModelService.findFromOthers(account, ClassifierType.POLARITY);
                 Set<LanguageModel> allOpinionModels = languageModelService.findFromOthers(account, ClassifierType.OPINION);
+                Set<LanguageModel> allDomainModels = languageModelService.findFromOthers(account, ClassifierType.DOMAIN);
                 model.addAttribute("allPolarityModels", allPolarityModels);
                 model.addAttribute("allOpinionModels", allOpinionModels);
+                model.addAttribute("allDomainModels", allDomainModels);
             }
         }
         return "models/my_models";
@@ -206,8 +208,10 @@ public class ModelsController {
             String adapterPath = null;
             if (model.getClassifierType() == ClassifierType.POLARITY)
                 adapterPath = sentimentFactory.get(model.getAdapterClass()).get_adapter_path();
-            else
+            else if (model.getClassifierType() == ClassifierType.OPINION)
                 adapterPath = subjectivityFactory.get(model.getAdapterClass()).get_adapter_path();
+            else if (model.getClassifierType() == ClassifierType.DOMAIN)
+                adapterPath = domainFactory.get(model.getAdapterClass()).get_adapter_path();
             if (languageModelService.delete(adapterPath, model))
                 return new ResponseEntity<>("Ok", HttpStatus.OK);
         }

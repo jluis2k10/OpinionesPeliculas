@@ -7,9 +7,11 @@
         <ul class="nav nav-tabs card-header-tabs" role="tablist">
             <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#usentiment">Sentimiento</a></li>
             <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#uopinion">Opinión</a></li>
+            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#udomain">Dominio</a></li>
             <sec:authorize access="hasRole('ADMIN')">
-                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#adminsentiment">Sentimiento (resto usuarios)</a></li>
-                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#adminopinion">Opinión (resto usuarios)</a></li>
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#adminsentiment">Sentimiento (resto)</a></li>
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#adminopinion">Opinión (resto)</a></li>
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#admindomain">Dominio (resto)</a></li>
             </sec:authorize>
         </ul>
     </div>
@@ -125,6 +127,61 @@
                     </c:otherwise>
                 </c:choose>
             </div>
+            <div id="udomain" class="tab-pane fade">
+                <c:choose>
+                    <c:when test="${not empty domainModels}">
+                        <table id="userDomainModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Idioma</th>
+                                <th>Clase del Adaptador</th>
+                                <th>Opciones</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <c:forEach var="model" items="${domainModels}">
+                                <tr>
+                                    <td>${model.id}</td>
+                                    <td>${model.name}</td>
+                                    <td>${model.language}</td>
+                                    <td>${model.adapterClass}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <c:if test="${model.trainable}">
+                                                <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
+                                                    <i class="fas fa-sliders-h"></i>
+                                                </a>
+                                            </c:if>
+                                            <c:choose>
+                                                <c:when test="${model.isPublic}">
+                                                    <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
+                                                        <i class="fas fa-eye-slash"></i>
+                                                    </button>
+                                                </c:otherwise>
+                                            </c:choose>
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
+                                                <i class="far fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                            </tbody>
+                        </table>
+                    </c:when>
+                    <c:otherwise>
+                        <h3>Sin modelos para análisis de dominio</h3>
+                    </c:otherwise>
+                </c:choose>
+            </div>
             <sec:authorize access="hasRole('ADMIN')">
                 <div id="adminsentiment" class="tab-pane fade">
                     <c:choose>
@@ -237,6 +294,63 @@
                         </c:when>
                         <c:otherwise>
                             <h3>Sin modelos para análisis de opinión</h3>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+                <div id="admindomain" class="tab-pane fade">
+                    <c:choose>
+                        <c:when test="${not empty allDomainModels}">
+                            <table id="allDomainModels" class="table table-striped table-bordered table-sm data-table" width="100%" cellpadding="0">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Idioma</th>
+                                    <th>Clase del Adaptador</th>
+                                    <th>Usuario</th>
+                                    <th>Opciones</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <c:forEach var="model" items="${allDomainModels}">
+                                    <tr>
+                                        <td>${model.id}</td>
+                                        <td>${model.name}</td>
+                                        <td>${model.language}</td>
+                                        <td>${model.adapterClass}</td>
+                                        <td>${model.owner.userName}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <c:if test="${model.trainable}">
+                                                    <a href="${path}/models/train/${model.id}" class="btn btn-secondary btn-sm" title="Entrenar">
+                                                        <i class="fas fa-sliders-h"></i>
+                                                    </a>
+                                                </c:if>
+                                                <c:choose>
+                                                    <c:when test="${model.isPublic}">
+                                                        <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer privado" data-modelid="${model.id}">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <button type="button" class="btn btn-secondary btn-sm isopen" title="Hacer público"  data-modelid="${model.id}">
+                                                            <i class="fas fa-eye-slash"></i>
+                                                        </button>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-sm delete-model" title="Eliminar" data-modelid="${model.id}">
+                                                    <i class="far fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                                </tbody>
+                            </table>
+                        </c:when>
+                        <c:otherwise>
+                            <h3>Sin modelos para análisis de dominio</h3>
                         </c:otherwise>
                     </c:choose>
                 </div>

@@ -255,7 +255,6 @@
                         return analysis.total_records + "/" + corpus.total_comments;
                     }
                 },
-                {data: "total_records"},
                 {
                     orderable: false,
                     data: null,

@@ -1,5 +1,6 @@
 package es.uned.services;
 
+import es.uned.adapters.ClassifierType;
 import es.uned.entities.Analysis;
 import es.uned.entities.LanguageModel;
 import es.uned.repositories.AnalysisRepo;
@@ -66,8 +67,13 @@ public class MyAnalysisService implements AnalysisService {
      */
     @Override
     public void delete(Analysis analysis) {
-        recordsService.deleteByAnalysis(analysis.getId());
-        analysis.clearAllRecords();
+        if (analysis.getAnalysisType() == ClassifierType.DOMAIN) {
+            analysis.getCorpus().clearDomainAnalysisResults();
+        }
+        else {
+            recordsService.deleteByAnalysis(analysis.getId());
+            analysis.clearAllRecords();
+        }
         analysisRepo.delete(analysis);
     }
 }
